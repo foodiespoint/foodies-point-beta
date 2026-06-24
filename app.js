@@ -1,12 +1,6 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 58)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 59)
 // ==========================================================================
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) { registration.unregister(); }
-    });
-}
-
 let deferredPrompt = null;
 let installPromptSupported = false; 
 let cart = [];
@@ -185,7 +179,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=58').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=59').then(reg => {
             if (!navigator.serviceWorker.controller) { forceDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -243,10 +237,17 @@ OneSignal.push(async function() {
 });
 
 // ==========================================
-// 4. PERSISTENT GATEWAY & ALERTS MODAL ENGINE
+// 4. PERSISTENT GATEWAY & APP INSTALL MODAL
 // ==========================================
+
+// 🚀 THIS IS THE EVENT THAT TRIGGERS THE INSTALLATION MODAL
 window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); deferredPrompt = e; installPromptSupported = true; 
+    e.preventDefault(); 
+    deferredPrompt = e; 
+    installPromptSupported = true; 
+    if (localStorage.getItem('pwa_installed_successfully') !== 'true') {
+        showMandatoryModal();
+    }
 });
 
 function triggerNativeInstall() {
@@ -336,7 +337,7 @@ function triggerInstantNotification(messageText, type = 'success') {
 }
 
 // ==========================================
-// 5. BULLETPROOF TIMEZONE LOCKOUT ENGINE (DISABLED FOR TESTING)
+// 5. BULLETPROOF TIMEZONE LOCKOUT ENGINE
 // ==========================================
 function isKitchenBlackoutActive() {
     return false;
