@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 54)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 55)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -164,7 +164,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=54').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=55').then(reg => {
             if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -225,45 +225,32 @@ window.addEventListener('appinstalled', () => {
 function showMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'flex'; pwaOverlay.style.display = 'block'; body.classList.add('stop-scrolling'); } }
 function dismissMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'none'; pwaOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); initNotificationGestureCheck(); } }
 
-// 🚀 UPGRADED V54 HARDWARE SECURITY GATEWAY: Natively scans browser parameters instantly on layout parse
+// 🚀 FIXED V55: Checks permission status synchronously on framework parse execution maps
 function initNotificationGestureCheck() {
     if (!('Notification' in window)) return;
     
-    // Bypasses asynchronous CDN lags completely—scans browser state instantly
+    // Locks UI frame instantly on boot loop if status is anything other than granted
     if (Notification.permission !== 'granted') {
         showNotificationModal();
     }
 }
 
+// 🚀 FIXED V55: Keeps the template popup clean with only the "Allow Alerts" operational button
 function showNotificationModal() { 
     if (notifModal && notifOverlay) { 
-        if (Notification.permission === 'denied') {
-            const descriptionDiv = notifModal.querySelector('div:nth-of-type(2)');
-            if (descriptionDiv) {
-                descriptionDiv.innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts are Blocked!</span><br>Please click the site settings padlock icon (🔒) in your browser address bar, reset the notification rule to 'Allow', and re-boot the application to proceed.";
-            }
-            const actionBtn = notifModal.querySelector('.blocker-btn');
-            if (actionBtn) {
-                actionBtn.innerText = "Permissions Blocked";
-                actionBtn.style.backgroundColor = "#9CA3AF";
-                actionBtn.disabled = true;
-                actionBtn.style.cursor = "not-allowed";
-            }
-        }
         notifModal.style.display = 'flex'; 
         notifOverlay.style.display = 'block'; 
         body.classList.add('stop-scrolling'); 
     } 
 }
 
-// 🚀 FIXED V54 SYNCHRONOUS FLOW: Requests token natively within user gesture timeline to avoid browser punting
+// 🚀 FIXED V55 SYNCHRONOUS HANDSHAKE: Fires prompt entirely within user gesture timeline to satisfy mobile browsers
 function acceptNotificationModal() {
     if (!('Notification' in window)) return;
 
-    // Synchronously pop the native prompt immediately within the click execution thread!
+    // Direct synchronous call inside click thread context
     Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
-            // Dismiss the modal layers safely now that criteria is satisfied
             if (notifModal && notifOverlay) { 
                 notifModal.style.display = 'none'; 
                 notifOverlay.style.display = 'none'; 
@@ -271,7 +258,7 @@ function acceptNotificationModal() {
             }
             triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
             
-            // Hand over the authorization token payload directly to the OneSignal SDK tracking layers
+            // Connect the generated authorization token to the active OneSignal routing instances
             window.OneSignal = window.OneSignal || [];
             OneSignal.push(function() {
                 OneSignal.Notifications.requestPermission();
@@ -749,7 +736,7 @@ function archiveTicket(ticketId) { database.ref(`orders/${ticketId}`).update({ a
 let blackoutStateMemory = isKitchenBlackoutActive();
 
 window.addEventListener('DOMContentLoaded', () => {
-    // 🚀 FIXED V54: Native verification triggers instantly when layouts finish mounting onto DOM branches
+    // 🚀 FIXED V55: Evaluates permission status natively right on layout load
     initNotificationGestureCheck();
     listenToOrderHistory();
     
