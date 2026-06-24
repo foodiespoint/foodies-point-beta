@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 49)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 50)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -72,7 +72,7 @@ const MASTER_MENU = [
     { id: "snack_18", title: "Falafel Mushakkal Veg. Roll", details: "40", category: "SNACKS" },
     { id: "snack_19", title: "Pani Poori", details: "15 (5 pc)", category: "SNACKS" },
     { id: "snack_20", title: "Tikki Chaat", details: "55 per plate", category: "SNACKS" },
-    { id: "snack_21", title: "Dahi vada", details: "60 per plate (4pc)", category: "SNACKS" },
+    { id: "snack_21", title: "Dahi vada", details: "60 per plate (4pc)", category: "SWEETS" },
     { id: "snack_22", title: "Raj Kachori", details: "85 per plate", category: "SNACKS" },
     { id: "snack_23", title: "Samosa", details: "12 per pc", category: "SNACKS" },
     { id: "snack_24", title: "Paneer Tikka", details: "240 per plate", category: "SNACKS" },
@@ -164,7 +164,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=49').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=50').then(reg => {
             if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -265,18 +265,11 @@ function triggerInstantNotification(messageText, type = 'success') {
 }
 
 // ==========================================
-// 5. BULLETPROOF IST TIMEZONE LOCKOUT ENGINE
+// 5. BULLETPROOF TIMEZONE LOCKOUT ENGINE (DISABLED FOR TESTING)
 // ==========================================
 function isKitchenBlackoutActive() {
-    const now = new Date();
-    const istFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false });
-    const istTimeParts = istFormatter.format(now).split(':');
-    const currentHour = parseInt(istTimeParts[0], 10);
-    const currentMinute = parseInt(istTimeParts[1], 10);
-    const totalMinutesPassed = (currentHour * 60) + currentMinute;
-    const lockStartMinutes = 18 * 60; // 6:00 PM
-    const lockReleaseMinutes = (21 * 60) + 30; // 9:30 PM
-    return (totalMinutesPassed >= lockStartMinutes && totalMinutesPassed < lockReleaseMinutes);
+    // 🚀 TIME LOCKOUT COMPLETELY DISABLED FOR UNRESTRICTED 24/7 TESTING
+    return false;
 }
 
 function enforceBlackoutUILayout() {
@@ -422,7 +415,6 @@ function submitOrder() {
 
     const newOrderRef = database.ref('orders').push();
 
-    // Fetch user OneSignal hardware profile string dynamically upon submission
     OneSignal.push(function() {
         OneSignal.getUserId(function(userId) {
             newOrderRef.set({ 
@@ -468,7 +460,6 @@ function closeConsoleAuthModal() {
     body.classList.remove('stop-scrolling');
 }
 
-// Credentials validated securely against 2026 criteria
 function submitConsolePIN() {
     const enteredPassword = document.getElementById('admin-pin-input').value;
     if (enteredPassword === ROUTING_SECRET_PIN) {
@@ -674,17 +665,14 @@ function initializeKitchenOrderStream() {
     });
 }
 
-// 🚀 ONESIGNAL CLIENT-TO-CLIENT PUSH LOGIC FOR TICKETS
 function updateTicketStatus(ticketId, targetState) { 
     const doubleCheck = confirm(`Confirm Action:\n\nAre you sure you want to mark this order as ${targetState}?`);
     if(!doubleCheck) return;
 
-    // Fetch snapshot to secure hardware destination token
     database.ref(`orders/${ticketId}`).once('value').then((snapshot) => {
         const orderData = snapshot.val();
         if (!orderData) return;
 
-        // Write status mutation update to system nodes
         database.ref(`orders/${ticketId}`).update({ status: targetState }); 
 
         const customerToken = orderData.oneSignalToken;
@@ -694,7 +682,6 @@ function updateTicketStatus(ticketId, targetState) {
                 ? "The kitchen has verified your ticket and is preparing your food." 
                 : "Your order was declined. Please check in with kitchen support.";
 
-            // Fire direct push authorization trigger array via fetch framework
             fetch("https://api.onesignal.com/notifications", {
                 method: "POST",
                 headers: {
