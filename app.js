@@ -165,13 +165,10 @@ const splashFailSafeGuard = setTimeout(() => {
 function evaluateStartupSequence() {
     if (!minimumSplashTimeMet) return;
 
-    // 🚀 FIXED V58: Dismiss the loading screen unconditionally first!
-    // This ensures the modal below it is actually visible to the user.
     forceDismissSplash();
 
     if (!('Notification' in window)) return;
 
-    // Trigger the gateway lock if permissions are missing
     if (Notification.permission !== 'granted') {
         showStrictNotificationModal();
     }
@@ -189,7 +186,7 @@ function forceDismissSplash() {
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js?v=58').then(reg => {
-            if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
+            if (!navigator.serviceWorker.controller) { forceDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
                 installingWorker.onstatechange = () => {
@@ -198,9 +195,9 @@ window.addEventListener('load', () => {
                     }
                 };
             };
-        }).catch(err => { console.error("SW Error:", err); tryDismissSplash(); });
+        }).catch(err => { console.error("SW Error:", err); forceDismissSplash(); });
     } else {
-        tryDismissSplash();
+        forceDismissSplash();
     }
 });
 
@@ -807,7 +804,7 @@ window.addEventListener('popstate', (event) => {
 });
 
 // ==========================================================================
-// 🚀 9. DEVELOPER UTILITY: NUKE DEVICE CACHE SCRIPT
+// 9. DEVELOPER UTILITY: NUKE DEVICE CACHE SCRIPT
 // ==========================================================================
 async function nukeAppCache() {
     console.log("Initiating complete site data wipe...");
