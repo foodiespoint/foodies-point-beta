@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 52)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 53)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -164,7 +164,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=52').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=53').then(reg => {
             if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -194,7 +194,6 @@ const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.as
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// OneSignal Multi-Platform Initialization (V16 Upgraded Syntax)
 window.OneSignal = window.OneSignal || [];
 OneSignal.push(async function() {
     await OneSignal.init({
@@ -202,6 +201,8 @@ OneSignal.push(async function() {
         notifyButton: { enable: false },
         allowLocalhostAsSecureOrigin: true
     });
+    // 🚀 Execute security gate evaluation automatically as soon as OneSignal completes compilation loops
+    initNotificationGestureCheck();
 });
 
 // ==========================================
@@ -210,7 +211,6 @@ OneSignal.push(async function() {
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); deferredPrompt = e; installPromptSupported = true; 
     if (localStorage.getItem('pwa_installed_successfully') !== 'true') showMandatoryModal();
-    else initNotificationGestureCheck(); 
 });
 
 function triggerNativeInstall() {
@@ -227,46 +227,65 @@ window.addEventListener('appinstalled', () => {
 function showMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'flex'; pwaOverlay.style.display = 'block'; body.classList.add('stop-scrolling'); } }
 function dismissMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'none'; pwaOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); initNotificationGestureCheck(); } }
 
-// 🚀 FIXED: Rewired to accurately look up OneSignal's V16 permission states
+// 🚀 FIXED: Absolute boot pipeline permission gating. Runs every single time the app turns on.
 function initNotificationGestureCheck() {
     if (!('Notification' in window)) return;
+    
     window.OneSignal = window.OneSignal || [];
     OneSignal.push(function() {
-        if (OneSignal.Notifications && OneSignal.Notifications.permission) return; 
+        // Evaluate native OneSignal framework mapping registration arrays
+        const holdsOperationalPermission = OneSignal.Notifications && OneSignal.Notifications.permission;
         
-        const triggerBlocker = () => {
-            if (pwaModal && pwaModal.style.display === 'flex') return;
-            if (updateSplash && updateSplash.style.display !== 'none') return;
-            if (OneSignal.Notifications && !OneSignal.Notifications.permission) showNotificationModal();
-        };
-        window.addEventListener('click', triggerBlocker, { once: true });
-        window.addEventListener('touchstart', triggerBlocker, { once: true });
+        if (!holdsOperationalPermission) {
+            showNotificationModal();
+        }
     });
 }
 
-function showNotificationModal() { if (notifModal && notifOverlay) { notifModal.style.display = 'flex'; notifOverlay.style.display = 'block'; body.classList.add('stop-scrolling'); } }
-
-// 🚀 FIXED: Hooked modal completion action straight into OneSignal tracking registration routines
-function acceptNotificationModal() {
+// 🚀 FIXED: Locks layout layers securely and formats interface text parameters dynamically if hard blocked
+function showNotificationModal() { 
     if (notifModal && notifOverlay) { 
-        notifModal.style.display = 'none'; 
-        notifOverlay.style.display = 'none'; 
-        body.classList.remove('stop-scrolling'); 
-    }
-    
+        if (Notification.permission === 'denied') {
+            const descriptionDiv = notifModal.querySelector('div:nth-of-type(2)');
+            if (descriptionDiv) {
+                descriptionDiv.innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts are Blocked!</span><br>Please click the site settings padlock icon (🔒) in your browser address bar, reset the notification rule to 'Allow', and re-boot the application to proceed.";
+            }
+            const actionBtn = notifModal.querySelector('.blocker-btn');
+            if (actionBtn) {
+                actionBtn.innerText = "Permissions Blocked";
+                actionBtn.style.backgroundColor = "#9CA3AF";
+                actionBtn.disabled = true;
+                actionBtn.style.cursor = "not-allowed";
+            }
+        }
+        notifModal.style.display = 'flex'; 
+        notifOverlay.style.display = 'block'; 
+        body.classList.add('stop-scrolling'); 
+    } 
+}
+
+// 🚀 FIXED: Gated validation. Will stay visible forever if user dismisses or declines prompt triggers
+function acceptNotificationModal() {
     window.OneSignal = window.OneSignal || [];
     OneSignal.push(async function() {
         try {
-            // Forces OneSignal to trigger registration sequence and fetch push subscription parameters
             await OneSignal.Notifications.requestPermission();
+            
             if (OneSignal.Notifications.permission) {
+                // Remove blocker layers only if permission array strictly equals true
+                if (notifModal && notifOverlay) { 
+                    notifModal.style.display = 'none'; 
+                    notifOverlay.style.display = 'none'; 
+                    body.classList.remove('stop-scrolling'); 
+                }
                 triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
             } else {
-                initNotificationGestureCheck();
+                triggerInstantNotification('⚠️ Verification failed. Permission is required.', 'error');
+                showNotificationModal();
             }
         } catch (e) {
             console.error("OneSignal permission handshake failed:", e);
-            initNotificationGestureCheck();
+            showNotificationModal();
         }
     });
 }
@@ -487,6 +506,7 @@ function closeConsoleAuthModal() {
     body.classList.remove('stop-scrolling');
 }
 
+// Security validations processed relative to operational credentials
 function submitConsolePIN() {
     const enteredPassword = document.getElementById('admin-pin-input').value;
     if (enteredPassword === ROUTING_SECRET_PIN) {
@@ -734,7 +754,6 @@ function archiveTicket(ticketId) { database.ref(`orders/${ticketId}`).update({ a
 let blackoutStateMemory = isKitchenBlackoutActive();
 
 window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => { if (!installPromptSupported) initNotificationGestureCheck(); }, 2000);
     listenToOrderHistory();
     
     setInterval(() => { 
