@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 53)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 54)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -164,7 +164,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=53').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=54').then(reg => {
             if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -201,12 +201,10 @@ OneSignal.push(async function() {
         notifyButton: { enable: false },
         allowLocalhostAsSecureOrigin: true
     });
-    // 🚀 Execute security gate evaluation automatically as soon as OneSignal completes compilation loops
-    initNotificationGestureCheck();
 });
 
 // ==========================================
-// 4. IN-APP TOAST NOTIFICATION ENGINE
+// 4. IN-APP TOAST NOTIFICATION ENGINE & UNBREAKABLE PERSISTENT GATEWAY
 // ==========================================
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); deferredPrompt = e; installPromptSupported = true; 
@@ -227,22 +225,16 @@ window.addEventListener('appinstalled', () => {
 function showMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'flex'; pwaOverlay.style.display = 'block'; body.classList.add('stop-scrolling'); } }
 function dismissMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'none'; pwaOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); initNotificationGestureCheck(); } }
 
-// 🚀 FIXED: Absolute boot pipeline permission gating. Runs every single time the app turns on.
+// 🚀 UPGRADED V54 HARDWARE SECURITY GATEWAY: Natively scans browser parameters instantly on layout parse
 function initNotificationGestureCheck() {
     if (!('Notification' in window)) return;
     
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function() {
-        // Evaluate native OneSignal framework mapping registration arrays
-        const holdsOperationalPermission = OneSignal.Notifications && OneSignal.Notifications.permission;
-        
-        if (!holdsOperationalPermission) {
-            showNotificationModal();
-        }
-    });
+    // Bypasses asynchronous CDN lags completely—scans browser state instantly
+    if (Notification.permission !== 'granted') {
+        showNotificationModal();
+    }
 }
 
-// 🚀 FIXED: Locks layout layers securely and formats interface text parameters dynamically if hard blocked
 function showNotificationModal() { 
     if (notifModal && notifOverlay) { 
         if (Notification.permission === 'denied') {
@@ -264,29 +256,33 @@ function showNotificationModal() {
     } 
 }
 
-// 🚀 FIXED: Gated validation. Will stay visible forever if user dismisses or declines prompt triggers
+// 🚀 FIXED V54 SYNCHRONOUS FLOW: Requests token natively within user gesture timeline to avoid browser punting
 function acceptNotificationModal() {
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(async function() {
-        try {
-            await OneSignal.Notifications.requestPermission();
-            
-            if (OneSignal.Notifications.permission) {
-                // Remove blocker layers only if permission array strictly equals true
-                if (notifModal && notifOverlay) { 
-                    notifModal.style.display = 'none'; 
-                    notifOverlay.style.display = 'none'; 
-                    body.classList.remove('stop-scrolling'); 
-                }
-                triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
-            } else {
-                triggerInstantNotification('⚠️ Verification failed. Permission is required.', 'error');
-                showNotificationModal();
+    if (!('Notification' in window)) return;
+
+    // Synchronously pop the native prompt immediately within the click execution thread!
+    Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            // Dismiss the modal layers safely now that criteria is satisfied
+            if (notifModal && notifOverlay) { 
+                notifModal.style.display = 'none'; 
+                notifOverlay.style.display = 'none'; 
+                body.classList.remove('stop-scrolling'); 
             }
-        } catch (e) {
-            console.error("OneSignal permission handshake failed:", e);
+            triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
+            
+            // Hand over the authorization token payload directly to the OneSignal SDK tracking layers
+            window.OneSignal = window.OneSignal || [];
+            OneSignal.push(function() {
+                OneSignal.Notifications.requestPermission();
+            });
+        } else {
+            triggerInstantNotification('⚠️ Verification failed. Permission is required.', 'error');
             showNotificationModal();
         }
+    }).catch(err => {
+        console.error("Native permission check crashed:", err);
+        showNotificationModal();
     });
 }
 
@@ -506,7 +502,6 @@ function closeConsoleAuthModal() {
     body.classList.remove('stop-scrolling');
 }
 
-// Security validations processed relative to operational credentials
 function submitConsolePIN() {
     const enteredPassword = document.getElementById('admin-pin-input').value;
     if (enteredPassword === ROUTING_SECRET_PIN) {
@@ -754,6 +749,8 @@ function archiveTicket(ticketId) { database.ref(`orders/${ticketId}`).update({ a
 let blackoutStateMemory = isKitchenBlackoutActive();
 
 window.addEventListener('DOMContentLoaded', () => {
+    // 🚀 FIXED V54: Native verification triggers instantly when layouts finish mounting onto DOM branches
+    initNotificationGestureCheck();
     listenToOrderHistory();
     
     setInterval(() => { 
