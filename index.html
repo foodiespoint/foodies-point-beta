@@ -138,6 +138,17 @@
         <div id="splash-text" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 16px; color: #111827; letter-spacing: -0.2px; text-align: center; padding: 0 24px;">Checking for updates...</div>
     </div>
 
+    <script>
+        setTimeout(function() {
+            var splashEl = document.getElementById('update-splash');
+            if (splashEl) {
+                splashEl.style.transition = "opacity 0.4s ease, visibility 0.4s";
+                splashEl.style.opacity = "0";
+                setTimeout(function() { splashEl.style.display = "none"; }, 400);
+            }
+        }, 1500);
+    </script>
+
     <div id="admin-auth-overlay" class="modal-overlay" style="z-index: 15000;"></div>
     <div id="admin-auth-modal" class="centered-blocker" style="z-index: 15001;">
         <div style="font-size: 38px; margin-bottom: 10px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.05));">🔒</div>
