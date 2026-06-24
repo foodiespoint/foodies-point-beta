@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 56)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 57)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -14,6 +14,10 @@ let cart = [];
 let isConsoleViewActive = false;
 let currentLiveMenuArray = []; 
 let pendingLiveArray = [];     
+
+// 🚀 CLOUD PERSISTENCE VARIABLES
+let currentUserUid = null;
+let cloudTrackedOrders = [];
 
 const ROUTING_SECRET_PIN = "validatefoodies2026"; 
 
@@ -144,14 +148,34 @@ const MASTER_MENU = [
 ];
 
 // ==========================================================================
-// 2. RUNTIME ENGINE LOADING SPLASH SCREEN & SERVICE WORKER
+// 2. RUNTIME ENGINE LOADING SPLASH SCREEN & SEQUENCE CONTROLLER
 // ==========================================================================
 let minimumSplashTimeMet = false;
-setTimeout(() => { minimumSplashTimeMet = true; tryDismissSplash(); }, 1200);
 
-const splashFailSafeGuard = setTimeout(() => { forceDismissSplash(); }, 4000);
+setTimeout(() => { 
+    minimumSplashTimeMet = true; 
+    evaluateStartupSequence(); 
+}, 1200);
 
-function tryDismissSplash() { if (minimumSplashTimeMet) forceDismissSplash(); }
+const splashFailSafeGuard = setTimeout(() => { 
+    minimumSplashTimeMet = true;
+    evaluateStartupSequence(); 
+}, 4000);
+
+function evaluateStartupSequence() {
+    if (!minimumSplashTimeMet) return;
+
+    if (!('Notification' in window)) {
+        forceDismissSplash(); 
+        return;
+    }
+
+    if (Notification.permission === 'granted') {
+        forceDismissSplash();
+    } else {
+        showStrictNotificationModal();
+    }
+}
 
 function forceDismissSplash() {
     clearTimeout(splashFailSafeGuard);
@@ -164,7 +188,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=56').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=57').then(reg => {
             if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -188,11 +212,31 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 3. FIREBASE & ONESIGNAL SDK COUPLING INFRASTRUCTURE
+// 3. FIREBASE INFRASTRUCTURE & ANONYMOUS AUTHENTICATION CLOUD SYNC
 // ==========================================================================
 const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
+const auth = firebase.auth(); 
+
+// 🚀 NATIVE CLOUD AUTHENTICATION PIPELINE
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUserUid = user.uid;
+        initializeCloudDataSync();
+    } else {
+        auth.signInAnonymously().catch(err => console.error("Firebase Auth Error:", err));
+    }
+});
+
+function initializeCloudDataSync() {
+    // ☁️ Replaces localStorage: Pulls order history directly from the user's permanent cloud node
+    database.ref(`users/${currentUserUid}/tracked_orders`).on('value', (snapshot) => {
+        cloudTrackedOrders = [];
+        snapshot.forEach((child) => { cloudTrackedOrders.push(child.val()); });
+        renderOrderHistory(); 
+    });
+}
 
 window.OneSignal = window.OneSignal || [];
 OneSignal.push(async function() {
@@ -204,11 +248,10 @@ OneSignal.push(async function() {
 });
 
 // ==========================================
-// 4. IN-APP TOAST NOTIFICATION ENGINE & UNBREAKABLE PERSISTENT GATEWAY
+// 4. PERSISTENT GATEWAY & ALERTS MODAL ENGINE
 // ==========================================
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); deferredPrompt = e; installPromptSupported = true; 
-    if (localStorage.getItem('pwa_installed_successfully') !== 'true') showMandatoryModal();
 });
 
 function triggerNativeInstall() {
@@ -223,61 +266,62 @@ window.addEventListener('appinstalled', () => {
 });
 
 function showMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'flex'; pwaOverlay.style.display = 'block'; body.classList.add('stop-scrolling'); } }
-function dismissMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'none'; pwaOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); initNotificationGestureCheck(); } }
+function dismissMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'none'; pwaOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); } }
 
-function initNotificationGestureCheck() {
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== 'granted') {
-        showNotificationModal();
+function showStrictNotificationModal() {
+    if (notifModal && notifOverlay) {
+        const descriptionDiv = notifModal.querySelector('div:nth-of-type(3)');
+        const actionBtn = notifModal.querySelector('.blocker-btn');
+
+        if (actionBtn) {
+            actionBtn.innerText = "OK";
+            actionBtn.disabled = false;
+            actionBtn.style.cursor = "pointer";
+            actionBtn.style.backgroundColor = "#FF4B3A";
+            actionBtn.onclick = handleMandatoryPermissionRequest;
+        }
+
+        if (Notification.permission === 'denied') {
+            if (descriptionDiv) {
+                descriptionDiv.innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts are Blocked!</span><br>Tapping OK cannot open the device prompt because permissions are blocked in your settings. Please clear/reset permissions via the browser padlock icon (🔒) to continue testing.";
+            }
+        } else {
+            if (descriptionDiv) {
+                descriptionDiv.innerHTML = "To track your orders in real-time and receive instant updates from the kitchen, enabling device notifications is mandatory.";
+            }
+        }
+
+        notifModal.style.display = 'flex';
+        notifOverlay.style.display = 'block';
+        body.classList.add('stop-scrolling');
     }
 }
 
-// 🚀 FIXED V56 DESCRIPTION TARGETING: Accurately targets paragraph element arrays without shifting template titles
-function showNotificationModal() { 
-    if (notifModal && notifOverlay) { 
-        if (Notification.permission === 'denied') {
-            // Targets the 3rd element inside layout node tree (the description block)
-            const descriptionDiv = notifModal.querySelector('div:nth-of-type(3)');
-            if (descriptionDiv) {
-                descriptionDiv.innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts are Blocked!</span><br>Please click the site settings padlock icon (🔒) in your browser address bar, change the notification permission back to 'Allow' (or click 'Reset permissions'), and refresh the app to complete testing.";
-            }
-            const actionBtn = notifModal.querySelector('.blocker-btn');
-            if (actionBtn) {
-                actionBtn.innerText = "Blocked in Settings";
-                actionBtn.style.backgroundColor = "#9CA3AF";
-                actionBtn.disabled = true;
-                actionBtn.style.cursor = "not-allowed";
-            }
-        }
-        notifModal.style.display = 'flex'; 
-        notifOverlay.style.display = 'block'; 
-        body.classList.add('stop-scrolling'); 
-    } 
-}
-
-function acceptNotificationModal() {
+function handleMandatoryPermissionRequest() {
     if (!('Notification' in window)) return;
 
     Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
-            if (notifModal && notifOverlay) { 
-                notifModal.style.display = 'none'; 
-                notifOverlay.style.display = 'none'; 
-                body.classList.remove('stop-scrolling'); 
+            if (notifModal && notifOverlay) {
+                notifModal.style.display = 'none';
+                notifOverlay.style.display = 'none';
+                body.classList.remove('stop-scrolling');
             }
+            forceDismissSplash(); 
             triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
             
             window.OneSignal = window.OneSignal || [];
             OneSignal.push(function() {
                 OneSignal.Notifications.requestPermission();
             });
+            
         } else {
-            triggerInstantNotification('⚠️ Verification failed. Permission is required.', 'error');
-            showNotificationModal();
+            triggerInstantNotification('⚠️ Access required to utilize the application.', 'error');
+            showStrictNotificationModal();
         }
     }).catch(err => {
-        console.error("Native permission check crashed:", err);
-        showNotificationModal();
+        console.error("Critical crash during system native request handler:", err);
+        showStrictNotificationModal();
     });
 }
 
@@ -357,21 +401,21 @@ function renderCustomerMenu() {
 }
 
 // ==========================================
-// 7. CLIENT-SIDE ORDER HISTORY PIPELINE
+// 7. CLIENT-SIDE CLOUD ORDER HISTORY PIPELINE
 // ==========================================
-function listenToOrderHistory() {
+function renderOrderHistory() {
     if (isKitchenBlackoutActive()) return enforceBlackoutUILayout();
     const historyContainer = document.getElementById('history-container');
-    const trackList = JSON.parse(localStorage.getItem('foodies_tracked_orders') || '[]');
     
-    if (trackList.length === 0) { 
+    // 🚀 Reads directly from the global cloud array instead of localStorage
+    if (cloudTrackedOrders.length === 0) { 
         historyContainer.innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin-top: 12px;">No orders placed today yet.</p>'; return; 
     }
     if (historyContainer.innerHTML.includes("No orders placed today") || historyContainer.innerHTML.includes("History cleared")) { historyContainer.innerHTML = ''; }
 
     let notifiedStatuses = JSON.parse(localStorage.getItem('foodies_notified_statuses') || '{}');
     
-    trackList.forEach(orderId => {
+    cloudTrackedOrders.forEach(orderId => {
         database.ref(`orders/${orderId}`).on('value', (snapshot) => {
             if (isKitchenBlackoutActive() || isConsoleViewActive) return; 
             const order = snapshot.val();
@@ -466,8 +510,11 @@ function submitOrder() {
         archived: false,
         oneSignalToken: hardwareToken
     }).then(() => {
-        let trackList = JSON.parse(localStorage.getItem('foodies_tracked_orders') || '[]'); trackList.push(newOrderRef.key); localStorage.setItem('foodies_tracked_orders', JSON.stringify(trackList));
-        listenToOrderHistory(); 
+        // 🚀 CLOUD PERSISTENCE: Push the order key to the user's permanent cloud account instead of local cache
+        if (currentUserUid) {
+            database.ref(`users/${currentUserUid}/tracked_orders`).push(newOrderRef.key);
+        }
+        
         triggerInstantNotification("Order dispatched to the kitchen!", "success");
         cart = []; cartBtn.style.display = 'none'; closeCheckout();
         document.getElementById('customer-first-name').value = ''; document.getElementById('customer-last-name').value = ''; document.getElementById('customer-phone').value = '';
@@ -744,9 +791,6 @@ function archiveTicket(ticketId) { database.ref(`orders/${ticketId}`).update({ a
 let blackoutStateMemory = isKitchenBlackoutActive();
 
 window.addEventListener('DOMContentLoaded', () => {
-    initNotificationGestureCheck();
-    listenToOrderHistory();
-    
     setInterval(() => { 
         const currentlyBlackedOut = isKitchenBlackoutActive();
         if (currentlyBlackedOut !== blackoutStateMemory) {
@@ -766,3 +810,33 @@ window.addEventListener('popstate', (event) => {
         window.location.reload();
     }
 });
+
+// ==========================================================================
+// 🚀 9. DEVELOPER UTILITY: NUKE DEVICE CACHE SCRIPT
+// ==========================================================================
+// To wipe a test device, open the browser's inspect console and type: nukeAppCache()
+async function nukeAppCache() {
+    console.log("Initiating complete site data wipe...");
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log("Local Storage cleared.");
+
+    if ('caches' in window) {
+        try {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(cache => caches.delete(cache)));
+            console.log("Service Worker Cache cleared.");
+        } catch (e) { console.error("Failed to clear cache:", e); }
+    }
+
+    if ('serviceWorker' in navigator) {
+        try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (let registration of registrations) { await registration.unregister(); }
+            console.log("Service Workers unregistered.");
+        } catch (e) { console.error("Failed to unregister SW:", e); }
+    }
+
+    alert("App data wiped successfully. Reloading...");
+    window.location.reload(true); 
+}
