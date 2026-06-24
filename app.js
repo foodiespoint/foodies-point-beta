@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 50)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 51)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -72,7 +72,7 @@ const MASTER_MENU = [
     { id: "snack_18", title: "Falafel Mushakkal Veg. Roll", details: "40", category: "SNACKS" },
     { id: "snack_19", title: "Pani Poori", details: "15 (5 pc)", category: "SNACKS" },
     { id: "snack_20", title: "Tikki Chaat", details: "55 per plate", category: "SNACKS" },
-    { id: "snack_21", title: "Dahi vada", details: "60 per plate (4pc)", category: "SWEETS" },
+    { id: "snack_21", title: "Dahi vada", details: "60 per plate (4pc)", category: "SNACKS" },
     { id: "snack_22", title: "Raj Kachori", details: "85 per plate", category: "SNACKS" },
     { id: "snack_23", title: "Samosa", details: "12 per pc", category: "SNACKS" },
     { id: "snack_24", title: "Paneer Tikka", details: "240 per plate", category: "SNACKS" },
@@ -164,7 +164,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=50').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=51').then(reg => {
             if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -194,12 +194,13 @@ const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.as
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// OneSignal Multi-Platform Initialization
+// OneSignal Multi-Platform Initialization (V16 Upgraded Syntax)
 window.OneSignal = window.OneSignal || [];
-OneSignal.push(function() {
-    OneSignal.init({
-        appId: "YOUR_ONESIGNAL_APP_ID", // 👈 Replace with your real OneSignal App ID
-        notifyButton: { enable: false }
+OneSignal.push(async function() {
+    await OneSignal.init({
+        appId: "ad014d82-5244-4531-bca8-f7acf471d23d", 
+        notifyButton: { enable: false },
+        allowLocalhostAsSecureOrigin: true
     });
 });
 
@@ -415,26 +416,32 @@ function submitOrder() {
 
     const newOrderRef = database.ref('orders').push();
 
-    OneSignal.push(function() {
-        OneSignal.getUserId(function(userId) {
-            newOrderRef.set({ 
-                id: newOrderRef.key, 
-                customerName: completeFullName, 
-                customerPhone: phone, 
-                items: itemSummaryString, 
-                status: "PENDING", 
-                timestamp: Date.now(), 
-                archived: false,
-                oneSignalToken: userId || "NOT_ALLOWED"
-            }).then(() => {
-                let trackList = JSON.parse(localStorage.getItem('foodies_tracked_orders') || '[]'); trackList.push(newOrderRef.key); localStorage.setItem('foodies_tracked_orders', JSON.stringify(trackList));
-                listenToOrderHistory(); 
-                triggerInstantNotification("Order dispatched to the kitchen!", "success");
-                cart = []; cartBtn.style.display = 'none'; closeCheckout();
-                document.getElementById('customer-first-name').value = ''; document.getElementById('customer-last-name').value = ''; document.getElementById('customer-phone').value = '';
-            }).catch(() => triggerInstantNotification("Error sending order.", "error"));
-        });
-    });
+    // 🚀 UPGRADED V16 SDK STRUCTURE: Extraction of Push Subscription ID String without asymmetric errors
+    let hardwareToken = "NOT_ALLOWED";
+    try {
+        if (window.OneSignal && OneSignal.User && OneSignal.User.PushSubscription) {
+            hardwareToken = OneSignal.User.PushSubscription.id || "NOT_ALLOWED";
+        }
+    } catch (e) {
+        console.warn("Could not handle native hardware token extraction:", e);
+    }
+
+    newOrderRef.set({ 
+        id: newOrderRef.key, 
+        customerName: completeFullName, 
+        customerPhone: phone, 
+        items: itemSummaryString, 
+        status: "PENDING", 
+        timestamp: Date.now(), 
+        archived: false,
+        oneSignalToken: hardwareToken
+    }).then(() => {
+        let trackList = JSON.parse(localStorage.getItem('foodies_tracked_orders') || '[]'); trackList.push(newOrderRef.key); localStorage.setItem('foodies_tracked_orders', JSON.stringify(trackList));
+        listenToOrderHistory(); 
+        triggerInstantNotification("Order dispatched to the kitchen!", "success");
+        cart = []; cartBtn.style.display = 'none'; closeCheckout();
+        document.getElementById('customer-first-name').value = ''; document.getElementById('customer-last-name').value = ''; document.getElementById('customer-phone').value = '';
+    }).catch(() => triggerInstantNotification("Error sending order.", "error"));
 }
 
 // ==========================================================================
@@ -531,6 +538,7 @@ function filterConsoleMenu() {
     });
 }
 
+// Handle Checkbox Selection Mutate Nodes
 function handleCheckboxChange(chk, itemId) {
     const index = currentLiveMenuArray.findIndex(m => m.id === itemId);
     if (!chk.checked && index !== -1) {
@@ -665,6 +673,7 @@ function initializeKitchenOrderStream() {
     });
 }
 
+// 🚀 LIVE ONESIGNAL CORS PROXIED PIPELINE ENGINE
 function updateTicketStatus(ticketId, targetState) { 
     const doubleCheck = confirm(`Confirm Action:\n\nAre you sure you want to mark this order as ${targetState}?`);
     if(!doubleCheck) return;
@@ -682,20 +691,23 @@ function updateTicketStatus(ticketId, targetState) {
                 ? "The kitchen has verified your ticket and is preparing your food." 
                 : "Your order was declined. Please check in with kitchen support.";
 
-            fetch("https://api.onesignal.com/notifications", {
+            // ⚡ CORS Proxy redirection pipeline to bypass browser runtime headers securely
+            fetch("https://corsproxy.io/?https://api.onesignal.com/notifications", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",
-                    "Authorization": "Basic YOUR_ONESIGNAL_REST_API_KEY" // 👈 Replace with real REST API Key
+                    "Authorization": "Basic os_v2_app_vuau3assirbvdpfi66wpi4oshwmnjoxo5crepuuesz5rn67apboysov2putkhzo52d6wdk6izm2cnn7temdw4rphwc4ljervdun6mia" 
                 },
                 body: JSON.stringify({
-                    app_id: "YOUR_ONESIGNAL_APP_ID", // 👈 Replace with real OneSignal App ID
+                    app_id: "ad014d82-5244-4531-bca8-f7acf471d23d", 
                     include_subscription_ids: [customerToken], 
                     headings: {"en": messageTitle},
                     contents: {"en": messageBody},
                     priority: 10
                 })
-            }).catch(err => console.error("OneSignal Fetch execution failed:", err));
+            }).then(res => {
+                console.log("OneSignal Proxy Delivery Status Payload code:", res.status);
+            }).catch(err => console.error("OneSignal Fetch execution failed through proxy:", err));
         }
     });
 }
@@ -720,6 +732,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }, 5000);
 });
 
+// Interceptor Router for Android Native Framework Back Button Actions
 window.addEventListener('popstate', (event) => {
     if (isConsoleViewActive && window.location.hash !== '#console') {
         isConsoleViewActive = false;
