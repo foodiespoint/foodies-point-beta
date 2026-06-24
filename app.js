@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 57)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 58)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -15,7 +15,7 @@ let isConsoleViewActive = false;
 let currentLiveMenuArray = []; 
 let pendingLiveArray = [];     
 
-// 🚀 CLOUD PERSISTENCE VARIABLES
+// CLOUD PERSISTENCE VARIABLES
 let currentUserUid = null;
 let cloudTrackedOrders = [];
 
@@ -165,14 +165,14 @@ const splashFailSafeGuard = setTimeout(() => {
 function evaluateStartupSequence() {
     if (!minimumSplashTimeMet) return;
 
-    if (!('Notification' in window)) {
-        forceDismissSplash(); 
-        return;
-    }
+    // 🚀 FIXED V58: Dismiss the loading screen unconditionally first!
+    // This ensures the modal below it is actually visible to the user.
+    forceDismissSplash();
 
-    if (Notification.permission === 'granted') {
-        forceDismissSplash();
-    } else {
+    if (!('Notification' in window)) return;
+
+    // Trigger the gateway lock if permissions are missing
+    if (Notification.permission !== 'granted') {
         showStrictNotificationModal();
     }
 }
@@ -188,7 +188,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=57').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=58').then(reg => {
             if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -219,7 +219,6 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const auth = firebase.auth(); 
 
-// 🚀 NATIVE CLOUD AUTHENTICATION PIPELINE
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUserUid = user.uid;
@@ -230,7 +229,6 @@ auth.onAuthStateChanged((user) => {
 });
 
 function initializeCloudDataSync() {
-    // ☁️ Replaces localStorage: Pulls order history directly from the user's permanent cloud node
     database.ref(`users/${currentUserUid}/tracked_orders`).on('value', (snapshot) => {
         cloudTrackedOrders = [];
         snapshot.forEach((child) => { cloudTrackedOrders.push(child.val()); });
@@ -307,7 +305,6 @@ function handleMandatoryPermissionRequest() {
                 notifOverlay.style.display = 'none';
                 body.classList.remove('stop-scrolling');
             }
-            forceDismissSplash(); 
             triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
             
             window.OneSignal = window.OneSignal || [];
@@ -407,7 +404,6 @@ function renderOrderHistory() {
     if (isKitchenBlackoutActive()) return enforceBlackoutUILayout();
     const historyContainer = document.getElementById('history-container');
     
-    // 🚀 Reads directly from the global cloud array instead of localStorage
     if (cloudTrackedOrders.length === 0) { 
         historyContainer.innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin-top: 12px;">No orders placed today yet.</p>'; return; 
     }
@@ -510,7 +506,6 @@ function submitOrder() {
         archived: false,
         oneSignalToken: hardwareToken
     }).then(() => {
-        // 🚀 CLOUD PERSISTENCE: Push the order key to the user's permanent cloud account instead of local cache
         if (currentUserUid) {
             database.ref(`users/${currentUserUid}/tracked_orders`).push(newOrderRef.key);
         }
@@ -814,7 +809,6 @@ window.addEventListener('popstate', (event) => {
 // ==========================================================================
 // 🚀 9. DEVELOPER UTILITY: NUKE DEVICE CACHE SCRIPT
 // ==========================================================================
-// To wipe a test device, open the browser's inspect console and type: nukeAppCache()
 async function nukeAppCache() {
     console.log("Initiating complete site data wipe...");
     localStorage.clear();
