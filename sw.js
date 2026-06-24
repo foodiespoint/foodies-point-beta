@@ -29,7 +29,7 @@ try {
     console.warn("FCM background initialization skipped/failed in SW.", e);
 }
 
-const CACHE_NAME = 'foodies-cache-v78';
+const CACHE_NAME = 'foodies-cache-v79';
 const ASSETS = ['', 'index.html', 'app.js', 'manifest.json', 'icon.png'];
 
 self.addEventListener('install', (event) => {
