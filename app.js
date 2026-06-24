@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 51)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 52)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -164,7 +164,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=51').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=52').then(reg => {
             if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -227,25 +227,47 @@ window.addEventListener('appinstalled', () => {
 function showMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'flex'; pwaOverlay.style.display = 'block'; body.classList.add('stop-scrolling'); } }
 function dismissMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'none'; pwaOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); initNotificationGestureCheck(); } }
 
+// 🚀 FIXED: Rewired to accurately look up OneSignal's V16 permission states
 function initNotificationGestureCheck() {
     if (!('Notification' in window)) return;
-    if (Notification.permission === 'granted') return;
-    const triggerBlocker = () => {
-        if (pwaModal && pwaModal.style.display === 'flex') return;
-        if (updateSplash && updateSplash.style.display !== 'none') return;
-        if (Notification.permission !== 'granted') showNotificationModal();
-    };
-    window.addEventListener('click', triggerBlocker, { once: true });
-    window.addEventListener('touchstart', triggerBlocker, { once: true });
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function() {
+        if (OneSignal.Notifications && OneSignal.Notifications.permission) return; 
+        
+        const triggerBlocker = () => {
+            if (pwaModal && pwaModal.style.display === 'flex') return;
+            if (updateSplash && updateSplash.style.display !== 'none') return;
+            if (OneSignal.Notifications && !OneSignal.Notifications.permission) showNotificationModal();
+        };
+        window.addEventListener('click', triggerBlocker, { once: true });
+        window.addEventListener('touchstart', triggerBlocker, { once: true });
+    });
 }
 
 function showNotificationModal() { if (notifModal && notifOverlay) { notifModal.style.display = 'flex'; notifOverlay.style.display = 'block'; body.classList.add('stop-scrolling'); } }
 
+// 🚀 FIXED: Hooked modal completion action straight into OneSignal tracking registration routines
 function acceptNotificationModal() {
-    if (notifModal && notifOverlay) { notifModal.style.display = 'none'; notifOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); }
-    Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
-        else initNotificationGestureCheck();
+    if (notifModal && notifOverlay) { 
+        notifModal.style.display = 'none'; 
+        notifOverlay.style.display = 'none'; 
+        body.classList.remove('stop-scrolling'); 
+    }
+    
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(async function() {
+        try {
+            // Forces OneSignal to trigger registration sequence and fetch push subscription parameters
+            await OneSignal.Notifications.requestPermission();
+            if (OneSignal.Notifications.permission) {
+                triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
+            } else {
+                initNotificationGestureCheck();
+            }
+        } catch (e) {
+            console.error("OneSignal permission handshake failed:", e);
+            initNotificationGestureCheck();
+        }
     });
 }
 
@@ -269,7 +291,6 @@ function triggerInstantNotification(messageText, type = 'success') {
 // 5. BULLETPROOF TIMEZONE LOCKOUT ENGINE (DISABLED FOR TESTING)
 // ==========================================
 function isKitchenBlackoutActive() {
-    // 🚀 TIME LOCKOUT COMPLETELY DISABLED FOR UNRESTRICTED 24/7 TESTING
     return false;
 }
 
@@ -416,7 +437,6 @@ function submitOrder() {
 
     const newOrderRef = database.ref('orders').push();
 
-    // 🚀 UPGRADED V16 SDK STRUCTURE: Extraction of Push Subscription ID String without asymmetric errors
     let hardwareToken = "NOT_ALLOWED";
     try {
         if (window.OneSignal && OneSignal.User && OneSignal.User.PushSubscription) {
@@ -538,7 +558,6 @@ function filterConsoleMenu() {
     });
 }
 
-// Handle Checkbox Selection Mutate Nodes
 function handleCheckboxChange(chk, itemId) {
     const index = currentLiveMenuArray.findIndex(m => m.id === itemId);
     if (!chk.checked && index !== -1) {
@@ -673,7 +692,6 @@ function initializeKitchenOrderStream() {
     });
 }
 
-// 🚀 LIVE ONESIGNAL CORS PROXIED PIPELINE ENGINE
 function updateTicketStatus(ticketId, targetState) { 
     const doubleCheck = confirm(`Confirm Action:\n\nAre you sure you want to mark this order as ${targetState}?`);
     if(!doubleCheck) return;
@@ -691,7 +709,6 @@ function updateTicketStatus(ticketId, targetState) {
                 ? "The kitchen has verified your ticket and is preparing your food." 
                 : "Your order was declined. Please check in with kitchen support.";
 
-            // ⚡ CORS Proxy redirection pipeline to bypass browser runtime headers securely
             fetch("https://corsproxy.io/?https://api.onesignal.com/notifications", {
                 method: "POST",
                 headers: {
@@ -732,7 +749,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }, 5000);
 });
 
-// Interceptor Router for Android Native Framework Back Button Actions
 window.addEventListener('popstate', (event) => {
     if (isConsoleViewActive && window.location.hash !== '#console') {
         isConsoleViewActive = false;
