@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 55)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 56)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -164,7 +164,7 @@ function forceDismissSplash() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=55').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=56').then(reg => {
             if (!navigator.serviceWorker.controller) { tryDismissSplash(); return; }
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -225,30 +225,39 @@ window.addEventListener('appinstalled', () => {
 function showMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'flex'; pwaOverlay.style.display = 'block'; body.classList.add('stop-scrolling'); } }
 function dismissMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'none'; pwaOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); initNotificationGestureCheck(); } }
 
-// 🚀 FIXED V55: Checks permission status synchronously on framework parse execution maps
 function initNotificationGestureCheck() {
     if (!('Notification' in window)) return;
-    
-    // Locks UI frame instantly on boot loop if status is anything other than granted
     if (Notification.permission !== 'granted') {
         showNotificationModal();
     }
 }
 
-// 🚀 FIXED V55: Keeps the template popup clean with only the "Allow Alerts" operational button
+// 🚀 FIXED V56 DESCRIPTION TARGETING: Accurately targets paragraph element arrays without shifting template titles
 function showNotificationModal() { 
     if (notifModal && notifOverlay) { 
+        if (Notification.permission === 'denied') {
+            // Targets the 3rd element inside layout node tree (the description block)
+            const descriptionDiv = notifModal.querySelector('div:nth-of-type(3)');
+            if (descriptionDiv) {
+                descriptionDiv.innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts are Blocked!</span><br>Please click the site settings padlock icon (🔒) in your browser address bar, change the notification permission back to 'Allow' (or click 'Reset permissions'), and refresh the app to complete testing.";
+            }
+            const actionBtn = notifModal.querySelector('.blocker-btn');
+            if (actionBtn) {
+                actionBtn.innerText = "Blocked in Settings";
+                actionBtn.style.backgroundColor = "#9CA3AF";
+                actionBtn.disabled = true;
+                actionBtn.style.cursor = "not-allowed";
+            }
+        }
         notifModal.style.display = 'flex'; 
         notifOverlay.style.display = 'block'; 
         body.classList.add('stop-scrolling'); 
     } 
 }
 
-// 🚀 FIXED V55 SYNCHRONOUS HANDSHAKE: Fires prompt entirely within user gesture timeline to satisfy mobile browsers
 function acceptNotificationModal() {
     if (!('Notification' in window)) return;
 
-    // Direct synchronous call inside click thread context
     Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
             if (notifModal && notifOverlay) { 
@@ -258,7 +267,6 @@ function acceptNotificationModal() {
             }
             triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
             
-            // Connect the generated authorization token to the active OneSignal routing instances
             window.OneSignal = window.OneSignal || [];
             OneSignal.push(function() {
                 OneSignal.Notifications.requestPermission();
@@ -736,7 +744,6 @@ function archiveTicket(ticketId) { database.ref(`orders/${ticketId}`).update({ a
 let blackoutStateMemory = isKitchenBlackoutActive();
 
 window.addEventListener('DOMContentLoaded', () => {
-    // 🚀 FIXED V55: Evaluates permission status natively right on layout load
     initNotificationGestureCheck();
     listenToOrderHistory();
     
