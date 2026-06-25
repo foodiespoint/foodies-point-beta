@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 59)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 60)
 // ==========================================================================
 let deferredPrompt = null;
 let installPromptSupported = false; 
@@ -142,7 +142,7 @@ const MASTER_MENU = [
 ];
 
 // ==========================================================================
-// 2. RUNTIME ENGINE LOADING SPLASH SCREEN & SEQUENCE CONTROLLER
+// 2. STRICT LINEAR STARTUP SEQUENCE ENGINE (V60)
 // ==========================================================================
 let minimumSplashTimeMet = false;
 
@@ -156,16 +156,33 @@ const splashFailSafeGuard = setTimeout(() => {
     evaluateStartupSequence(); 
 }, 4000);
 
+// Checks if the app is physically installed on the home screen
+function isAppInstalled() {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isIosStandalone = window.navigator.standalone === true;
+    const hasInstalledFlag = localStorage.getItem('pwa_installed_successfully') === 'true';
+    return isStandalone || isIosStandalone || hasInstalledFlag;
+}
+
+// 🚀 FIXED V60: The Master Gatekeeper. Evaluates conditions in exact order.
 function evaluateStartupSequence() {
     if (!minimumSplashTimeMet) return;
-
     forceDismissSplash();
 
-    if (!('Notification' in window)) return;
-
-    if (Notification.permission !== 'granted') {
-        showStrictNotificationModal();
+    // GATE 1: PWA Installation Check
+    if (!isAppInstalled()) {
+        showMandatoryInstallModal();
+        return; // Halt here until installed
     }
+
+    // GATE 2: Notification Permission Check
+    if ('Notification' in window && Notification.permission !== 'granted') {
+        showStrictNotificationModal();
+        return; // Halt here until permissions are granted
+    }
+
+    // GATE 3: Both conditions met. Boot the application.
+    bootApplication();
 }
 
 function forceDismissSplash() {
@@ -177,10 +194,26 @@ function forceDismissSplash() {
     }
 }
 
+// The core engine start loop (Only fires if gates are clear)
+function bootApplication() {
+    initializeCloudDataSync();
+    
+    setInterval(() => { 
+        const currentlyBlackedOut = isKitchenBlackoutActive();
+        if (currentlyBlackedOut !== blackoutStateMemory) {
+            blackoutStateMemory = currentlyBlackedOut;
+            if (currentlyBlackedOut) enforceBlackoutUILayout();
+            else renderCustomerMenu();
+        } else if (currentlyBlackedOut) {
+            enforceBlackoutUILayout();
+        }
+    }, 5000);
+}
+
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=59').then(reg => {
-            if (!navigator.serviceWorker.controller) { forceDismissSplash(); return; }
+        navigator.serviceWorker.register('sw.js?v=60').then(reg => {
+            if (!navigator.serviceWorker.controller) return; 
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
                 installingWorker.onstatechange = () => {
@@ -189,9 +222,7 @@ window.addEventListener('load', () => {
                     }
                 };
             };
-        }).catch(err => { console.error("SW Error:", err); forceDismissSplash(); });
-    } else {
-        forceDismissSplash();
+        }).catch(err => console.error("SW Error:", err));
     }
 });
 
@@ -203,67 +234,58 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 3. FIREBASE INFRASTRUCTURE & ANONYMOUS AUTHENTICATION CLOUD SYNC
+// 3. GATEWAY MODALS (INSTALLATION & ALERTS)
 // ==========================================================================
-const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const auth = firebase.auth(); 
 
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        currentUserUid = user.uid;
-        initializeCloudDataSync();
-    } else {
-        auth.signInAnonymously().catch(err => console.error("Firebase Auth Error:", err));
-    }
-});
-
-function initializeCloudDataSync() {
-    database.ref(`users/${currentUserUid}/tracked_orders`).on('value', (snapshot) => {
-        cloudTrackedOrders = [];
-        snapshot.forEach((child) => { cloudTrackedOrders.push(child.val()); });
-        renderOrderHistory(); 
-    });
-}
-
-window.OneSignal = window.OneSignal || [];
-OneSignal.push(async function() {
-    await OneSignal.init({
-        appId: "ad014d82-5244-4531-bca8-f7acf471d23d", 
-        notifyButton: { enable: false },
-        allowLocalhostAsSecureOrigin: true
-    });
-});
-
-// ==========================================
-// 4. PERSISTENT GATEWAY & APP INSTALL MODAL
-// ==========================================
-
-// 🚀 THIS IS THE EVENT THAT TRIGGERS THE INSTALLATION MODAL
+// --- INSTALLATION MODAL LOGIC ---
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); 
     deferredPrompt = e; 
     installPromptSupported = true; 
-    if (localStorage.getItem('pwa_installed_successfully') !== 'true') {
-        showMandatoryModal();
-    }
 });
 
+function showMandatoryInstallModal() { 
+    if (pwaModal && pwaOverlay) { 
+        pwaModal.style.display = 'flex'; 
+        pwaOverlay.style.display = 'block'; 
+        body.classList.add('stop-scrolling'); 
+    } 
+}
+
+function dismissInstallModal() { 
+    if (pwaModal && pwaOverlay) { 
+        pwaModal.style.display = 'none'; 
+        pwaOverlay.style.display = 'none'; 
+        body.classList.remove('stop-scrolling'); 
+    } 
+}
+
 function triggerNativeInstall() {
-    if (!deferredPrompt) { dismissMandatoryModal(); return; }
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; dismissMandatoryModal(); });
+    if (deferredPrompt) {
+        // Use the native prompt if the browser gave it to us
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => { 
+            if (choiceResult.outcome === 'accepted') {
+                deferredPrompt = null; 
+                localStorage.setItem('pwa_installed_successfully', 'true');
+                dismissInstallModal(); 
+                evaluateStartupSequence(); // Re-run the gates
+            }
+        });
+    } else {
+        // Fallback for iOS or aggressive browser caching: Tell them to do it manually
+        alert("To install: Tap the 3 dots menu (or Share button on iOS) and select 'Add to Home screen' or 'Install App'. Then launch the app from your home screen.");
+    }
 }
 
 window.addEventListener('appinstalled', () => { 
     localStorage.setItem('pwa_installed_successfully', 'true'); 
-    dismissMandatoryModal(); 
+    dismissInstallModal();
+    evaluateStartupSequence(); // Advance to Gate 2
 });
 
-function showMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'flex'; pwaOverlay.style.display = 'block'; body.classList.add('stop-scrolling'); } }
-function dismissMandatoryModal() { if (pwaModal && pwaOverlay) { pwaModal.style.display = 'none'; pwaOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); } }
 
+// --- NOTIFICATION MODAL LOGIC ---
 function showStrictNotificationModal() {
     if (notifModal && notifOverlay) {
         const descriptionDiv = notifModal.querySelector('div:nth-of-type(3)');
@@ -309,6 +331,8 @@ function handleMandatoryPermissionRequest() {
             OneSignal.push(function() {
                 OneSignal.Notifications.requestPermission();
             });
+
+            bootApplication(); // Move to final boot stage
             
         } else {
             triggerInstantNotification('⚠️ Access required to utilize the application.', 'error');
@@ -335,6 +359,40 @@ function triggerInstantNotification(messageText, type = 'success') {
         }, 4000);
     }
 }
+
+// ==========================================================================
+// 4. FIREBASE INFRASTRUCTURE & ANONYMOUS AUTHENTICATION CLOUD SYNC
+// ==========================================================================
+const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const auth = firebase.auth(); 
+
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUserUid = user.uid;
+    } else {
+        auth.signInAnonymously().catch(err => console.error("Firebase Auth Error:", err));
+    }
+});
+
+function initializeCloudDataSync() {
+    if(!currentUserUid) return; // Guard clause
+    database.ref(`users/${currentUserUid}/tracked_orders`).on('value', (snapshot) => {
+        cloudTrackedOrders = [];
+        snapshot.forEach((child) => { cloudTrackedOrders.push(child.val()); });
+        renderOrderHistory(); 
+    });
+}
+
+window.OneSignal = window.OneSignal || [];
+OneSignal.push(async function() {
+    await OneSignal.init({
+        appId: "ad014d82-5244-4531-bca8-f7acf471d23d", 
+        notifyButton: { enable: false },
+        allowLocalhostAsSecureOrigin: true
+    });
+});
 
 // ==========================================
 // 5. BULLETPROOF TIMEZONE LOCKOUT ENGINE
@@ -782,19 +840,6 @@ function updateTicketStatus(ticketId, targetState) {
 function archiveTicket(ticketId) { database.ref(`orders/${ticketId}`).update({ archived: true }); }
 
 let blackoutStateMemory = isKitchenBlackoutActive();
-
-window.addEventListener('DOMContentLoaded', () => {
-    setInterval(() => { 
-        const currentlyBlackedOut = isKitchenBlackoutActive();
-        if (currentlyBlackedOut !== blackoutStateMemory) {
-            blackoutStateMemory = currentlyBlackedOut;
-            if (currentlyBlackedOut) enforceBlackoutUILayout();
-            else renderCustomerMenu();
-        } else if (currentlyBlackedOut) {
-            enforceBlackoutUILayout();
-        }
-    }, 5000);
-});
 
 window.addEventListener('popstate', (event) => {
     if (isConsoleViewActive && window.location.hash !== '#console') {
