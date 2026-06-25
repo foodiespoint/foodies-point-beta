@@ -165,23 +165,17 @@ function evaluateStartupSequence() {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     forceDismissSplash();
 
-    // Gate 1: Check PWA Installation
     if (!isStandalone) {
         showStrictInstallModal();
-    } 
-    // Gate 2: Check Notifications (First time default OR denied reminder)
-    else if ('Notification' in window) {
+    } else if ('Notification' in window) {
         if (Notification.permission === 'default') {
-            // First time opening the app, prompt them properly
             showStrictNotificationModal();
         } else if (Notification.permission === 'denied' && sessionStorage.getItem('notification_reminder_shown') !== 'true') {
-            // Notifications are blocked, show the reminder once per session
             showStrictNotificationModal();
         } else {
             bootApplication();
         }
     } else {
-        // Fallback for browsers that don't support notifications at all
         bootApplication();
     }
 }
@@ -228,7 +222,6 @@ function showStrictNotificationModal() {
         const actionBtn = document.getElementById('notif-ok-btn');
 
         if (Notification.permission === 'denied') {
-            // Set flag so the reminder only happens once per session
             sessionStorage.setItem('notification_reminder_shown', 'true');
             if(descriptionDiv) {
                 descriptionDiv.innerHTML = "Notifications are currently disabled. To receive real-time order tracking alerts, please enable notification access in your device settings.";
@@ -240,18 +233,17 @@ function showStrictNotificationModal() {
                     notifModal.style.display = 'none'; 
                     notifOverlay.style.display = 'none'; 
                     body.classList.remove('stop-scrolling'); 
-                    bootApplication(); // Proceed into the app without a prompt
+                    bootApplication(); 
                 };
             }
         } else {
-            // Permission is 'default' (First run)
             if(descriptionDiv) {
                 descriptionDiv.innerHTML = "To track your orders in real-time and receive instant updates from the kitchen, enabling device notifications is mandatory.";
             }
             if(actionBtn) {
                 actionBtn.innerText = "OK";
                 actionBtn.style.backgroundColor = "#FF4B3A";
-                actionBtn.onclick = handleMandatoryPermissionRequest; // Trigger the native prompt
+                actionBtn.onclick = handleMandatoryPermissionRequest; 
             }
         }
 
@@ -274,7 +266,6 @@ function handleMandatoryPermissionRequest() {
         if (permission === 'granted') {
             triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
         } else {
-            // They denied it, so set the session flag to avoid immediately nagging them again
             sessionStorage.setItem('notification_reminder_shown', 'true');
             triggerInstantNotification('⚠️ Notifications disabled. You will not receive live updates.', 'error');
         }
@@ -317,7 +308,6 @@ function bootApplication() {
             notifyButton: { enable: false }, 
             allowLocalhostAsSecureOrigin: true 
         });
-        // This will only show if the permission isn't already decided
         OneSignal.Notifications.requestPermission();
     });
 
@@ -381,9 +371,9 @@ function initializeCloudDataSync() {
     });
 }
 
-// ==========================================
+// ==========================================================================
 // 6. TIMEZONE ENGINE & LIVE MENU CONTROLLER
-// ==========================================
+// ==========================================================================
 function isKitchenBlackoutActive() { return false; } 
 
 function enforceBlackoutUILayout() {
@@ -392,7 +382,9 @@ function enforceBlackoutUILayout() {
     cart = [];
     if (cartBtn) cartBtn.style.display = 'none';
     const menuContainer = document.getElementById('menu-container');
-    menuContainer.innerHTML = `<div style="text-align: center; padding: 32px 16px; background-color: #FFFFFF; border-radius: 18px; border: 1px dashed #E5E7EB; width: 100%; box-sizing: border-box;"><div style="font-size: 32px; margin-bottom: 8px;">⏰</div><div style="font-weight: 700; font-size: 15px; color: #111827;">Kitchen Closed for Today</div><div style="color: #6B7280; font-size: 13px; margin-top: 4px; line-height: 1.5;">Tomorrow's live menu will be available after 9:30 PM IST.</div></div>`;
+    if (menuContainer) {
+        menuContainer.innerHTML = `<div style="text-align: center; padding: 32px 16px; background-color: #FFFFFF; border-radius: 18px; border: 1px dashed #E5E7EB; width: 100%; box-sizing: border-box;"><div style="font-size: 32px; margin-bottom: 8px;">⏰</div><div style="font-weight: 700; font-size: 15px; color: #111827;">Kitchen Closed for Today</div><div style="color: #6B7280; font-size: 13px; margin-top: 4px; line-height: 1.5;">Tomorrow's live menu will be available after 9:30 PM IST.</div></div>`;
+    }
 }
 
 const menuContainer = document.getElementById('menu-container');
@@ -408,6 +400,7 @@ database.ref('daily_live_menu').on('value', (snapshot) => {
 });
 
 function renderCustomerMenu() {
+    if (!menuContainer) return;
     menuContainer.innerHTML = ''; 
     if (currentLiveMenuArray.length === 0) {
         menuContainer.innerHTML = '<p style="text-align: center; color: #9CA3AF; margin-top: 20px;">The kitchen has not posted a menu yet today.</p>'; return;
@@ -440,6 +433,7 @@ function renderCustomerMenu() {
 function renderOrderHistory() {
     if (isKitchenBlackoutActive()) return enforceBlackoutUILayout();
     const historyContainer = document.getElementById('history-container');
+    if (!historyContainer) return;
     
     if (cloudTrackedOrders.length === 0) { 
         historyContainer.innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin-top: 12px;">No orders placed today yet.</p>'; return; 
@@ -493,25 +487,42 @@ function addToCart(id, title, details) {
     if (details.toLowerCase().includes("per plate") && existingItem && existingItem.quantity >= 5) return alert(`⚠️ Order Limit Exceeded!`);
     if (existingItem) existingItem.quantity += 1; else cart.push({ id, title, details, quantity: 1 });
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartBtn.style.display = 'block'; cartBtn.innerText = `View Order (${totalItems} items)`;
+    if (cartBtn) {
+        cartBtn.style.display = 'block'; 
+        cartBtn.innerText = `View Order (${totalItems} items)`;
+    }
 }
 
 function openCheckout() {
     if (isKitchenBlackoutActive()) return;
-    document.getElementById('checkout-modal').style.display = 'flex'; body.classList.add('stop-scrolling'); 
+    const checkoutMdl = document.getElementById('checkout-modal');
+    if (checkoutMdl) checkoutMdl.style.display = 'flex'; 
+    body.classList.add('stop-scrolling'); 
     const summaryDiv = document.getElementById('cart-summary');
-    let summaryHTML = '<div style="font-weight: 600; color: #111827; margin-bottom: 8px; font-size: 15px;">Selected Items:</div>';
-    cart.forEach(item => { summaryHTML += `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span>🟢 ${item.title}</span><span style="font-weight: 600; color: #111827;">x${item.quantity}</span></div>`; });
-    summaryDiv.innerHTML = summaryHTML;
+    if (summaryDiv) {
+        let summaryHTML = '<div style="font-weight: 600; color: #111827; margin-bottom: 8px; font-size: 15px;">Selected Items:</div>';
+        cart.forEach(item => { summaryHTML += `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span>🟢 ${item.title}</span><span style="font-weight: 600; color: #111827;">x${item.quantity}</span></div>`; });
+        summaryDiv.innerHTML = summaryHTML;
+    }
 }
 
-function closeCheckout() { document.getElementById('checkout-modal').style.display = 'none'; body.classList.remove('stop-scrolling'); }
+function closeCheckout() { 
+    const checkoutMdl = document.getElementById('checkout-modal');
+    if (checkoutMdl) checkoutMdl.style.display = 'none'; 
+    body.classList.remove('stop-scrolling'); 
+}
 
 function submitOrder() {
     if (isKitchenBlackoutActive()) return alert("The kitchen is currently closed for the day.");
-    const firstName = document.getElementById('customer-first-name').value.trim();
-    const lastName = document.getElementById('customer-last-name').value.trim();
-    const phone = document.getElementById('customer-phone').value.trim();
+    const firstNameEl = document.getElementById('customer-first-name');
+    const lastNameEl = document.getElementById('customer-last-name');
+    const phoneEl = document.getElementById('customer-phone');
+
+    if (!firstNameEl || !lastNameEl || !phoneEl) return;
+
+    const firstName = firstNameEl.value.trim();
+    const lastName = lastNameEl.value.trim();
+    const phone = phoneEl.value.trim();
 
     if (firstName === "" || lastName === "") return alert("Please enter both your First Name and Last Name.");
     if (phone === "" || phone.length !== 10) return alert("Please enter a valid 10-digit mobile number.");
@@ -548,13 +559,15 @@ function submitOrder() {
         }
         
         triggerInstantNotification("Order dispatched to the kitchen!", "success");
-        cart = []; cartBtn.style.display = 'none'; closeCheckout();
-        document.getElementById('customer-first-name').value = ''; document.getElementById('customer-last-name').value = ''; document.getElementById('customer-phone').value = '';
+        cart = []; 
+        if (cartBtn) cartBtn.style.display = 'none'; 
+        closeCheckout();
+        firstNameEl.value = ''; lastNameEl.value = ''; phoneEl.value = '';
     }).catch(() => triggerInstantNotification("Error sending order.", "error"));
 }
 
 // ==========================================================================
-// 🚀 8. KITCHEN CONSOLE ENGINE
+// 🚀 8. KITCHEN CONSOLE ENGINE (STRICT CRASH GUARDS APPLIED)
 // ==========================================================================
 function authenticateConsoleAccess() {
     if (isConsoleViewActive) {
@@ -564,43 +577,63 @@ function authenticateConsoleAccess() {
     } 
     if (localStorage.getItem('foodies_console_authenticated') === 'true') { launchConsoleLayout(); return; }
     
-    document.getElementById('admin-auth-overlay').style.display = 'block';
-    document.getElementById('admin-auth-modal').style.display = 'flex';
-    document.getElementById('admin-pin-input').value = ''; document.getElementById('admin-pin-input').focus();
+    const overlay = document.getElementById('admin-auth-overlay');
+    const modal = document.getElementById('admin-auth-modal');
+    const input = document.getElementById('admin-pin-input');
+
+    if (overlay) overlay.style.display = 'block';
+    if (modal) modal.style.display = 'flex';
+    if (input) { input.value = ''; input.focus(); }
     body.classList.add('stop-scrolling');
 }
 
 function closeConsoleAuthModal() {
-    document.getElementById('admin-auth-overlay').style.display = 'none';
-    document.getElementById('admin-auth-modal').style.display = 'none';
+    const overlay = document.getElementById('admin-auth-overlay');
+    const modal = document.getElementById('admin-auth-modal');
+    if (overlay) overlay.style.display = 'none';
+    if (modal) modal.style.display = 'none';
     body.classList.remove('stop-scrolling');
 }
 
 function submitConsolePIN() {
-    const enteredPassword = document.getElementById('admin-pin-input').value;
+    const input = document.getElementById('admin-pin-input');
+    const enteredPassword = input ? input.value : '';
     if (enteredPassword === ROUTING_SECRET_PIN) {
         localStorage.setItem('foodies_console_authenticated', 'true');
         closeConsoleAuthModal(); launchConsoleLayout();
-    } else { alert("✕ Authentication Failed."); document.getElementById('admin-pin-input').value = ''; }
+    } else { 
+        alert("✕ Authentication Failed."); 
+        if (input) input.value = ''; 
+    }
 }
 
 function launchConsoleLayout() {
     isConsoleViewActive = true;
-    document.getElementById('customer-view-layout').style.display = 'none';
-    if (cartBtn) cartBtn.style.display = 'none';
-    document.getElementById('kitchen-view-layout').style.display = 'flex';
-    document.getElementById('header-title-text').innerText = "Kitchen Console";
-    document.getElementById('view-toggle-action').innerText = "Exit";
-    document.getElementById('view-toggle-action').style.backgroundColor = "#DC2626";
     
+    const customerLayout = document.getElementById('customer-view-layout');
+    const kitchenLayout = document.getElementById('kitchen-view-layout');
+    const headerTitle = document.getElementById('header-title-text');
+    const toggleAction = document.getElementById('view-toggle-action');
     const searchBar = document.getElementById('console-search-bar');
+    const inventoryContainer = document.getElementById('kitchen-inventory-container');
+
+    if (customerLayout) customerLayout.style.display = 'none';
+    if (cartBtn) cartBtn.style.display = 'none';
+    if (kitchenLayout) kitchenLayout.style.display = 'flex';
+    if (headerTitle) headerTitle.innerText = "Kitchen Console";
+    if (toggleAction) {
+        toggleAction.innerText = "Exit";
+        toggleAction.style.backgroundColor = "#DC2626";
+    }
     if (searchBar) searchBar.value = '';
 
-    if (window.location.hash !== '#console') history.pushState({ view: 'console' }, 'Console', window.location.pathname + window.location.search + '#console');
+    if (window.location.hash !== '#console') {
+        history.pushState({ view: 'console' }, 'Console', window.location.pathname + window.location.search + '#console');
+    }
 
     initializeKitchenOrderStream();
     
-    const inventoryContainer = document.getElementById('kitchen-inventory-container');
+    if (!inventoryContainer) return; // Completely safety stop if structural element doesn't exist
     inventoryContainer.innerHTML = ''; 
     
     const sortedMenu = [...MASTER_MENU].sort((a, b) => {
@@ -638,11 +671,12 @@ function launchConsoleLayout() {
 }
 
 function filterConsoleMenu() {
-    const query = document.getElementById('console-search-bar').value.toLowerCase();
+    const searchBar = document.getElementById('console-search-bar');
+    const query = searchBar ? searchBar.value.toLowerCase() : '';
     const rows = document.querySelectorAll('.inventory-row');
     rows.forEach(row => {
         const searchData = row.getAttribute('data-search');
-        if (searchData.includes(query)) row.style.display = 'flex';
+        if (searchData && searchData.includes(query)) row.style.display = 'flex';
         else row.style.display = 'none';
     });
 }
@@ -679,6 +713,7 @@ function toggleLocalStockState(btnElement, itemId) {
 
 function previewSelectedLiveMenu() {
     const previewList = document.getElementById('menu-preview-list');
+    if (!previewList) return;
     previewList.innerHTML = '';
     pendingLiveArray = []; 
 
@@ -701,13 +736,18 @@ function previewSelectedLiveMenu() {
     }
 
     if (pendingLiveArray.length === 0) { alert("⚠️ Menu empty:\n\nPlease select at least one item before posting today's menu!"); return; }
-    document.getElementById('menu-confirm-overlay').style.display = 'block';
-    document.getElementById('menu-confirm-modal').style.display = 'flex';
+    
+    const overlay = document.getElementById('menu-confirm-overlay');
+    const modal = document.getElementById('menu-confirm-modal');
+    if (overlay) overlay.style.display = 'block';
+    if (modal) modal.style.display = 'flex';
 }
 
 function closeMenuConfirmModal() {
-    document.getElementById('menu-confirm-overlay').style.display = 'none';
-    document.getElementById('menu-confirm-modal').style.display = 'none';
+    const overlay = document.getElementById('menu-confirm-overlay');
+    const modal = document.getElementById('menu-confirm-modal');
+    if (overlay) overlay.style.display = 'none';
+    if (modal) modal.style.display = 'none';
 }
 
 function publishSelectedLiveMenu() {
@@ -721,6 +761,8 @@ function publishSelectedLiveMenu() {
 
 function initializeKitchenOrderStream() {
     const ordersContainer = document.getElementById('kitchen-orders-container');
+    if (!ordersContainer) return; // Prevent full system loop freeze
+    
     let notifiedKitchenOrders = JSON.parse(localStorage.getItem('foodies_kitchen_notified') || '{}');
 
     database.ref('orders').orderByChild('timestamp').on('value', (snapshot) => {
@@ -850,7 +892,9 @@ async function nukeAppCache() {
     if ('serviceWorker' in navigator) {
         try {
             const registrations = await navigator.serviceWorker.getRegistrations();
-            for (let registration of registrations) { await registration.unregister(); }
+            for (let registration = 0; registration < registrations.length; registration++) { 
+                await registrations[registration].unregister(); 
+            }
             console.log("Service Workers unregistered.");
         } catch (e) { console.error("Failed to unregister SW:", e); }
     }
