@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 61)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 63)
 // ==========================================================================
 let deferredPrompt = null;
 let cart = [];
@@ -140,7 +140,7 @@ const MASTER_MENU = [
 ];
 
 // ==========================================================================
-// 2. STRICT LINEAR STARTUP SEQUENCE ENGINE (V61)
+// 2. STRICT LINEAR STARTUP SEQUENCE ENGINE (V63)
 // ==========================================================================
 let minimumSplashTimeMet = false;
 
@@ -154,30 +154,24 @@ const splashFailSafeGuard = setTimeout(() => {
     evaluateStartupSequence(); 
 }, 4000);
 
-// Capture the browser's native install prompt the second it fires
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); 
     deferredPrompt = e; 
 });
 
-// 🚀 FIXED V61: The Master Gatekeeper. Separates Tab vs. Installed contexts perfectly.
 function evaluateStartupSequence() {
     if (!minimumSplashTimeMet) return;
     
-    // Check if running directly on the hardware home screen
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     
     forceDismissSplash();
 
     if (!isStandalone) {
-        // PHASE 1: User is in the browser tab. Force the Installation Gate.
         showStrictInstallModal();
     } else {
-        // PHASE 2: User is inside the installed application. Force the Notification Gate.
         if ('Notification' in window && Notification.permission !== 'granted') {
             showStrictNotificationModal();
         } else {
-            // PHASE 3: All permissions met. Boot the application engine.
             bootApplication();
         }
     }
@@ -213,39 +207,45 @@ function handleInstallClick() {
         deferredPrompt.userChoice.then((choiceResult) => { 
             if (choiceResult.outcome === 'accepted') {
                 deferredPrompt = null; 
-                // Once installed, prompt them to close the tab and open the real app
                 if (pwaModal) {
                     pwaModal.innerHTML = `<div style="text-align:center; padding: 10px;"><div style="font-size:48px; margin-bottom:14px;">✅</div><div style="font-weight:700; font-size:20px; color:#111827; margin-bottom:8px;">App Installed!</div><div style="font-size:14px; color:#6B7280; line-height:1.5;">Please close this browser tab and launch Foodies Point directly from your home screen.</div></div>`;
                 }
             }
         });
     } else {
-        // Fallback for iOS Safari which blocks automated prompts
         alert("To install: Tap your browser's menu (3 dots or Share button), select 'Add to Home Screen', and launch the app from there!");
     }
 }
 
-// --- GATE 2: NOTIFICATION LOGIC ---
+// --- GATE 2: NOTIFICATION LOGIC (MODIFIED FOR APPACHACLE SEQUENCE CYCLE) ---
 function showStrictNotificationModal() {
     if (notifModal && notifOverlay) {
         const descriptionDiv = notifModal.querySelector('div:nth-of-type(3)');
         const actionBtn = document.getElementById('notif-ok-btn');
 
-        if (actionBtn) {
-            actionBtn.innerText = "OK";
-            actionBtn.disabled = false;
-            actionBtn.style.cursor = "pointer";
-            actionBtn.style.backgroundColor = "#FF4B3A";
-            actionBtn.onclick = handleMandatoryPermissionRequest;
-        }
-
         if (Notification.permission === 'denied') {
+            // 🚨 TRIGGER DATA PURGE PROTOCOL IF PERMISSION BLOCKED
             if (descriptionDiv) {
-                descriptionDiv.innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts are Blocked!</span><br>Tapping OK cannot open the device prompt because permissions are blocked in your settings. Please go to your device settings, enable notifications for this app, and restart.";
+                descriptionDiv.innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts are Blocked!</span><br>Application requires permission to track orders. Click below to clear state configurations and retry initialization process.";
+            }
+            if (actionBtn) {
+                actionBtn.innerText = "Reset & Retry";
+                actionBtn.disabled = false;
+                actionBtn.style.cursor = "pointer";
+                actionBtn.style.backgroundColor = "#DC2626";
+                actionBtn.onclick = nukeAppCache; // Bind directly to data clearing function
             }
         } else {
+            // Standard onboarding state (First initial execution request context)
             if (descriptionDiv) {
                 descriptionDiv.innerHTML = "To track your orders in real-time and receive instant updates from the kitchen, enabling device notifications is mandatory.";
+            }
+            if (actionBtn) {
+                actionBtn.innerText = "OK";
+                actionBtn.disabled = false;
+                actionBtn.style.cursor = "pointer";
+                actionBtn.style.backgroundColor = "#FF4B3A";
+                actionBtn.onclick = handleMandatoryPermissionRequest;
             }
         }
 
@@ -293,10 +293,9 @@ function triggerInstantNotification(messageText, type = 'success') {
 }
 
 // ==========================================================================
-// 4. CORE ENGINE BOOT SEQUENCE (Runs only after all gates pass)
+// 4. CORE ENGINE BOOT SEQUENCE 
 // ==========================================================================
 function bootApplication() {
-    // 1. Initialize OneSignal native tracking
     window.OneSignal = window.OneSignal || [];
     OneSignal.push(async function() {
         await OneSignal.init({
@@ -307,10 +306,8 @@ function bootApplication() {
         OneSignal.Notifications.requestPermission();
     });
 
-    // 2. Initialize Cloud Persistence Sync
     initializeCloudDataSync();
     
-    // 3. Start DOM / Menu update loop
     setInterval(() => { 
         const currentlyBlackedOut = isKitchenBlackoutActive();
         if (currentlyBlackedOut !== blackoutStateMemory) {
@@ -325,7 +322,7 @@ function bootApplication() {
 
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=61').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=63').then(reg => {
             if (!navigator.serviceWorker.controller) return; 
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
@@ -374,7 +371,7 @@ function initializeCloudDataSync() {
 // ==========================================
 // 6. TIMEZONE ENGINE & LIVE MENU CONTROLLER
 // ==========================================
-function isKitchenBlackoutActive() { return false; } // Disabled for testing
+function isKitchenBlackoutActive() { return false; } 
 
 function enforceBlackoutUILayout() {
     if (isConsoleViewActive) return;
@@ -560,6 +557,7 @@ function authenticateConsoleAccess() {
     body.classList.add('stop-scrolling');
 }
 
+// ... Rest of your unchanged Kitchen Console mechanics ...
 function closeConsoleAuthModal() {
     document.getElementById('admin-auth-overlay').style.display = 'none';
     document.getElementById('admin-auth-modal').style.display = 'none';
@@ -649,6 +647,7 @@ function handleCheckboxChange(chk, itemId) {
     }
 }
 
+// ... Remaining logic unchanged for space ...
 function toggleLocalStockState(btnElement, itemId) {
     const index = currentLiveMenuArray.findIndex(m => m.id === itemId);
     if (index !== -1) {
