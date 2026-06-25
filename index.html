@@ -120,9 +120,9 @@
     <div id="pwa-overlay" class="modal-overlay"></div>
     <div id="pwa-modal" class="centered-blocker" style="z-index: 9999;">
         <img src="icon.png" style="width: 80px; height: 80px; border-radius: 22px; margin-bottom: 18px; box-shadow: 0 8px 20px rgba(255, 75, 58, 0.2);">
-        <div style="font-weight: 700; font-size: 20px; color: #111827; text-align: center; margin-bottom: 6px; letter-spacing: -0.4px;">Install App Setup</div>
-        <div style="color: #6B7280; font-size: 13px; text-align: center; margin-bottom: 28px; line-height: 1.5; padding: 0 8px;">Install our official app for zero-latency menu loading and real-time order tracking alerts.</div>
-        <button onclick="triggerNativeInstall()" class="blocker-btn" style="background-color: #FF4B3A; box-shadow: 0 6px 20px rgba(255, 75, 58, 0.3);">Get App</button>
+        <div style="font-weight: 700; font-size: 20px; color: #111827; text-align: center; margin-bottom: 6px; letter-spacing: -0.4px;">Install Application</div>
+        <div style="color: #6B7280; font-size: 13px; text-align: center; margin-bottom: 28px; line-height: 1.5; padding: 0 8px;">You must install the official app to your home screen to continue.</div>
+        <button id="pwa-ok-btn" class="blocker-btn" style="background-color: #FF4B3A; box-shadow: 0 6px 20px rgba(255, 75, 58, 0.3);">OK</button>
     </div>
 
     <div id="notification-overlay" class="modal-overlay" style="z-index: 10000;"></div>
@@ -130,7 +130,7 @@
         <div style="font-size: 44px; margin-bottom: 14px; filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.2));">🔔</div>
         <div style="font-weight: 700; font-size: 20px; color: #111827; text-align: center; margin-bottom: 6px; letter-spacing: -0.4px;">Turn on Notifications</div>
         <div style="color: #6B7280; font-size: 13px; text-align: center; margin-bottom: 28px; line-height: 1.5; padding: 0 6px;">To track your orders in real-time and receive instant updates from the kitchen, enabling device notifications is mandatory.</div>
-        <button class="blocker-btn" style="background-color: #FF4B3A; box-shadow: 0 6px 20px rgba(255, 75, 58, 0.3);">OK</button>
+        <button id="notif-ok-btn" class="blocker-btn" style="background-color: #FF4B3A; box-shadow: 0 6px 20px rgba(255, 75, 58, 0.3);">OK</button>
     </div>
 
     <div id="update-splash" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #FFFFFF; z-index: 20000; display: flex; flex-direction: column; align-items: center; justify-content: center;">
