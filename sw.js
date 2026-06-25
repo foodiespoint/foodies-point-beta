@@ -1,9 +1,9 @@
 // ==========================================================================
-// FOODIES POINT - SERVICE WORKER (V59)
+// FOODIES POINT - SERVICE WORKER (V68)
 // ==========================================================================
 
-const CACHE_NAME = 'foodies-cache-v89';
-const ASSETS = ['', 'index.html', 'app.js', 'manifest.json', 'icon.png'];
+const CACHE_NAME = 'foodies-cache-v90';
+const ASSETS = ['', 'index.html', 'app.js?v=68', 'manifest.json', 'icon.png'];
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
@@ -18,7 +18,6 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// 🚀 MANDATORY FOR PWA INSTALLATION PROMPT TO FIRE
 self.addEventListener('fetch', (event) => {
     if (!event.request.url.startsWith(self.location.origin)) return; 
     event.respondWith(
