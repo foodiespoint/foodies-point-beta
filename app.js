@@ -1,51 +1,204 @@
 // ==========================================================================
-// 1. GLOBAL SCOPE & EVENT LISTENERS (VERSION 68)
+// 1. BOOTSTRAP ENGINE (VERSION 69) - ABSOLUTE TOP PRIORITY
 // ==========================================================================
-// 🚀 THIS MUST BE AT THE VERY TOP TO CATCH THE EVENT
 window.deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { 
     e.preventDefault(); 
     window.deferredPrompt = e; 
 });
 
-let cart = [];
-let isConsoleViewActive = false;
-let currentLiveMenuArray = []; 
-let pendingLiveArray = [];     
+let minimumSplashTimeMet = false;
+let appBooted = false;
+
+// Guarantee the boot sequence fires regardless of downstream script parsing
+setTimeout(() => { 
+    minimumSplashTimeMet = true; 
+    if(!appBooted) try { evaluateStartupSequence(); } catch(e) { console.error("Boot Err:", e); bootApplication(); }
+}, 1200);
+
+const splashFailSafeGuard = setTimeout(() => { 
+    minimumSplashTimeMet = true; 
+    if(!appBooted) try { evaluateStartupSequence(); } catch(e) { console.error("Boot Err:", e); bootApplication(); }
+}, 4000);
+
+function evaluateStartupSequence() {
+    if (!minimumSplashTimeMet) return;
+    appBooted = true;
+    
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    forceDismissSplash();
+
+    // Gate 1: App Installation 
+    if (!isStandalone) {
+        showStrictInstallModal();
+    } 
+    // Gate 2: Notifications
+    else if ('Notification' in window) {
+        if (Notification.permission === 'default') {
+            showStrictNotificationModal();
+        } else if (Notification.permission === 'denied' && sessionStorage.getItem('notification_reminder_shown') !== 'true') {
+            showStrictNotificationModal();
+        } else {
+            bootApplication();
+        }
+    } else {
+        bootApplication();
+    }
+}
+
+function forceDismissSplash() {
+    clearTimeout(splashFailSafeGuard);
+    const updateSplash = document.getElementById('update-splash');
+    if (updateSplash) { 
+        updateSplash.style.transition = "opacity 0.4s"; 
+        updateSplash.style.opacity = "0"; 
+        setTimeout(() => { updateSplash.style.display = "none"; }, 400); 
+    }
+}
+
+// ==========================================================================
+// 2. MODAL GATES & UI LOCKS
+// ==========================================================================
+function showStrictInstallModal() { 
+    const pwaModal = document.getElementById('pwa-modal');
+    const pwaOverlay = document.getElementById('pwa-overlay');
+    const okBtn = document.getElementById('pwa-ok-btn');
+
+    if (pwaModal && pwaOverlay) { 
+        if(okBtn) okBtn.onclick = handleInstallClick; 
+        pwaModal.style.display = 'flex'; 
+        pwaOverlay.style.display = 'block'; 
+        document.body.classList.add('stop-scrolling'); 
+    } else {
+        bootApplication(); // Fail-safe if HTML is missing
+    }
+}
+
+function handleInstallClick() {
+    if (window.deferredPrompt) {
+        window.deferredPrompt.prompt();
+        window.deferredPrompt.userChoice.then((choiceResult) => { 
+            if (choiceResult.outcome === 'accepted') { 
+                window.deferredPrompt = null; 
+                const pwaModal = document.getElementById('pwa-modal');
+                if (pwaModal) {
+                    pwaModal.innerHTML = `<div style="text-align:center;"><div style="font-size:48px; margin-bottom:14px;">✅</div><div style="font-weight:700; font-size:20px; color:#111827; margin-bottom:8px;">App Installed!</div><div style="font-size:14px; color:#6B7280;">Please close this browser tab and launch Foodies Point directly from your home screen.</div></div>`; 
+                }
+            } 
+        });
+    } else { 
+        alert("To install: Tap your browser's menu (3 dots or Share button), select 'Add to Home Screen', and launch the app from there!"); 
+    }
+}
+
+function showStrictNotificationModal() {
+    const notifModal = document.getElementById('notification-modal');
+    const notifOverlay = document.getElementById('notification-overlay');
+
+    if (notifModal && notifOverlay) {
+        const descriptionDiv = notifModal.querySelector('div:nth-of-type(3)');
+        const actionBtn = document.getElementById('notif-ok-btn');
+
+        if (Notification.permission === 'denied') {
+            sessionStorage.setItem('notification_reminder_shown', 'true');
+            if(descriptionDiv) descriptionDiv.innerHTML = "Notifications are currently disabled. To receive real-time order tracking alerts, please enable notification access in your device settings.";
+            if(actionBtn) {
+                actionBtn.innerText = "OK";
+                actionBtn.style.backgroundColor = "#FF4B3A";
+                actionBtn.onclick = () => { 
+                    notifModal.style.display = 'none'; 
+                    notifOverlay.style.display = 'none'; 
+                    document.body.classList.remove('stop-scrolling'); 
+                    bootApplication(); 
+                };
+            }
+        } else {
+            if(descriptionDiv) descriptionDiv.innerHTML = "To track your orders in real-time and receive instant updates from the kitchen, enabling device notifications is mandatory.";
+            if(actionBtn) {
+                actionBtn.innerText = "OK";
+                actionBtn.style.backgroundColor = "#FF4B3A";
+                actionBtn.onclick = handleMandatoryPermissionRequest; 
+            }
+        }
+
+        notifModal.style.display = 'flex'; 
+        notifOverlay.style.display = 'block'; 
+        document.body.classList.add('stop-scrolling');
+    } else {
+        bootApplication();
+    }
+}
+
+function handleMandatoryPermissionRequest() {
+    if (!('Notification' in window)) return;
+    
+    Notification.requestPermission().then((permission) => {
+        const notifModal = document.getElementById('notification-modal');
+        const notifOverlay = document.getElementById('notification-overlay');
+        
+        if (notifModal && notifOverlay) {
+            notifModal.style.display = 'none'; 
+            notifOverlay.style.display = 'none'; 
+            document.body.classList.remove('stop-scrolling');
+        }
+        
+        if (permission === 'granted') {
+            triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
+        } else {
+            sessionStorage.setItem('notification_reminder_shown', 'true');
+            triggerInstantNotification('⚠️ Notifications disabled. You will not receive live updates.', 'error');
+        }
+        
+        bootApplication(); 
+    }).catch(err => {
+        console.error("Native request handler crash:", err);
+        bootApplication();
+    });
+}
+
+function triggerInstantNotification(messageText, type = 'success') {
+    const toastContainer = document.getElementById('toast-container');
+    if (toastContainer) {
+        const toast = document.createElement('div');
+        const bgColor = type === 'error' ? '#EF4444' : (type === 'info' ? '#3B82F6' : '#10B981');
+        toast.style.cssText = `background: ${bgColor}; color: white; padding: 14px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: toastFadeIn 0.3s forwards; pointer-events: auto;`;
+        toast.innerText = messageText;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'toastFadeOut 0.3s forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+}
+
+// ==========================================================================
+// 3. CLOUD PERSISTENCE & FIREBASE INITIALIZATION
+// ==========================================================================
+let database;
+let auth;
 let currentUserUid = null;
 let cloudTrackedOrders = [];
 
-const ROUTING_SECRET_PIN = "validatefoodies2026"; 
+try {
+    const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    database = firebase.database();
+    auth = firebase.auth(); 
 
-const pwaModal = document.getElementById('pwa-modal');
-const pwaOverlay = document.getElementById('pwa-overlay');
-const notifModal = document.getElementById('notification-modal');
-const notifOverlay = document.getElementById('notification-overlay');
-const body = document.body;
-const updateSplash = document.getElementById('update-splash');
-const splashText = document.getElementById('splash-text');
-const menuContainer = document.getElementById('menu-container');
-const cartBtn = document.getElementById('cart-btn');
-
-// ==========================================================================
-// 2. CORE FIREBASE ENGINE
-// ==========================================================================
-const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const auth = firebase.auth(); 
-
-auth.onAuthStateChanged((user) => { 
-    if (user) { 
-        currentUserUid = user.uid; 
-        initializeCloudDataSync(); 
-    } else { 
-        auth.signInAnonymously().catch(err => console.error("Firebase Auth Error:", err)); 
-    } 
-});
+    auth.onAuthStateChanged((user) => { 
+        if (user) { 
+            currentUserUid = user.uid; 
+            initializeCloudDataSync(); 
+        } else { 
+            auth.signInAnonymously().catch(err => console.error("Firebase Auth Error:", err)); 
+        } 
+    });
+} catch(err) {
+    console.error("Firebase Initialization Failed:", err);
+}
 
 function initializeCloudDataSync() {
-    if(!currentUserUid) return;
+    if(!currentUserUid || !database) return;
     database.ref(`users/${currentUserUid}/tracked_orders`).on('value', (snapshot) => {
         cloudTrackedOrders = []; 
         snapshot.forEach((child) => { cloudTrackedOrders.push(child.val()); });
@@ -54,7 +207,7 @@ function initializeCloudDataSync() {
 }
 
 // ==========================================================================
-// 3. MASTER CATALOG DATA CONTAINER
+// 4. MASTER CATALOG DATA
 // ==========================================================================
 const MASTER_MENU = [
     { id: "roll_1", title: "Dahi Bread Roll", details: "15/- per pc.", category: "ROLLS" },
@@ -161,165 +314,17 @@ const MASTER_MENU = [
     { id: "rice_4", title: "Veg. Biryani", details: "180", category: "RICE" }
 ];
 
-// ==========================================================================
-// 4. LINEAR STARTUP SEQUENCE ENGINE (V68)
-// ==========================================================================
-let minimumSplashTimeMet = false;
-
-setTimeout(() => { 
-    minimumSplashTimeMet = true; 
-    try { evaluateStartupSequence(); } catch(e) { console.error("Boot Err:", e); }
-}, 1200);
-
-const splashFailSafeGuard = setTimeout(() => { 
-    minimumSplashTimeMet = true; 
-    try { evaluateStartupSequence(); } catch(e) { console.error("Boot Err:", e); }
-}, 4000);
-
-function evaluateStartupSequence() {
-    if (!minimumSplashTimeMet) return;
-    
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    forceDismissSplash();
-
-    // Gate 1: App Installation 
-    if (!isStandalone) {
-        showStrictInstallModal();
-    } 
-    // Gate 2: Notifications
-    else if ('Notification' in window) {
-        if (Notification.permission === 'default') {
-            showStrictNotificationModal();
-        } else if (Notification.permission === 'denied' && sessionStorage.getItem('notification_reminder_shown') !== 'true') {
-            showStrictNotificationModal();
-        } else {
-            bootApplication();
-        }
-    } else {
-        bootApplication();
-    }
-}
-
-function forceDismissSplash() {
-    clearTimeout(splashFailSafeGuard);
-    if (updateSplash) { 
-        updateSplash.style.transition = "opacity 0.4s"; 
-        updateSplash.style.opacity = "0"; 
-        setTimeout(() => { updateSplash.style.display = "none"; }, 400); 
-    }
-}
+let cart = [];
+let isConsoleViewActive = false;
+let currentLiveMenuArray = []; 
+let pendingLiveArray = [];     
+const ROUTING_SECRET_PIN = "validatefoodies2026"; 
 
 // ==========================================================================
-// 5. MODAL GATES
+// 5. MAIN ENGINE BOOT & ONESIGNAL
 // ==========================================================================
-function showStrictInstallModal() { 
-    if (pwaModal && pwaOverlay) { 
-        const okBtn = document.getElementById('pwa-ok-btn');
-        if(okBtn) okBtn.onclick = handleInstallClick; 
-        pwaModal.style.display = 'flex'; 
-        pwaOverlay.style.display = 'block'; 
-        body.classList.add('stop-scrolling'); 
-    } 
-}
+let blackoutStateMemory = false;
 
-function handleInstallClick() {
-    if (window.deferredPrompt) {
-        window.deferredPrompt.prompt();
-        window.deferredPrompt.userChoice.then((choiceResult) => { 
-            if (choiceResult.outcome === 'accepted') { 
-                window.deferredPrompt = null; 
-                pwaModal.innerHTML = `<div style="text-align:center;"><div style="font-size:48px; margin-bottom:14px;">✅</div><div style="font-weight:700; font-size:20px; color:#111827; margin-bottom:8px;">App Installed!</div><div style="font-size:14px; color:#6B7280;">Please close this browser tab and launch Foodies Point directly from your home screen.</div></div>`; 
-            } 
-        });
-    } else { 
-        alert("To install: Tap your browser's menu (3 dots or Share button), select 'Add to Home Screen', and launch the app from there!"); 
-    }
-}
-
-function showStrictNotificationModal() {
-    if (notifModal && notifOverlay) {
-        const descriptionDiv = notifModal.querySelector('div:nth-of-type(3)');
-        const actionBtn = document.getElementById('notif-ok-btn');
-
-        if (Notification.permission === 'denied') {
-            sessionStorage.setItem('notification_reminder_shown', 'true');
-            if(descriptionDiv) {
-                descriptionDiv.innerHTML = "Notifications are currently disabled. To receive real-time order tracking alerts, please enable notification access in your device settings.";
-            }
-            if(actionBtn) {
-                actionBtn.innerText = "OK";
-                actionBtn.style.backgroundColor = "#FF4B3A";
-                actionBtn.onclick = () => { 
-                    notifModal.style.display = 'none'; 
-                    notifOverlay.style.display = 'none'; 
-                    body.classList.remove('stop-scrolling'); 
-                    bootApplication(); 
-                };
-            }
-        } else {
-            if(descriptionDiv) {
-                descriptionDiv.innerHTML = "To track your orders in real-time and receive instant updates from the kitchen, enabling device notifications is mandatory.";
-            }
-            if(actionBtn) {
-                actionBtn.innerText = "OK";
-                actionBtn.style.backgroundColor = "#FF4B3A";
-                actionBtn.onclick = handleMandatoryPermissionRequest; 
-            }
-        }
-
-        notifModal.style.display = 'flex'; 
-        notifOverlay.style.display = 'block'; 
-        body.classList.add('stop-scrolling');
-    }
-}
-
-function handleMandatoryPermissionRequest() {
-    if (!('Notification' in window)) return;
-    
-    Notification.requestPermission().then((permission) => {
-        if (notifModal && notifOverlay) {
-            notifModal.style.display = 'none'; 
-            notifOverlay.style.display = 'none'; 
-            body.classList.remove('stop-scrolling');
-        }
-        
-        if (permission === 'granted') {
-            triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
-        } else {
-            sessionStorage.setItem('notification_reminder_shown', 'true');
-            triggerInstantNotification('⚠️ Notifications disabled. You will not receive live updates.', 'error');
-        }
-        
-        bootApplication(); 
-    }).catch(err => {
-        console.error("Native request handler crash:", err);
-        if (notifModal && notifOverlay) {
-            notifModal.style.display = 'none'; 
-            notifOverlay.style.display = 'none'; 
-            body.classList.remove('stop-scrolling');
-        }
-        bootApplication();
-    });
-}
-
-function triggerInstantNotification(messageText, type = 'success') {
-    const toastContainer = document.getElementById('toast-container');
-    if (toastContainer) {
-        const toast = document.createElement('div');
-        const bgColor = type === 'error' ? '#EF4444' : (type === 'info' ? '#3B82F6' : '#10B981');
-        toast.style.cssText = `background: ${bgColor}; color: white; padding: 14px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: toastFadeIn 0.3s forwards; pointer-events: auto;`;
-        toast.innerText = messageText;
-        toastContainer.appendChild(toast);
-        setTimeout(() => {
-            toast.style.animation = 'toastFadeOut 0.3s forwards';
-            setTimeout(() => toast.remove(), 300);
-        }, 4000);
-    }
-}
-
-// ==========================================================================
-// 6. MAIN ENGINE BOOT & ONESIGNAL
-// ==========================================================================
 function bootApplication() {
     window.OneSignal = window.OneSignal || [];
     OneSignal.push(async function() {
@@ -333,7 +338,16 @@ function bootApplication() {
         } catch(e) { console.error("OneSignal Init Error:", e); }
     });
 
-    initializeCloudDataSync();
+    if(database) {
+        database.ref('daily_live_menu').on('value', (snapshot) => {
+            currentLiveMenuArray = [];
+            snapshot.forEach((child) => { currentLiveMenuArray.push(child.val()); });
+
+            if (isKitchenBlackoutActive()) { enforceBlackoutUILayout(); return; }
+            if (isConsoleViewActive) return; 
+            renderCustomerMenu();
+        });
+    }
     
     setInterval(() => { 
         const currentlyBlackedOut = isKitchenBlackoutActive();
@@ -348,30 +362,23 @@ function bootApplication() {
 }
 
 // ==========================================================================
-// 7. TIMEZONE ENGINE & LIVE MENU CONTROLLER
+// 6. TIMEZONE ENGINE & LIVE MENU CONTROLLER
 // ==========================================================================
 function isKitchenBlackoutActive() { return false; } 
 
 function enforceBlackoutUILayout() {
     if (isConsoleViewActive) return;
-    const historyContainer = document.getElementById('history-container');
+    const cartBtn = document.getElementById('cart-btn');
     cart = [];
     if (cartBtn) cartBtn.style.display = 'none';
+    const menuContainer = document.getElementById('menu-container');
     if (menuContainer) {
         menuContainer.innerHTML = `<div style="text-align: center; padding: 32px 16px; background-color: #FFFFFF; border-radius: 18px; border: 1px dashed #E5E7EB; width: 100%; box-sizing: border-box;"><div style="font-size: 32px; margin-bottom: 8px;">⏰</div><div style="font-weight: 700; font-size: 15px; color: #111827;">Kitchen Closed for Today</div><div style="color: #6B7280; font-size: 13px; margin-top: 4px; line-height: 1.5;">Tomorrow's live menu will be available after 9:30 PM IST.</div></div>`;
     }
 }
 
-database.ref('daily_live_menu').on('value', (snapshot) => {
-    currentLiveMenuArray = [];
-    snapshot.forEach((child) => { currentLiveMenuArray.push(child.val()); });
-
-    if (isKitchenBlackoutActive()) { enforceBlackoutUILayout(); return; }
-    if (isConsoleViewActive) return; 
-    renderCustomerMenu();
-});
-
 function renderCustomerMenu() {
+    const menuContainer = document.getElementById('menu-container');
     if (!menuContainer) return;
     menuContainer.innerHTML = ''; 
     if (currentLiveMenuArray.length === 0) {
@@ -400,7 +407,7 @@ function renderCustomerMenu() {
 }
 
 // ==========================================================================
-// 8. CART & CHECKOUT PIPELINE
+// 7. CART & CHECKOUT PIPELINE
 // ==========================================================================
 function addToCart(id, title, details) {
     if (isKitchenBlackoutActive()) return alert("The kitchen is currently closed.");
@@ -408,6 +415,7 @@ function addToCart(id, title, details) {
     if (details.toLowerCase().includes("per plate") && existingItem && existingItem.quantity >= 5) return alert(`⚠️ Order Limit Exceeded!`);
     if (existingItem) existingItem.quantity += 1; else cart.push({ id, title, details, quantity: 1 });
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const cartBtn = document.getElementById('cart-btn');
     if (cartBtn) {
         cartBtn.style.display = 'block'; 
         cartBtn.innerText = `View Order (${totalItems} items)`;
@@ -418,7 +426,7 @@ function openCheckout() {
     if (isKitchenBlackoutActive()) return;
     const checkoutMdl = document.getElementById('checkout-modal');
     if (checkoutMdl) checkoutMdl.style.display = 'flex'; 
-    body.classList.add('stop-scrolling'); 
+    document.body.classList.add('stop-scrolling'); 
     const summaryDiv = document.getElementById('cart-summary');
     if (summaryDiv) {
         let summaryHTML = '<div style="font-weight: 600; color: #111827; margin-bottom: 8px; font-size: 15px;">Selected Items:</div>';
@@ -430,7 +438,7 @@ function openCheckout() {
 function closeCheckout() { 
     const checkoutMdl = document.getElementById('checkout-modal');
     if (checkoutMdl) checkoutMdl.style.display = 'none'; 
-    body.classList.remove('stop-scrolling'); 
+    document.body.classList.remove('stop-scrolling'); 
 }
 
 function submitOrder() {
@@ -454,6 +462,8 @@ function submitOrder() {
         return item.details.toLowerCase().includes("per plate") ? `${item.quantity}x ${item.title} (${item.details})` : `${item.title} (${item.details})`;
     }).join(", ");
 
+    if(!database) return alert("Database connection error");
+
     const newOrderRef = database.ref('orders').push();
 
     let hardwareToken = "NOT_ALLOWED";
@@ -462,7 +472,7 @@ function submitOrder() {
             hardwareToken = OneSignal.User.PushSubscription.id || "NOT_ALLOWED";
         }
     } catch (e) {
-        console.warn("Could not handle native hardware token extraction:", e);
+        console.warn("Token err:", e);
     }
 
     newOrderRef.set({ 
@@ -481,6 +491,7 @@ function submitOrder() {
         
         triggerInstantNotification("Order dispatched to the kitchen!", "success");
         cart = []; 
+        const cartBtn = document.getElementById('cart-btn');
         if (cartBtn) cartBtn.style.display = 'none'; 
         closeCheckout();
         firstNameEl.value = ''; lastNameEl.value = ''; phoneEl.value = '';
@@ -488,12 +499,12 @@ function submitOrder() {
 }
 
 // ==========================================================================
-// 9. CLIENT-SIDE CLOUD ORDER HISTORY
+// 8. CLIENT-SIDE CLOUD ORDER HISTORY
 // ==========================================================================
 function renderOrderHistory() {
     if (isKitchenBlackoutActive()) return enforceBlackoutUILayout();
     const historyContainer = document.getElementById('history-container');
-    if (!historyContainer) return;
+    if (!historyContainer || !database) return;
     
     if (cloudTrackedOrders.length === 0) { 
         historyContainer.innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin-top: 12px;">No orders placed today yet.</p>'; return; 
@@ -542,7 +553,7 @@ function renderOrderHistory() {
 }
 
 // ==========================================================================
-// 10. KITCHEN CONSOLE ENGINE
+// 9. KITCHEN CONSOLE ENGINE
 // ==========================================================================
 function authenticateConsoleAccess() {
     if (isConsoleViewActive) {
@@ -559,7 +570,7 @@ function authenticateConsoleAccess() {
     if (overlay) overlay.style.display = 'block';
     if (modal) modal.style.display = 'flex';
     if (input) { input.value = ''; input.focus(); }
-    body.classList.add('stop-scrolling');
+    document.body.classList.add('stop-scrolling');
 }
 
 function closeConsoleAuthModal() {
@@ -567,7 +578,7 @@ function closeConsoleAuthModal() {
     const modal = document.getElementById('admin-auth-modal');
     if (overlay) overlay.style.display = 'none';
     if (modal) modal.style.display = 'none';
-    body.classList.remove('stop-scrolling');
+    document.body.classList.remove('stop-scrolling');
 }
 
 function submitConsolePIN() {
@@ -591,6 +602,7 @@ function launchConsoleLayout() {
     const toggleAction = document.getElementById('view-toggle-action');
     const searchBar = document.getElementById('console-search-bar');
     const inventoryContainer = document.getElementById('kitchen-inventory-container');
+    const cartBtn = document.getElementById('cart-btn');
 
     if (customerLayout) customerLayout.style.display = 'none';
     if (cartBtn) cartBtn.style.display = 'none';
@@ -663,7 +675,7 @@ function handleCheckboxChange(chk, itemId) {
         const confirmRemove = confirm(`⚠️ Remove from Live Menu:\n\nRemove "${targetItem.title}" immediately?`);
         if (confirmRemove) {
             currentLiveMenuArray.splice(index, 1);
-            database.ref('daily_live_menu').set(currentLiveMenuArray).then(() => { launchConsoleLayout(); });
+            if(database) database.ref('daily_live_menu').set(currentLiveMenuArray).then(() => { launchConsoleLayout(); });
         } else { chk.checked = true; }
     }
 }
@@ -679,7 +691,7 @@ function toggleLocalStockState(btnElement, itemId) {
         const confirmChange = confirm(`⚠️ Change Stock Status:\n\nAre you sure you want to mark "${targetItem.title}" as ${statusText}?`);
         if (!confirmChange) return; 
         
-        database.ref(`daily_live_menu/${index}`).update({ isOutOfStock: newOutState });
+        if(database) database.ref(`daily_live_menu/${index}`).update({ isOutOfStock: newOutState });
         btnElement.innerText = newOutState ? "Out of Stock" : "In Stock";
         btnElement.style.backgroundColor = newOutState ? "#EF4444" : "#10B981";
         currentLiveMenuArray[index].isOutOfStock = newOutState;
@@ -726,7 +738,7 @@ function closeMenuConfirmModal() {
 }
 
 function publishSelectedLiveMenu() {
-    if (pendingLiveArray.length === 0) return;
+    if (pendingLiveArray.length === 0 || !database) return;
     database.ref('daily_live_menu').set(pendingLiveArray)
         .then(() => {
             alert(`🚀 Success!\n\n${pendingLiveArray.length} items successfully published.`);
@@ -736,7 +748,7 @@ function publishSelectedLiveMenu() {
 
 function initializeKitchenOrderStream() {
     const ordersContainer = document.getElementById('kitchen-orders-container');
-    if (!ordersContainer) return; 
+    if (!ordersContainer || !database) return; 
     
     let notifiedKitchenOrders = JSON.parse(localStorage.getItem('foodies_kitchen_notified') || '{}');
 
@@ -800,7 +812,7 @@ function initializeKitchenOrderStream() {
 
 function updateTicketStatus(ticketId, targetState) { 
     const doubleCheck = confirm(`Confirm Action:\n\nAre you sure you want to mark this order as ${targetState}?`);
-    if(!doubleCheck) return;
+    if(!doubleCheck || !database) return;
 
     database.ref(`orders/${ticketId}`).once('value').then((snapshot) => {
         const orderData = snapshot.val();
@@ -828,16 +840,12 @@ function updateTicketStatus(ticketId, targetState) {
                     contents: {"en": messageBody},
                     priority: 10
                 })
-            }).then(res => {
-                console.log("OneSignal Proxy Delivery Status Payload code:", res.status);
-            }).catch(err => console.error("OneSignal Fetch execution failed through proxy:", err));
+            }).catch(err => console.error("OneSignal Proxy Err:", err));
         }
     });
 }
 
-function archiveTicket(ticketId) { database.ref(`orders/${ticketId}`).update({ archived: true }); }
-
-let blackoutStateMemory = isKitchenBlackoutActive();
+function archiveTicket(ticketId) { if(database) database.ref(`orders/${ticketId}`).update({ archived: true }); }
 
 window.addEventListener('popstate', (event) => {
     if (isConsoleViewActive && window.location.hash !== '#console') {
@@ -848,21 +856,11 @@ window.addEventListener('popstate', (event) => {
 });
 
 // ==========================================================================
-// 11. DEVELOPER UTILITY & SERVICE WORKER REGISTRATION
+// 10. SW REGISTRATION & CACHE NUKE UTILITY
 // ==========================================================================
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=68').then(reg => {
-            if (!navigator.serviceWorker.controller) return; 
-            reg.onupdatefound = () => {
-                const installingWorker = reg.installing;
-                installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        if (splashText) splashText.innerHTML = "New update found!<br><span style='color:#FF4B3A; font-size:14px; font-weight:500;'>Installing assets... Please do not close the app.</span>";
-                    }
-                };
-            };
-        }).catch(err => console.error("SW Error:", err));
+        navigator.serviceWorker.register('sw.js?v=69').catch(err => console.error("SW Error:", err));
     }
 });
 
@@ -877,26 +875,24 @@ async function nukeAppCache() {
     console.log("Initiating complete site data wipe...");
     localStorage.clear();
     sessionStorage.clear();
-    console.log("Local Storage cleared.");
 
     if ('caches' in window) {
         try {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(cache => caches.delete(cache)));
-            console.log("Service Worker Cache cleared.");
-        } catch (e) { console.error("Failed to clear cache:", e); }
+        } catch (e) { console.error("Cache clear err:", e); }
     }
 
     if ('serviceWorker' in navigator) {
         try {
             const registrations = await navigator.serviceWorker.getRegistrations();
-            for (let registration = 0; registration < registrations.length; registration++) { 
-                await registrations[registration].unregister(); 
+            for (let i = 0; i < registrations.length; i++) { 
+                await registrations[i].unregister(); 
             }
-            console.log("Service Workers unregistered.");
-        } catch (e) { console.error("Failed to unregister SW:", e); }
+        } catch (e) { console.error("SW unregister err:", e); }
     }
 
     alert("App data wiped successfully. Reloading...");
     window.location.reload(true); 
 }
+window.nukeAppCache = nukeAppCache;
