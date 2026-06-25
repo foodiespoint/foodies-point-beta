@@ -1,7 +1,13 @@
 // ==========================================================================
-// 1. GLOBAL CONFIGURATIONS & DOM ELEMENTS (VERSION 67)
+// 1. GLOBAL SCOPE & EVENT LISTENERS (VERSION 68)
 // ==========================================================================
-let deferredPrompt = null;
+// 🚀 THIS MUST BE AT THE VERY TOP TO CATCH THE EVENT
+window.deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => { 
+    e.preventDefault(); 
+    window.deferredPrompt = e; 
+});
+
 let cart = [];
 let isConsoleViewActive = false;
 let currentLiveMenuArray = []; 
@@ -22,7 +28,7 @@ const menuContainer = document.getElementById('menu-container');
 const cartBtn = document.getElementById('cart-btn');
 
 // ==========================================================================
-// 🚀 2. CORE FIREBASE ENGINE (MUST LOAD FIRST)
+// 2. CORE FIREBASE ENGINE
 // ==========================================================================
 const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
 firebase.initializeApp(firebaseConfig);
@@ -156,24 +162,19 @@ const MASTER_MENU = [
 ];
 
 // ==========================================================================
-// 4. LINEAR STARTUP SEQUENCE ENGINE 
+// 4. LINEAR STARTUP SEQUENCE ENGINE (V68)
 // ==========================================================================
 let minimumSplashTimeMet = false;
 
 setTimeout(() => { 
     minimumSplashTimeMet = true; 
-    evaluateStartupSequence(); 
+    try { evaluateStartupSequence(); } catch(e) { console.error("Boot Err:", e); }
 }, 1200);
 
 const splashFailSafeGuard = setTimeout(() => { 
     minimumSplashTimeMet = true; 
-    evaluateStartupSequence(); 
+    try { evaluateStartupSequence(); } catch(e) { console.error("Boot Err:", e); }
 }, 4000);
-
-window.addEventListener('beforeinstallprompt', (e) => { 
-    e.preventDefault(); 
-    deferredPrompt = e; 
-});
 
 function evaluateStartupSequence() {
     if (!minimumSplashTimeMet) return;
@@ -222,11 +223,11 @@ function showStrictInstallModal() {
 }
 
 function handleInstallClick() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => { 
+    if (window.deferredPrompt) {
+        window.deferredPrompt.prompt();
+        window.deferredPrompt.userChoice.then((choiceResult) => { 
             if (choiceResult.outcome === 'accepted') { 
-                deferredPrompt = null; 
+                window.deferredPrompt = null; 
                 pwaModal.innerHTML = `<div style="text-align:center;"><div style="font-size:48px; margin-bottom:14px;">✅</div><div style="font-weight:700; font-size:20px; color:#111827; margin-bottom:8px;">App Installed!</div><div style="font-size:14px; color:#6B7280;">Please close this browser tab and launch Foodies Point directly from your home screen.</div></div>`; 
             } 
         });
@@ -322,12 +323,14 @@ function triggerInstantNotification(messageText, type = 'success') {
 function bootApplication() {
     window.OneSignal = window.OneSignal || [];
     OneSignal.push(async function() {
-        await OneSignal.init({ 
-            appId: "ad014d82-5244-4531-bca8-f7acf471d23d", 
-            notifyButton: { enable: false }, 
-            allowLocalhostAsSecureOrigin: true 
-        });
-        OneSignal.Notifications.requestPermission();
+        try {
+            await OneSignal.init({ 
+                appId: "ad014d82-5244-4531-bca8-f7acf471d23d", 
+                notifyButton: { enable: false }, 
+                allowLocalhostAsSecureOrigin: true 
+            });
+            OneSignal.Notifications.requestPermission();
+        } catch(e) { console.error("OneSignal Init Error:", e); }
     });
 
     initializeCloudDataSync();
@@ -539,7 +542,7 @@ function renderOrderHistory() {
 }
 
 // ==========================================================================
-// 🚀 10. KITCHEN CONSOLE ENGINE
+// 10. KITCHEN CONSOLE ENGINE
 // ==========================================================================
 function authenticateConsoleAccess() {
     if (isConsoleViewActive) {
@@ -845,11 +848,11 @@ window.addEventListener('popstate', (event) => {
 });
 
 // ==========================================================================
-// 11. DEVELOPER UTILITY: NUKE DEVICE CACHE SCRIPT
+// 11. DEVELOPER UTILITY & SERVICE WORKER REGISTRATION
 // ==========================================================================
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=67').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=68').then(reg => {
             if (!navigator.serviceWorker.controller) return; 
             reg.onupdatefound = () => {
                 const installingWorker = reg.installing;
