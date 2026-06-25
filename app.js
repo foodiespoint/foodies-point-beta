@@ -1,13 +1,11 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 66)
+// 1. GLOBAL CONFIGURATIONS & DOM ELEMENTS (VERSION 67)
 // ==========================================================================
 let deferredPrompt = null;
 let cart = [];
 let isConsoleViewActive = false;
 let currentLiveMenuArray = []; 
 let pendingLiveArray = [];     
-
-// CLOUD PERSISTENCE VARIABLES
 let currentUserUid = null;
 let cloudTrackedOrders = [];
 
@@ -20,8 +18,38 @@ const notifOverlay = document.getElementById('notification-overlay');
 const body = document.body;
 const updateSplash = document.getElementById('update-splash');
 const splashText = document.getElementById('splash-text');
+const menuContainer = document.getElementById('menu-container');
+const cartBtn = document.getElementById('cart-btn');
 
-// MASTER CATALOG DATA CONTAINER
+// ==========================================================================
+// 🚀 2. CORE FIREBASE ENGINE (MUST LOAD FIRST)
+// ==========================================================================
+const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const auth = firebase.auth(); 
+
+auth.onAuthStateChanged((user) => { 
+    if (user) { 
+        currentUserUid = user.uid; 
+        initializeCloudDataSync(); 
+    } else { 
+        auth.signInAnonymously().catch(err => console.error("Firebase Auth Error:", err)); 
+    } 
+});
+
+function initializeCloudDataSync() {
+    if(!currentUserUid) return;
+    database.ref(`users/${currentUserUid}/tracked_orders`).on('value', (snapshot) => {
+        cloudTrackedOrders = []; 
+        snapshot.forEach((child) => { cloudTrackedOrders.push(child.val()); });
+        renderOrderHistory(); 
+    });
+}
+
+// ==========================================================================
+// 3. MASTER CATALOG DATA CONTAINER
+// ==========================================================================
 const MASTER_MENU = [
     { id: "roll_1", title: "Dahi Bread Roll", details: "15/- per pc.", category: "ROLLS" },
     { id: "roll_2", title: "Bread Roll", details: "80/- per plate (8 pc.)", category: "ROLLS" },
@@ -35,7 +63,6 @@ const MASTER_MENU = [
     { id: "roll_10", title: "Chicken Mayonaise Roll", details: "60/- per pc.", category: "ROLLS" },
     { id: "roll_11", title: "Chicken Egg Roll", details: "70/- per pc.", category: "ROLLS" },
     { id: "roll_12", title: "Chicken Egg Mayonaise Roll", details: "75/-", category: "ROLLS" },
-
     { id: "pak_1", title: "Pyaaz ki Pakodi", details: "60 (250gm)", category: "PAKODI" },
     { id: "pak_2", title: "Paalak ki pakodi", details: "60 (250gm)", category: "PAKODI" },
     { id: "pak_3", title: "Gobhi ki pajkodi", details: "60 (250gm)", category: "PAKODI" },
@@ -43,11 +70,9 @@ const MASTER_MENU = [
     { id: "pak_5", title: "Bread Pakoda", details: "20/- per pc.", category: "PAKODI" },
     { id: "pak_6", title: "Egg pakodi", details: "10/- per pc", category: "PAKODI" },
     { id: "pak_7", title: "Moong daal ke mongode", details: "75 (250gm)", category: "PAKODI" },
-
     { id: "sand_1", title: "Veg Grilled Mayonaise Sandwich", details: "55/- (2 pc)", category: "SANDWICH" },
     { id: "sand_2", title: "Veg Cheese Sandwich", details: "60/- (2 pc)", category: "SANDWICH" },
     { id: "sand_3", title: "Veg Sandwich", details: "18/- per pc", category: "SANDWICH" },
-
     { id: "snack_1", title: "Chocolate Croissant", details: "48 per pc", category: "SNACKS" },
     { id: "snack_2", title: "Zingy Parcel (Paneer)", details: "60 per pc", category: "SNACKS" },
     { id: "snack_3", title: "Pizza Puff", details: "18 per pc", category: "SNACKS" },
@@ -73,7 +98,6 @@ const MASTER_MENU = [
     { id: "snack_23", title: "Samosa", details: "12 per pc", category: "SNACKS" },
     { id: "snack_24", title: "Paneer Tikka", details: "240 per plate", category: "SNACKS" },
     { id: "snack_25", title: "Paneer Malai Tikka", details: "260 per plate", category: "SNACKS" },
-
     { id: "chin_1", title: "Honey Chilli Potato", details: "90 per plate", category: "CHINESE" },
     { id: "chin_2", title: "Chowmein", details: "80 per plate", category: "CHINESE" },
     { id: "chin_3", title: "Macaroni", details: "80 per plate", category: "CHINESE" },
@@ -85,20 +109,16 @@ const MASTER_MENU = [
     { id: "chin_9", title: "Paneer momos", details: "75 per plate (10 pc)", category: "CHINESE" },
     { id: "chin_10", title: "Chicken momos", details: "100 per plate (10 pc)", category: "CHINESE" },
     { id: "chin_11", title: "White Pasta", details: "100 per plate", category: "CHINESE" },
-
     { id: "keb_1", title: "Veg. Seekh Kebab", details: "15 per pc", category: "KEBEBS" },
     { id: "keb_2", title: "Veg Kebab", details: "17 per pc", category: "KEBEBS" },
     { id: "keb_3", title: "Dahi ke kebab", details: "25 per pc", category: "KEBEBS" },
     { id: "keb_4", title: "Hariyali kebab", details: "25 per pc", category: "KEBEBS" },
-
     { id: "cake_1", title: "Tutti Frutti Cup Cake", details: "18 per pc", category: "CAKE (Egg-Less)" },
     { id: "cake_2", title: "Chocolate Cup Cake", details: "20 per pc", category: "CAKE (Egg-Less)" },
     { id: "cake_3", title: "Chocolava Cup Cake", details: "38 per pc", category: "CAKE (Egg-Less)" },
-
     { id: "shake_1", title: "Mango Shake", details: "30", category: "SHAKES" },
     { id: "shake_2", title: "Lassi", details: "45", category: "SHAKES" },
     { id: "shake_3", title: "Panna", details: "12", category: "SHAKES" },
-
     { id: "trad_1", title: "Chokha Baati", details: "50 per plate (2 pc)", category: "COMBOS" },
     { id: "trad_2", title: "Chole Aloo Kulche", details: "70 per plate", category: "COMBOS" },
     { id: "trad_3", title: "Chole Bhature", details: "60 per plate", category: "COMBOS" },
@@ -106,19 +126,16 @@ const MASTER_MENU = [
     { id: "trad_5", title: "Sambhar Vada", details: "55 per plate (4 pc)", category: "COMBOS" },
     { id: "trad_6", title: "Idli Sambhar", details: "55 per plate (4 pc)", category: "COMBOS" },
     { id: "trad_7", title: "Pav Bhaaji", details: "60 per plate", category: "COMBOS" },
-
     { id: "sweet_1", title: "Gulab Jamun", details: "20", category: "SWEETS" },
     { id: "sweet_2", title: "Kheer", details: "80", category: "SWEETS" },
     { id: "sweet_3", title: "Sweet Rice", details: "90", category: "SWEETS" },
     { id: "sweet_4", title: "Shrikhand", details: "85 (250 gm)", category: "SWEETS" },
-
     { id: "sabzi_1", title: "Shaahi Paneer", details: "300", category: "SABZI" },
     { id: "sabzi_2", title: "Paneer Masala", details: "220", category: "SABZI" },
     { id: "sabzi_3", title: "Paneer Angara", details: "280", category: "SABZI" },
     { id: "sabzi_4", title: "Paneer Korma", details: "Price on request", category: "SABZI" },
     { id: "sabzi_5", title: "Palak Paneer", details: "200", category: "SABZI" },
     { id: "sabzi_6", title: "Matar Paneer", details: "200", category: "SABZI" },
-
     { id: "nv_1", title: "Chichen Afghani", details: "500", category: "NON-VEG" },
     { id: "nv_2", title: "Roasted Chicken", details: "340", category: "NON-VEG" },
     { id: "nv_3", title: "Chilli Chicken", details: "440", category: "NON-VEG" },
@@ -132,7 +149,6 @@ const MASTER_MENU = [
     { id: "nv_11", title: "Chicken Curry", details: "360", category: "NON-VEG" },
     { id: "nv_12", title: "Chicken Masala", details: "400", category: "NON-VEG" },
     { id: "nv_13", title: "Butter Chicken", details: "500", category: "NON-VEG" },
-
     { id: "rice_1", title: "Plain Rice", details: "90", category: "RICE" },
     { id: "rice_2", title: "Jeera Rice", details: "120", category: "RICE" },
     { id: "rice_3", title: "Matar Pulao", details: "140", category: "RICE" },
@@ -140,7 +156,7 @@ const MASTER_MENU = [
 ];
 
 // ==========================================================================
-// 2. LINEAR STARTUP SEQUENCE ENGINE (V66)
+// 4. LINEAR STARTUP SEQUENCE ENGINE 
 // ==========================================================================
 let minimumSplashTimeMet = false;
 
@@ -165,9 +181,12 @@ function evaluateStartupSequence() {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     forceDismissSplash();
 
+    // Gate 1: App Installation 
     if (!isStandalone) {
         showStrictInstallModal();
-    } else if ('Notification' in window) {
+    } 
+    // Gate 2: Notifications
+    else if ('Notification' in window) {
         if (Notification.permission === 'default') {
             showStrictNotificationModal();
         } else if (Notification.permission === 'denied' && sessionStorage.getItem('notification_reminder_shown') !== 'true') {
@@ -190,7 +209,7 @@ function forceDismissSplash() {
 }
 
 // ==========================================================================
-// 3. MODAL GATES
+// 5. MODAL GATES
 // ==========================================================================
 function showStrictInstallModal() { 
     if (pwaModal && pwaOverlay) { 
@@ -298,7 +317,7 @@ function triggerInstantNotification(messageText, type = 'success') {
 }
 
 // ==========================================================================
-// 4. CORE ENGINE & FIREBASE SYNC
+// 6. MAIN ENGINE BOOT & ONESIGNAL
 // ==========================================================================
 function bootApplication() {
     window.OneSignal = window.OneSignal || [];
@@ -325,54 +344,8 @@ function bootApplication() {
     }, 5000);
 }
 
-window.addEventListener('load', () => {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=66').then(reg => {
-            if (!navigator.serviceWorker.controller) return; 
-            reg.onupdatefound = () => {
-                const installingWorker = reg.installing;
-                installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        if (splashText) splashText.innerHTML = "New update found!<br><span style='color:#FF4B3A; font-size:14px; font-weight:500;'>Installing assets... Please do not close the app.</span>";
-                    }
-                };
-            };
-        }).catch(err => console.error("SW Error:", err));
-    }
-});
-
-let refreshing = false;
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) { refreshing = true; window.location.reload(); }
-    });
-}
-
-const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const auth = firebase.auth(); 
-
-auth.onAuthStateChanged((user) => { 
-    if (user) { 
-        currentUserUid = user.uid; 
-        initializeCloudDataSync(); 
-    } else { 
-        auth.signInAnonymously().catch(err => console.error("Firebase Auth Error:", err)); 
-    } 
-});
-
-function initializeCloudDataSync() {
-    if(!currentUserUid) return;
-    database.ref(`users/${currentUserUid}/tracked_orders`).on('value', (snapshot) => {
-        cloudTrackedOrders = []; 
-        snapshot.forEach((child) => { cloudTrackedOrders.push(child.val()); });
-        renderOrderHistory(); 
-    });
-}
-
 // ==========================================================================
-// 6. TIMEZONE ENGINE & LIVE MENU CONTROLLER
+// 7. TIMEZONE ENGINE & LIVE MENU CONTROLLER
 // ==========================================================================
 function isKitchenBlackoutActive() { return false; } 
 
@@ -381,14 +354,10 @@ function enforceBlackoutUILayout() {
     const historyContainer = document.getElementById('history-container');
     cart = [];
     if (cartBtn) cartBtn.style.display = 'none';
-    const menuContainer = document.getElementById('menu-container');
     if (menuContainer) {
         menuContainer.innerHTML = `<div style="text-align: center; padding: 32px 16px; background-color: #FFFFFF; border-radius: 18px; border: 1px dashed #E5E7EB; width: 100%; box-sizing: border-box;"><div style="font-size: 32px; margin-bottom: 8px;">⏰</div><div style="font-weight: 700; font-size: 15px; color: #111827;">Kitchen Closed for Today</div><div style="color: #6B7280; font-size: 13px; margin-top: 4px; line-height: 1.5;">Tomorrow's live menu will be available after 9:30 PM IST.</div></div>`;
     }
 }
-
-const menuContainer = document.getElementById('menu-container');
-const cartBtn = document.getElementById('cart-btn');
 
 database.ref('daily_live_menu').on('value', (snapshot) => {
     currentLiveMenuArray = [];
@@ -427,60 +396,9 @@ function renderCustomerMenu() {
     });
 }
 
-// ==========================================
-// 7. CLIENT-SIDE CLOUD ORDER HISTORY PIPELINE
-// ==========================================
-function renderOrderHistory() {
-    if (isKitchenBlackoutActive()) return enforceBlackoutUILayout();
-    const historyContainer = document.getElementById('history-container');
-    if (!historyContainer) return;
-    
-    if (cloudTrackedOrders.length === 0) { 
-        historyContainer.innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin-top: 12px;">No orders placed today yet.</p>'; return; 
-    }
-    if (historyContainer.innerHTML.includes("No orders placed today")) { historyContainer.innerHTML = ''; }
-
-    let notifiedStatuses = JSON.parse(localStorage.getItem('foodies_notified_statuses') || '{}');
-    
-    cloudTrackedOrders.forEach(orderId => {
-        database.ref(`orders/${orderId}`).on('value', (snapshot) => {
-            if (isKitchenBlackoutActive() || isConsoleViewActive) return; 
-            const order = snapshot.val();
-            if (!order) return;
-            
-            let card = document.getElementById(`history-card-${orderId}`);
-            let isNew = false;
-            if (!card) { card = document.createElement('div'); card.id = `history-card-${orderId}`; isNew = true; }
-            
-            let statusText = "On Hold"; let badgeColor = "#D97706"; let bgColor = "#FEF3C7";
-            const currentStatusKey = `${orderId}_${order.status}`;
-            
-            if (order.status === "ACCEPTED") { 
-                statusText = "Accepted"; badgeColor = "#059669"; bgColor = "#D1FAE5"; 
-                if (!notifiedStatuses[currentStatusKey]) {
-                    triggerInstantNotification(`✅ Order Accepted! The kitchen is preparing your food.`, 'success');
-                    notifiedStatuses[currentStatusKey] = true;
-                    localStorage.setItem('foodies_notified_statuses', JSON.stringify(notifiedStatuses));
-                }
-            } 
-            else if (order.status === "REJECTED") { 
-                statusText = "Rejected"; badgeColor = "#DC2626"; bgColor = "#FEE2E2"; 
-                if (!notifiedStatuses[currentStatusKey]) {
-                    triggerInstantNotification(`❌ Order Rejected. Please contact the kitchen.`, 'error');
-                    notifiedStatuses[currentStatusKey] = true;
-                    localStorage.setItem('foodies_notified_statuses', JSON.stringify(notifiedStatuses));
-                }
-            } else if (order.status === "HOLD" || order.status === "PENDING") {
-                statusText = "On Hold"; badgeColor = "#D97706"; bgColor = "#FEF3C7";
-            }
-            
-            card.style.cssText = `background-color: #F9FAFB; padding: 14px; border-radius: 14px; border: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center;`;
-            card.innerHTML = `<div style="flex-grow: 1; padding-right: 12px;"><div style="font-size: 13px; font-weight: 600; color: #111827; line-height: 1.4;">${order.items}</div><div style="font-size: 11px; color: #9CA3AF; margin-top: 4px;">Ordered at ${new Date(order.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div></div><span style="background-color: ${bgColor}; color: ${badgeColor}; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.3px;">${statusText}</span>`;
-            if (isNew) historyContainer.insertBefore(card, historyContainer.firstChild);
-        });
-    });
-}
-
+// ==========================================================================
+// 8. CART & CHECKOUT PIPELINE
+// ==========================================================================
 function addToCart(id, title, details) {
     if (isKitchenBlackoutActive()) return alert("The kitchen is currently closed.");
     const existingItem = cart.find(i => i.id === id);
@@ -567,7 +485,61 @@ function submitOrder() {
 }
 
 // ==========================================================================
-// 🚀 8. KITCHEN CONSOLE ENGINE (STRICT CRASH GUARDS APPLIED)
+// 9. CLIENT-SIDE CLOUD ORDER HISTORY
+// ==========================================================================
+function renderOrderHistory() {
+    if (isKitchenBlackoutActive()) return enforceBlackoutUILayout();
+    const historyContainer = document.getElementById('history-container');
+    if (!historyContainer) return;
+    
+    if (cloudTrackedOrders.length === 0) { 
+        historyContainer.innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin-top: 12px;">No orders placed today yet.</p>'; return; 
+    }
+    if (historyContainer.innerHTML.includes("No orders placed today")) { historyContainer.innerHTML = ''; }
+
+    let notifiedStatuses = JSON.parse(localStorage.getItem('foodies_notified_statuses') || '{}');
+    
+    cloudTrackedOrders.forEach(orderId => {
+        database.ref(`orders/${orderId}`).on('value', (snapshot) => {
+            if (isKitchenBlackoutActive() || isConsoleViewActive) return; 
+            const order = snapshot.val();
+            if (!order) return;
+            
+            let card = document.getElementById(`history-card-${orderId}`);
+            let isNew = false;
+            if (!card) { card = document.createElement('div'); card.id = `history-card-${orderId}`; isNew = true; }
+            
+            let statusText = "On Hold"; let badgeColor = "#D97706"; let bgColor = "#FEF3C7";
+            const currentStatusKey = `${orderId}_${order.status}`;
+            
+            if (order.status === "ACCEPTED") { 
+                statusText = "Accepted"; badgeColor = "#059669"; bgColor = "#D1FAE5"; 
+                if (!notifiedStatuses[currentStatusKey]) {
+                    triggerInstantNotification(`✅ Order Accepted! The kitchen is preparing your food.`, 'success');
+                    notifiedStatuses[currentStatusKey] = true;
+                    localStorage.setItem('foodies_notified_statuses', JSON.stringify(notifiedStatuses));
+                }
+            } 
+            else if (order.status === "REJECTED") { 
+                statusText = "Rejected"; badgeColor = "#DC2626"; bgColor = "#FEE2E2"; 
+                if (!notifiedStatuses[currentStatusKey]) {
+                    triggerInstantNotification(`❌ Order Rejected. Please contact the kitchen.`, 'error');
+                    notifiedStatuses[currentStatusKey] = true;
+                    localStorage.setItem('foodies_notified_statuses', JSON.stringify(notifiedStatuses));
+                }
+            } else if (order.status === "HOLD" || order.status === "PENDING") {
+                statusText = "On Hold"; badgeColor = "#D97706"; bgColor = "#FEF3C7";
+            }
+            
+            card.style.cssText = `background-color: #F9FAFB; padding: 14px; border-radius: 14px; border: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center;`;
+            card.innerHTML = `<div style="flex-grow: 1; padding-right: 12px;"><div style="font-size: 13px; font-weight: 600; color: #111827; line-height: 1.4;">${order.items}</div><div style="font-size: 11px; color: #9CA3AF; margin-top: 4px;">Ordered at ${new Date(order.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div></div><span style="background-color: ${bgColor}; color: ${badgeColor}; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.3px;">${statusText}</span>`;
+            if (isNew) historyContainer.insertBefore(card, historyContainer.firstChild);
+        });
+    });
+}
+
+// ==========================================================================
+// 🚀 10. KITCHEN CONSOLE ENGINE
 // ==========================================================================
 function authenticateConsoleAccess() {
     if (isConsoleViewActive) {
@@ -633,7 +605,7 @@ function launchConsoleLayout() {
 
     initializeKitchenOrderStream();
     
-    if (!inventoryContainer) return; // Completely safety stop if structural element doesn't exist
+    if (!inventoryContainer) return; 
     inventoryContainer.innerHTML = ''; 
     
     const sortedMenu = [...MASTER_MENU].sort((a, b) => {
@@ -761,7 +733,7 @@ function publishSelectedLiveMenu() {
 
 function initializeKitchenOrderStream() {
     const ordersContainer = document.getElementById('kitchen-orders-container');
-    if (!ordersContainer) return; // Prevent full system loop freeze
+    if (!ordersContainer) return; 
     
     let notifiedKitchenOrders = JSON.parse(localStorage.getItem('foodies_kitchen_notified') || '{}');
 
@@ -873,8 +845,31 @@ window.addEventListener('popstate', (event) => {
 });
 
 // ==========================================================================
-// 9. DEVELOPER UTILITY: NUKE DEVICE CACHE SCRIPT
+// 11. DEVELOPER UTILITY: NUKE DEVICE CACHE SCRIPT
 // ==========================================================================
+window.addEventListener('load', () => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js?v=67').then(reg => {
+            if (!navigator.serviceWorker.controller) return; 
+            reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        if (splashText) splashText.innerHTML = "New update found!<br><span style='color:#FF4B3A; font-size:14px; font-weight:500;'>Installing assets... Please do not close the app.</span>";
+                    }
+                };
+            };
+        }).catch(err => console.error("SW Error:", err));
+    }
+});
+
+let refreshing = false;
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; window.location.reload(); }
+    });
+}
+
 async function nukeAppCache() {
     console.log("Initiating complete site data wipe...");
     localStorage.clear();
