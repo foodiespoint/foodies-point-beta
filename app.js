@@ -1,10 +1,8 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 60)
+// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 61)
 // ==========================================================================
 let deferredPrompt = null;
-let installPromptSupported = false; 
 let cart = [];
-
 let isConsoleViewActive = false;
 let currentLiveMenuArray = []; 
 let pendingLiveArray = [];     
@@ -142,7 +140,7 @@ const MASTER_MENU = [
 ];
 
 // ==========================================================================
-// 2. STRICT LINEAR STARTUP SEQUENCE ENGINE (V60)
+// 2. STRICT LINEAR STARTUP SEQUENCE ENGINE (V61)
 // ==========================================================================
 let minimumSplashTimeMet = false;
 
@@ -156,33 +154,33 @@ const splashFailSafeGuard = setTimeout(() => {
     evaluateStartupSequence(); 
 }, 4000);
 
-// Checks if the app is physically installed on the home screen
-function isAppInstalled() {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const isIosStandalone = window.navigator.standalone === true;
-    const hasInstalledFlag = localStorage.getItem('pwa_installed_successfully') === 'true';
-    return isStandalone || isIosStandalone || hasInstalledFlag;
-}
+// Capture the browser's native install prompt the second it fires
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); 
+    deferredPrompt = e; 
+});
 
-// 🚀 FIXED V60: The Master Gatekeeper. Evaluates conditions in exact order.
+// 🚀 FIXED V61: The Master Gatekeeper. Separates Tab vs. Installed contexts perfectly.
 function evaluateStartupSequence() {
     if (!minimumSplashTimeMet) return;
+    
+    // Check if running directly on the hardware home screen
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    
     forceDismissSplash();
 
-    // GATE 1: PWA Installation Check
-    if (!isAppInstalled()) {
-        showMandatoryInstallModal();
-        return; // Halt here until installed
+    if (!isStandalone) {
+        // PHASE 1: User is in the browser tab. Force the Installation Gate.
+        showStrictInstallModal();
+    } else {
+        // PHASE 2: User is inside the installed application. Force the Notification Gate.
+        if ('Notification' in window && Notification.permission !== 'granted') {
+            showStrictNotificationModal();
+        } else {
+            // PHASE 3: All permissions met. Boot the application engine.
+            bootApplication();
+        }
     }
-
-    // GATE 2: Notification Permission Check
-    if ('Notification' in window && Notification.permission !== 'granted') {
-        showStrictNotificationModal();
-        return; // Halt here until permissions are granted
-    }
-
-    // GATE 3: Both conditions met. Boot the application.
-    bootApplication();
 }
 
 function forceDismissSplash() {
@@ -194,102 +192,44 @@ function forceDismissSplash() {
     }
 }
 
-// The core engine start loop (Only fires if gates are clear)
-function bootApplication() {
-    initializeCloudDataSync();
-    
-    setInterval(() => { 
-        const currentlyBlackedOut = isKitchenBlackoutActive();
-        if (currentlyBlackedOut !== blackoutStateMemory) {
-            blackoutStateMemory = currentlyBlackedOut;
-            if (currentlyBlackedOut) enforceBlackoutUILayout();
-            else renderCustomerMenu();
-        } else if (currentlyBlackedOut) {
-            enforceBlackoutUILayout();
-        }
-    }, 5000);
-}
-
-window.addEventListener('load', () => {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=60').then(reg => {
-            if (!navigator.serviceWorker.controller) return; 
-            reg.onupdatefound = () => {
-                const installingWorker = reg.installing;
-                installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        if (splashText) splashText.innerHTML = "New update found!<br><span style='color:#FF4B3A; font-size:14px; font-weight:500;'>Installing assets... Please do not close the app.</span>";
-                    }
-                };
-            };
-        }).catch(err => console.error("SW Error:", err));
-    }
-});
-
-let refreshing = false;
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) { refreshing = true; window.location.reload(); }
-    });
-}
-
 // ==========================================================================
 // 3. GATEWAY MODALS (INSTALLATION & ALERTS)
 // ==========================================================================
 
-// --- INSTALLATION MODAL LOGIC ---
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); 
-    deferredPrompt = e; 
-    installPromptSupported = true; 
-});
-
-function showMandatoryInstallModal() { 
+// --- GATE 1: INSTALLATION LOGIC ---
+function showStrictInstallModal() { 
     if (pwaModal && pwaOverlay) { 
+        const okBtn = document.getElementById('pwa-ok-btn');
+        if(okBtn) okBtn.onclick = handleInstallClick;
         pwaModal.style.display = 'flex'; 
         pwaOverlay.style.display = 'block'; 
         body.classList.add('stop-scrolling'); 
     } 
 }
 
-function dismissInstallModal() { 
-    if (pwaModal && pwaOverlay) { 
-        pwaModal.style.display = 'none'; 
-        pwaOverlay.style.display = 'none'; 
-        body.classList.remove('stop-scrolling'); 
-    } 
-}
-
-function triggerNativeInstall() {
+function handleInstallClick() {
     if (deferredPrompt) {
-        // Use the native prompt if the browser gave it to us
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then((choiceResult) => { 
             if (choiceResult.outcome === 'accepted') {
                 deferredPrompt = null; 
-                localStorage.setItem('pwa_installed_successfully', 'true');
-                dismissInstallModal(); 
-                evaluateStartupSequence(); // Re-run the gates
+                // Once installed, prompt them to close the tab and open the real app
+                if (pwaModal) {
+                    pwaModal.innerHTML = `<div style="text-align:center; padding: 10px;"><div style="font-size:48px; margin-bottom:14px;">✅</div><div style="font-weight:700; font-size:20px; color:#111827; margin-bottom:8px;">App Installed!</div><div style="font-size:14px; color:#6B7280; line-height:1.5;">Please close this browser tab and launch Foodies Point directly from your home screen.</div></div>`;
+                }
             }
         });
     } else {
-        // Fallback for iOS or aggressive browser caching: Tell them to do it manually
-        alert("To install: Tap the 3 dots menu (or Share button on iOS) and select 'Add to Home screen' or 'Install App'. Then launch the app from your home screen.");
+        // Fallback for iOS Safari which blocks automated prompts
+        alert("To install: Tap your browser's menu (3 dots or Share button), select 'Add to Home Screen', and launch the app from there!");
     }
 }
 
-window.addEventListener('appinstalled', () => { 
-    localStorage.setItem('pwa_installed_successfully', 'true'); 
-    dismissInstallModal();
-    evaluateStartupSequence(); // Advance to Gate 2
-});
-
-
-// --- NOTIFICATION MODAL LOGIC ---
+// --- GATE 2: NOTIFICATION LOGIC ---
 function showStrictNotificationModal() {
     if (notifModal && notifOverlay) {
         const descriptionDiv = notifModal.querySelector('div:nth-of-type(3)');
-        const actionBtn = notifModal.querySelector('.blocker-btn');
+        const actionBtn = document.getElementById('notif-ok-btn');
 
         if (actionBtn) {
             actionBtn.innerText = "OK";
@@ -301,7 +241,7 @@ function showStrictNotificationModal() {
 
         if (Notification.permission === 'denied') {
             if (descriptionDiv) {
-                descriptionDiv.innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts are Blocked!</span><br>Tapping OK cannot open the device prompt because permissions are blocked in your settings. Please clear/reset permissions via the browser padlock icon (🔒) to continue testing.";
+                descriptionDiv.innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts are Blocked!</span><br>Tapping OK cannot open the device prompt because permissions are blocked in your settings. Please go to your device settings, enable notifications for this app, and restart.";
             }
         } else {
             if (descriptionDiv) {
@@ -326,20 +266,13 @@ function handleMandatoryPermissionRequest() {
                 body.classList.remove('stop-scrolling');
             }
             triggerInstantNotification('🍕 Alerts Enabled! Your live tracking is active.', 'success');
-            
-            window.OneSignal = window.OneSignal || [];
-            OneSignal.push(function() {
-                OneSignal.Notifications.requestPermission();
-            });
-
-            bootApplication(); // Move to final boot stage
-            
+            bootApplication(); 
         } else {
             triggerInstantNotification('⚠️ Access required to utilize the application.', 'error');
             showStrictNotificationModal();
         }
     }).catch(err => {
-        console.error("Critical crash during system native request handler:", err);
+        console.error("Native request handler crash:", err);
         showStrictNotificationModal();
     });
 }
@@ -352,7 +285,6 @@ function triggerInstantNotification(messageText, type = 'success') {
         toast.style.cssText = `background: ${bgColor}; color: white; padding: 14px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: toastFadeIn 0.3s forwards; pointer-events: auto;`;
         toast.innerText = messageText;
         toastContainer.appendChild(toast);
-        
         setTimeout(() => {
             toast.style.animation = 'toastFadeOut 0.3s forwards';
             setTimeout(() => toast.remove(), 300);
@@ -361,7 +293,61 @@ function triggerInstantNotification(messageText, type = 'success') {
 }
 
 // ==========================================================================
-// 4. FIREBASE INFRASTRUCTURE & ANONYMOUS AUTHENTICATION CLOUD SYNC
+// 4. CORE ENGINE BOOT SEQUENCE (Runs only after all gates pass)
+// ==========================================================================
+function bootApplication() {
+    // 1. Initialize OneSignal native tracking
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(async function() {
+        await OneSignal.init({
+            appId: "ad014d82-5244-4531-bca8-f7acf471d23d", 
+            notifyButton: { enable: false },
+            allowLocalhostAsSecureOrigin: true
+        });
+        OneSignal.Notifications.requestPermission();
+    });
+
+    // 2. Initialize Cloud Persistence Sync
+    initializeCloudDataSync();
+    
+    // 3. Start DOM / Menu update loop
+    setInterval(() => { 
+        const currentlyBlackedOut = isKitchenBlackoutActive();
+        if (currentlyBlackedOut !== blackoutStateMemory) {
+            blackoutStateMemory = currentlyBlackedOut;
+            if (currentlyBlackedOut) enforceBlackoutUILayout();
+            else renderCustomerMenu();
+        } else if (currentlyBlackedOut) {
+            enforceBlackoutUILayout();
+        }
+    }, 5000);
+}
+
+window.addEventListener('load', () => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js?v=61').then(reg => {
+            if (!navigator.serviceWorker.controller) return; 
+            reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        if (splashText) splashText.innerHTML = "New update found!<br><span style='color:#FF4B3A; font-size:14px; font-weight:500;'>Installing assets... Please do not close the app.</span>";
+                    }
+                };
+            };
+        }).catch(err => console.error("SW Error:", err));
+    }
+});
+
+let refreshing = false;
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; window.location.reload(); }
+    });
+}
+
+// ==========================================================================
+// 5. FIREBASE INFRASTRUCTURE & ANONYMOUS AUTHENTICATION CLOUD SYNC
 // ==========================================================================
 const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
 firebase.initializeApp(firebaseConfig);
@@ -377,7 +363,7 @@ auth.onAuthStateChanged((user) => {
 });
 
 function initializeCloudDataSync() {
-    if(!currentUserUid) return; // Guard clause
+    if(!currentUserUid) return; 
     database.ref(`users/${currentUserUid}/tracked_orders`).on('value', (snapshot) => {
         cloudTrackedOrders = [];
         snapshot.forEach((child) => { cloudTrackedOrders.push(child.val()); });
@@ -385,35 +371,20 @@ function initializeCloudDataSync() {
     });
 }
 
-window.OneSignal = window.OneSignal || [];
-OneSignal.push(async function() {
-    await OneSignal.init({
-        appId: "ad014d82-5244-4531-bca8-f7acf471d23d", 
-        notifyButton: { enable: false },
-        allowLocalhostAsSecureOrigin: true
-    });
-});
-
 // ==========================================
-// 5. BULLETPROOF TIMEZONE LOCKOUT ENGINE
+// 6. TIMEZONE ENGINE & LIVE MENU CONTROLLER
 // ==========================================
-function isKitchenBlackoutActive() {
-    return false;
-}
+function isKitchenBlackoutActive() { return false; } // Disabled for testing
 
 function enforceBlackoutUILayout() {
     if (isConsoleViewActive) return;
     const historyContainer = document.getElementById('history-container');
     cart = [];
     if (cartBtn) cartBtn.style.display = 'none';
-    
     const menuContainer = document.getElementById('menu-container');
     menuContainer.innerHTML = `<div style="text-align: center; padding: 32px 16px; background-color: #FFFFFF; border-radius: 18px; border: 1px dashed #E5E7EB; width: 100%; box-sizing: border-box;"><div style="font-size: 32px; margin-bottom: 8px;">⏰</div><div style="font-weight: 700; font-size: 15px; color: #111827;">Kitchen Closed for Today</div><div style="color: #6B7280; font-size: 13px; margin-top: 4px; line-height: 1.5;">Tomorrow's live menu will be available after 9:30 PM IST.</div></div>`;
 }
 
-// ==========================================
-// 6. MAIN DATA PIPELINES: LIVE MENU CONTROLLER
-// ==========================================
 const menuContainer = document.getElementById('menu-container');
 const cartBtn = document.getElementById('cart-btn');
 
@@ -463,7 +434,7 @@ function renderOrderHistory() {
     if (cloudTrackedOrders.length === 0) { 
         historyContainer.innerHTML = '<p style="text-align: center; color: #9CA3AF; font-size: 13px; margin-top: 12px;">No orders placed today yet.</p>'; return; 
     }
-    if (historyContainer.innerHTML.includes("No orders placed today") || historyContainer.innerHTML.includes("History cleared")) { historyContainer.innerHTML = ''; }
+    if (historyContainer.innerHTML.includes("No orders placed today")) { historyContainer.innerHTML = ''; }
 
     let notifiedStatuses = JSON.parse(localStorage.getItem('foodies_notified_statuses') || '{}');
     
