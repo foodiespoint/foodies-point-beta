@@ -1,13 +1,11 @@
 // ==========================================================================
-// 1. GLOBAL PRODUCTION CONFIGURATIONS & STATE REGISTRY (VERSION 65)
+// 1. GLOBAL CONFIGURATIONS & STATE REGISTRY (VERSION 66)
 // ==========================================================================
 let deferredPrompt = null;
 let cart = [];
 let isConsoleViewActive = false;
 let currentLiveMenuArray = []; 
 let pendingLiveArray = [];     
-
-// CLOUD PERSISTENCE VARIABLES
 let currentUserUid = null;
 let cloudTrackedOrders = [];
 
@@ -128,7 +126,7 @@ const MASTER_MENU = [
 ];
 
 // ==========================================================================
-// 2. LINEAR STARTUP SEQUENCE ENGINE (V65)
+// 2. LINEAR STARTUP SEQUENCE ENGINE (V66)
 // ==========================================================================
 let minimumSplashTimeMet = false;
 setTimeout(() => { minimumSplashTimeMet = true; evaluateStartupSequence(); }, 1200);
@@ -141,7 +139,7 @@ function evaluateStartupSequence() {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     forceDismissSplash();
     if (!isStandalone) { showStrictInstallModal(); }
-    else if ('Notification' in window && Notification.permission !== 'granted') { showStrictNotificationModal(); }
+    else if ('Notification' in window && Notification.permission === 'denied' && sessionStorage.getItem('notification_reminder_shown') !== 'true') { showStrictNotificationModal(); }
     else { bootApplication(); }
 }
 
@@ -160,38 +158,20 @@ function showStrictInstallModal() {
 function handleInstallClick() {
     if (deferredPrompt) {
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => { 
-            if (choiceResult.outcome === 'accepted') {
-                deferredPrompt = null; 
-                pwaModal.innerHTML = `<div style="text-align:center;"><div style="font-size:48px;">✅</div><div style="font-weight:700; font-size:20px;">App Installed!</div><div style="font-size:14px; color:#6B7280;">Close this tab and open the app from your home screen.</div></div>`;
-            }
-        });
+        deferredPrompt.userChoice.then((choiceResult) => { if (choiceResult.outcome === 'accepted') { deferredPrompt = null; pwaModal.innerHTML = `<div style="text-align:center;"><div style="font-size:48px;">✅</div><div style="font-weight:700; font-size:20px;">App Installed!</div><div style="font-size:14px; color:#6B7280;">Close this tab and open the app from your home screen.</div></div>`; } });
     } else { alert("To install: Tap the menu (3 dots) and select 'Add to Home screen'."); }
 }
 
 function showStrictNotificationModal() {
     if (notifModal) {
+        sessionStorage.setItem('notification_reminder_shown', 'true');
         const actionBtn = document.getElementById('notif-ok-btn');
-        if (Notification.permission === 'denied') {
-            notifModal.querySelector('div:nth-of-type(3)').innerHTML = "<span style='color:#EF4444; font-weight:700;'>Alerts Blocked!</span><br>Notifications are disabled. Enable them in your device settings and refresh.";
-            actionBtn.innerText = "I've Enabled Them (Reload)";
-            actionBtn.onclick = () => window.location.reload(); 
-        } else {
-            actionBtn.innerText = "OK";
-            actionBtn.onclick = handleMandatoryPermissionRequest;
-        }
+        notifModal.querySelector('div:nth-of-type(3)').innerHTML = "Notifications are currently disabled. To receive real-time order tracking alerts, please enable notification access in your device settings.";
+        actionBtn.innerText = "OK";
+        actionBtn.style.backgroundColor = "#FF4B3A";
+        actionBtn.onclick = () => { notifModal.style.display = 'none'; notifOverlay.style.display = 'none'; body.classList.remove('stop-scrolling'); bootApplication(); };
         notifModal.style.display = 'flex'; notifOverlay.style.display = 'block'; body.classList.add('stop-scrolling');
     }
-}
-
-function handleMandatoryPermissionRequest() {
-    Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-            sessionStorage.setItem('notif_gate_passed', 'true');
-            notifModal.style.display = 'none'; notifOverlay.style.display = 'none'; body.classList.remove('stop-scrolling');
-            bootApplication(); 
-        } else { showStrictNotificationModal(); }
-    });
 }
 
 // ==========================================================================
@@ -204,6 +184,11 @@ function bootApplication() {
         OneSignal.Notifications.requestPermission();
     });
     initializeCloudDataSync();
+    
+    // Kitchen blackout logic loop
+    setInterval(() => { 
+        // Logic to check blackout state omitted for brevity
+    }, 5000);
 }
 
 const firebaseConfig = { databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app/" };
@@ -219,4 +204,10 @@ function initializeCloudDataSync() {
     });
 }
 
-// ... Keep your existing render/utility functions (renderMenu, renderOrderHistory, nukeAppCache, etc.) here ...
+// ... (Continue adding your renderMenu, renderOrderHistory, and utility functions here) ...
+
+window.addEventListener('load', () => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js?v=66').catch(err => console.error("SW Error:", err));
+    }
+});
