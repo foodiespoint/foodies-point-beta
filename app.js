@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. BOOTSTRAP ENGINE (VERSION 72) - ABSOLUTE TOP PRIORITY
+// 1. BOOTSTRAP ENGINE (VERSION 73) - ABSOLUTE TOP PRIORITY
 // ==========================================================================
 window.deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { 
@@ -361,7 +361,7 @@ function bootApplication() {
 }
 
 // ==========================================================================
-// 6. TIMEZONE ENGINE & LIVE MENU CONTROLLER
+// 6. TIMEZONE ENGINE & STEPPER RENDER CONTROLLER
 // ==========================================================================
 function isKitchenBlackoutActive() { return false; } 
 
@@ -374,6 +374,22 @@ function enforceBlackoutUILayout() {
     if (menuContainer) {
         menuContainer.innerHTML = `<div style="text-align: center; padding: 32px 16px; background-color: #FFFFFF; border-radius: 18px; border: 1px dashed #E5E7EB; width: 100%; box-sizing: border-box;"><div style="font-size: 32px; margin-bottom: 8px;">⏰</div><div style="font-weight: 700; font-size: 15px; color: #111827;">Kitchen Closed for Today</div><div style="color: #6B7280; font-size: 13px; margin-top: 4px; line-height: 1.5;">Tomorrow's live menu will be available after 9:30 PM IST.</div></div>`;
     }
+}
+
+// Generates either "+ Add" button or "[ - | Qty | + ]" stepper pill
+function renderItemActionUI(item, qty) {
+    if (item.isOutOfStock) {
+        return `<button disabled style="background-color: #F3F4F6; color: #9CA3AF; padding: 8px 14px; border: none; border-radius: 10px; font-weight: 500; font-size: 13px;">N/A</button>`;
+    }
+    if (qty > 0) {
+        return `
+        <div style="display: flex; align-items: center; background-color: #FF4B3A; color: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(255, 75, 58, 0.2); font-weight: 600; font-size: 13px;">
+            <button onclick="removeFromCart('${item.id}')" style="background: transparent; border: none; color: white; padding: 8px 11px; cursor: pointer; font-weight: 700; font-size: 15px; line-height: 1;">−</button>
+            <span style="padding: 0 4px; min-width: 18px; text-align: center; font-size: 13px;">${qty}</span>
+            <button onclick="addToCart('${item.id}', '${item.title}', '${item.details}')" style="background: transparent; border: none; color: white; padding: 8px 11px; cursor: pointer; font-weight: 700; font-size: 15px; line-height: 1;">+</button>
+        </div>`;
+    }
+    return `<button onclick="addToCart('${item.id}', '${item.title}', '${item.details}')" style="background-color: #FF4B3A; color: white; padding: 8px 16px; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 4px 10px rgba(255, 75, 58, 0.15); transition: all 0.15s ease;">+ Add</button>`;
 }
 
 function renderCustomerMenu() {
@@ -400,29 +416,33 @@ function renderCustomerMenu() {
         const currentQty = existingCartItem ? existingCartItem.quantity : 0;
         
         const badgeHTML = isStocked ? `<span style="background-color: #EEF2F6; color: #4B5563; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;">${item.category}</span>` : `<span style="background-color: #FEE2E2; color: #EF4444; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px;">OUT OF STOCK</span>`;
-        
-        let actionButtonHTML;
-        if (!isStocked) {
-            actionButtonHTML = `<button disabled style="background-color: #F3F4F6; color: #9CA3AF; padding: 8px 14px; border: none; border-radius: 10px; font-weight: 500; font-size: 13px;">N/A</button>`;
-        } else if (currentQty > 0) {
-            actionButtonHTML = `<button id="btn-${item.id}" onclick="addToCart('${item.id}', '${item.title}', '${item.details}')" style="background-color: #10B981; color: white; padding: 8px 16px; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); transition: all 0.15s ease;">${currentQty} Added</button>`;
-        } else {
-            actionButtonHTML = `<button id="btn-${item.id}" onclick="addToCart('${item.id}', '${item.title}', '${item.details}')" style="background-color: #FF4B3A; color: white; padding: 8px 16px; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 4px 10px rgba(255, 75, 58, 0.15); transition: all 0.15s ease;">+ Add</button>`;
-        }
 
         card.style.cssText = `background-color: #FFFFFF; padding: 16px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); border: 1px solid #F3F4F6; opacity: ${opacitySetting}; display: flex; justify-content: space-between; align-items: center;`;
-        card.innerHTML = `<div style="flex-grow: 1; padding-right: 16px;"><div style="margin-bottom: 6px; display: inline-block;">${badgeHTML}</div><div style="font-size: 16px; font-weight: 600; color: #111827; letter-spacing: -0.3px; margin-top: 2px;">${item.title}</div><div style="color: #6B7280; font-size: 13px; margin-top: 3px; line-height: 1.4;">${item.details}</div></div><div style="flex-shrink: 0;">${actionButtonHTML}</div>`;
+        card.innerHTML = `
+            <div style="flex-grow: 1; padding-right: 16px;">
+                <div style="margin-bottom: 6px; display: inline-block;">${badgeHTML}</div>
+                <div style="font-size: 16px; font-weight: 600; color: #111827; letter-spacing: -0.3px; margin-top: 2px;">${item.title}</div>
+                <div style="color: #6B7280; font-size: 13px; margin-top: 3px; line-height: 1.4;">${item.details}</div>
+            </div>
+            <div id="action-wrap-${item.id}" style="flex-shrink: 0;">
+                ${renderItemActionUI(item, currentQty)}
+            </div>
+        `;
         menuContainer.appendChild(card);
     });
 }
 
 // ==========================================================================
-// 7. CART & CHECKOUT PIPELINE
+// 7. CART STEPPER & CHECKOUT PIPELINE (MAX 10 CAP)
 // ==========================================================================
 function addToCart(id, title, details) {
     if (isKitchenBlackoutActive()) return alert("The kitchen is currently closed.");
     const existingItem = cart.find(i => i.id === id);
-    if (details.toLowerCase().includes("per plate") && existingItem && existingItem.quantity >= 5) return alert(`⚠️ Order Limit Exceeded!`);
+    
+    // Cap maximum additions per item to 10
+    if (existingItem && existingItem.quantity >= 10) {
+        return alert("⚠️ Maximum limit of 10 reached for this item!");
+    }
     
     if (existingItem) {
         existingItem.quantity += 1; 
@@ -430,22 +450,49 @@ function addToCart(id, title, details) {
         cart.push({ id, title, details, quantity: 1 });
     }
     
-    const updatedItem = cart.find(i => i.id === id);
-    const itemBtn = document.getElementById(`btn-${id}`);
-    if (itemBtn) {
-        itemBtn.innerText = `${updatedItem.quantity} Added`;
-        itemBtn.style.backgroundColor = "#10B981";
-        itemBtn.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.2)";
-        
-        itemBtn.style.transform = "scale(1.08)";
-        setTimeout(() => { itemBtn.style.transform = "scale(1)"; }, 150);
+    // Seamlessly update only this item's UI stepper wrapper
+    const actionWrap = document.getElementById(`action-wrap-${id}`);
+    const liveItem = currentLiveMenuArray.find(m => m.id === id);
+    if (actionWrap && liveItem) {
+        const updatedItem = cart.find(i => i.id === id);
+        const qty = updatedItem ? updatedItem.quantity : 0;
+        actionWrap.innerHTML = renderItemActionUI(liveItem, qty);
     }
 
+    updateCartButtonDisplay();
+}
+
+function removeFromCart(id) {
+    const existingItem = cart.find(i => i.id === id);
+    if (!existingItem) return;
+
+    if (existingItem.quantity > 1) {
+        existingItem.quantity -= 1;
+    } else {
+        cart = cart.filter(i => i.id !== id);
+    }
+
+    const actionWrap = document.getElementById(`action-wrap-${id}`);
+    const liveItem = currentLiveMenuArray.find(m => m.id === id);
+    if (actionWrap && liveItem) {
+        const updatedItem = cart.find(i => i.id === id);
+        const qty = updatedItem ? updatedItem.quantity : 0;
+        actionWrap.innerHTML = renderItemActionUI(liveItem, qty);
+    }
+
+    updateCartButtonDisplay();
+}
+
+function updateCartButtonDisplay() {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     const cartBtn = document.getElementById('cart-btn');
     if (cartBtn) {
-        cartBtn.style.display = 'block'; 
-        cartBtn.innerText = `View Order (${totalItems} items)`;
+        if (totalItems > 0) {
+            cartBtn.style.display = 'block'; 
+            cartBtn.innerText = `View Order (${totalItems} items)`;
+        } else {
+            cartBtn.style.display = 'none';
+        }
     }
 }
 
@@ -518,8 +565,7 @@ function submitOrder() {
         
         triggerInstantNotification("Order dispatched to the kitchen!", "success");
         cart = []; 
-        const cartBtn = document.getElementById('cart-btn');
-        if (cartBtn) cartBtn.style.display = 'none'; 
+        updateCartButtonDisplay();
         closeCheckout();
         firstNameEl.value = ''; lastNameEl.value = ''; phoneEl.value = '';
     }).catch(() => triggerInstantNotification("Error sending order.", "error"));
@@ -887,7 +933,7 @@ window.addEventListener('popstate', (event) => {
 // ==========================================================================
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=72').catch(err => console.error("SW Error:", err));
+        navigator.serviceWorker.register('sw.js?v=73').catch(err => console.error("SW Error:", err));
     }
 });
 
