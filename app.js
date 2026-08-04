@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. BOOTSTRAP ENGINE (VERSION 70) - ABSOLUTE TOP PRIORITY
+// 1. BOOTSTRAP ENGINE (VERSION 71) - ABSOLUTE TOP PRIORITY
 // ==========================================================================
 window.deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { 
@@ -10,7 +10,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
 let minimumSplashTimeMet = false;
 let appBooted = false;
 
-// Guarantee the boot sequence fires regardless of downstream script parsing
 setTimeout(() => { 
     minimumSplashTimeMet = true; 
     if(!appBooted) try { evaluateStartupSequence(); } catch(e) { console.error("Boot Err:", e); bootApplication(); }
@@ -70,7 +69,7 @@ function showStrictInstallModal() {
         pwaOverlay.style.display = 'block'; 
         document.body.classList.add('stop-scrolling'); 
     } else {
-        bootApplication(); // Fail-safe if HTML is missing
+        bootApplication(); 
     }
 }
 
@@ -397,13 +396,11 @@ function renderCustomerMenu() {
         const isStocked = !item.isOutOfStock;
         const opacitySetting = isStocked ? '1.0' : '0.6';
         
-        // Check if item is already in the cart
         const existingCartItem = cart.find(i => i.id === item.id);
         const currentQty = existingCartItem ? existingCartItem.quantity : 0;
         
         const badgeHTML = isStocked ? `<span style="background-color: #EEF2F6; color: #4B5563; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;">${item.category}</span>` : `<span style="background-color: #FEE2E2; color: #EF4444; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px;">OUT OF STOCK</span>`;
         
-        // Render "+ Add" OR the green active counter badge ("2 Added")
         let actionButtonHTML;
         if (!isStocked) {
             actionButtonHTML = `<button disabled style="background-color: #F3F4F6; color: #9CA3AF; padding: 8px 14px; border: none; border-radius: 10px; font-weight: 500; font-size: 13px;">N/A</button>`;
@@ -433,10 +430,7 @@ function addToCart(id, title, details) {
         cart.push({ id, title, details, quantity: 1 });
     }
     
-    // Find the updated quantity for this specific dish
     const updatedItem = cart.find(i => i.id === id);
-    
-    // Immediately update the specific button's text and color
     const itemBtn = document.getElementById(`btn-${id}`);
     if (itemBtn) {
         itemBtn.innerText = `${updatedItem.quantity} Added`;
@@ -889,11 +883,11 @@ window.addEventListener('popstate', (event) => {
 });
 
 // ==========================================================================
-// 10. SW REGISTRATION & CACHE NUKE UTILITY
+// 10. SW REGISTRATION, UPDATE CHECKER & CACHE NUKE UTILITY
 // ==========================================================================
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=70').catch(err => console.error("SW Error:", err));
+        navigator.serviceWorker.register('sw.js?v=71').catch(err => console.error("SW Error:", err));
     }
 });
 
@@ -903,6 +897,33 @@ if ('serviceWorker' in navigator) {
         if (!refreshing) { refreshing = true; window.location.reload(); }
     });
 }
+
+// 🚀 Dedicated Manual App Updater for Top-Left Header Button
+async function manualAppUpdate() {
+    const updateBtn = document.getElementById('manual-update-btn');
+    if (updateBtn) {
+        updateBtn.innerText = "⏳ Updating...";
+        updateBtn.disabled = true;
+    }
+
+    triggerInstantNotification("Checking for application updates...", "info");
+
+    try {
+        if ('serviceWorker' in navigator) {
+            const reg = await navigator.serviceWorker.getRegistration();
+            if (reg) {
+                await reg.update();
+            }
+        }
+    } catch (e) {
+        console.warn("Manual SW update check failed:", e);
+    }
+
+    setTimeout(() => {
+        window.location.reload(true);
+    }, 600);
+}
+window.manualAppUpdate = manualAppUpdate;
 
 async function nukeAppCache() {
     console.log("Initiating complete site data wipe...");
