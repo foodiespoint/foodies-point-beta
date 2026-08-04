@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v10)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v11)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v10] Initialized successfully.");
+  console.log("[Firebase v11] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v10] Initialization error:", error);
+  console.error("[Firebase v11] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v10] Initialization error:", error);
+  console.error("[OneSignal v11] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v10 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v11 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=10', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=11', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v10] Registered successfully with scope:', reg.scope);
+      console.log('[SW v11] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v10] Registration failed:', err);
+      console.error('[SW v11] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v10 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v11 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v10] Checking for updates...');
+  console.log('[PWA v11] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v10)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v11)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v10] User accepted installation prompt.');
+          console.log('[PWA v11] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v10] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v11] Standalone PWA mode verified. Application unlocked.");
   } else {
-    console.log("[PWA v10] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v11] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -263,13 +263,9 @@ let kitchenCheckedState = {};
 // ==========================================================================
 // 7. RENDER KITCHEN MENU (Unchecked by Default + Checked Move to Top)
 // ==========================================================================
-function renderKitchenMenu(activeIds = null) {
+function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
   if (!container) return;
-
-  if (activeIds) {
-    kitchenCheckedState = { ...activeIds };
-  }
 
   container.innerHTML = '';
   const categories = [...new Set(MENU_ITEMS.map(item => item.category))];
@@ -309,7 +305,7 @@ function renderKitchenMenu(activeIds = null) {
     });
   });
 
-  console.log("[Kitchen v10] Rendered menu with checked items sorted to top.");
+  console.log("[Kitchen v11] Rendered menu. All items unchecked by default.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -340,7 +336,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v10] Published dailyMenu to Firebase.`);
+      console.log(`[v11] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -399,7 +395,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v10] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v11] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -534,13 +530,9 @@ function enterKitchenMode() {
   const headerBtn = document.getElementById('header-kitchen-btn');
   if (headerBtn) headerBtn.style.display = 'none';
 
-  if (db) {
-    db.ref('dailyMenu').once('value')
-      .then((snap) => renderKitchenMenu(snap.val()))
-      .catch(() => renderKitchenMenu(null));
-  } else {
-    renderKitchenMenu(null);
-  }
+  // Always reset checked state so every checkbox starts UNCHECKED by default
+  kitchenCheckedState = {};
+  renderKitchenMenu();
 
   listenForKitchenOrders();
 }
