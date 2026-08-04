@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v08 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v09 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=08">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=09">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES                                    -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v09 - INVERTED GATE CSS)          -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -49,13 +49,15 @@
       padding-bottom: 90px;
     }
 
-    /* IRREMOVABLE INSTALL GATE OVERLAY (v08) */
+    /* ====================================================================== */
+    /* IRREMOVABLE INSTALL GATE OVERLAY (VISIBLE BY DEFAULT IN BROWSER)       */
+    /* ====================================================================== */
     #install-gate-overlay {
-      display: none; /* Controlled via app.js */
+      display: flex !important;
       position: fixed;
       inset: 0;
       background: var(--bg-light);
-      z-index: 9999;
+      z-index: 99999;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -65,22 +67,23 @@
 
     .install-modal-card {
       background: var(--white);
-      padding: 28px 24px;
-      border-radius: 16px;
+      padding: 30px 24px;
+      border-radius: 18px;
       width: 92%;
       max-width: 380px;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.15);
       border: 1px solid var(--border-color);
     }
 
     .install-modal-card h2 {
       color: var(--primary-color);
-      font-size: 1.35rem;
+      font-size: 1.4rem;
       margin-bottom: 12px;
+      font-weight: 800;
     }
 
     .install-modal-card p {
-      color: #555;
+      color: #444;
       font-size: 0.95rem;
       line-height: 1.5;
       margin-bottom: 20px;
@@ -88,13 +91,20 @@
 
     .install-instructions-box {
       font-size: 0.85rem;
-      color: #444;
-      background: var(--bg-light);
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border-color);
+      color: #333;
+      background: #FFF5F4;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #FFD8D4;
       text-align: left;
-      line-height: 1.5;
+      line-height: 1.6;
+    }
+
+    /* ====================================================================== */
+    /* MASTER APP CONTAINER (HIDDEN BY DEFAULT - UNLOCKED ONLY BY STANDALONE) */
+    /* ====================================================================== */
+    #main-app-content {
+      display: none !important;
     }
 
     /* Top App Header */
@@ -226,7 +236,7 @@
       font-size: 0.9rem;
     }
 
-    /* Place Order Checkout Bar (Customer View Only) */
+    /* Place Order Checkout Bar */
     .checkout-bar {
       position: fixed;
       bottom: 0;
@@ -356,7 +366,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v08)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v09 - ACTIVE BY DEFAULT)          -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -365,77 +375,75 @@
         To access the live menu and place orders, you must install the Foodies Point app to your home screen. Browser access is disabled.
       </p>
       
-      <!-- Native OS Install Button (Appears on Chrome/Android when supported) -->
-      <button id="btn-native-install" class="btn-publish" style="display: none; margin-bottom: 16px;">
+      <!-- Native OS Install Button (Appears automatically when Chrome/Android allows prompt) -->
+      <button id="btn-native-install" class="btn-publish" style="display: none; margin-bottom: 18px;">
         📲 Install App Now
       </button>
 
       <!-- Step-by-Step Installation Instructions -->
       <div class="install-instructions-box">
-        <p style="margin-bottom: 8px;">
-          <strong>iOS / iPhone:</strong> Tap the Share button (<span style="font-size: 1.1em;">⎋</span>) in Safari and select <strong>"Add to Home Screen"</strong> (<span style="font-size: 1.1em;">➕</span>).
+        <p style="margin-bottom: 10px;">
+          <strong>📱 iOS / iPhone:</strong><br>
+          Tap the Share button (<span style="font-size: 1.15em;">⎋</span>) at the bottom of Safari and select <strong>"Add to Home Screen"</strong> (<span style="font-size: 1.15em;">➕</span>).
         </p>
         <p>
-          <strong>Android / Chrome:</strong> Tap the browser menu (<strong>⋮</strong>) in the top right and select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
+          <strong>🤖 Android / Chrome:</strong><br>
+          Tap the browser menu (<strong>⋮</strong>) in the top right corner and select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
         </p>
       </div>
     </div>
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. APP HEADER WITH UPDATE ENGINE & KITCHEN TOGGLE                      -->
+  <!-- 5. MASTER APP CONTAINER (v09 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
-  <header class="app-header" id="app-header">
-    <div class="app-title">Foodies Point</div>
-    <div class="header-actions">
-      <!-- PWA Manual Cache Bust / App Update Button (v08) -->
-      <button class="btn-update" onclick="manualAppUpdate()">↻ Update v08</button>
-      <!-- Kitchen Console Access Button (Hides automatically inside Kitchen View) -->
-      <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
-    </div>
-  </header>
+  <div id="main-app-content">
 
-  <!-- ====================================================================== -->
-  <!-- 6. CUSTOMER LIVE MENU VIEW (Shows ONLY Published Items)                -->
-  <!-- ====================================================================== -->
-  <main class="container" id="customer-view">
-    <h2 class="section-title">Today's Live Menu</h2>
-    <!-- Customer Live Menu List Container -->
-    <div class="menu-list" id="customer-menu-container">
-      <p style="text-align:center; padding: 30px; color:#666;">Loading live menu...</p>
-    </div>
-  </main>
+    <!-- APP HEADER -->
+    <header class="app-header">
+      <div class="app-title">Foodies Point</div>
+      <div class="header-actions">
+        <button class="btn-update" onclick="manualAppUpdate()">↻ Update v09</button>
+        <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
+      </div>
+    </header>
 
-  <!-- Floating Checkout Bar -->
-  <div class="checkout-bar" id="checkout-bar">
-    <button class="btn-place-order" onclick="placeOrder()">Place Order</button>
+    <!-- CUSTOMER LIVE MENU VIEW -->
+    <main class="container" id="customer-view">
+      <h2 class="section-title">Today's Live Menu</h2>
+      <div class="menu-list" id="customer-menu-container">
+        <p style="text-align:center; padding: 30px; color:#666;">Loading live menu...</p>
+      </div>
+    </main>
+
+    <!-- CHECKOUT BAR -->
+    <div class="checkout-bar" id="checkout-bar">
+      <button class="btn-place-order" onclick="placeOrder()">Place Order</button>
+    </div>
+
+    <!-- KITCHEN CONSOLE VIEW -->
+    <section class="container" id="kitchen-view">
+      <div class="kitchen-header">
+        <h2 class="section-title">Kitchen Console (v09)</h2>
+        <button class="btn-kitchen" onclick="exitKitchenMode()">Exit Kitchen</button>
+      </div>
+
+      <h2 class="section-title" style="margin-top: 10px;">Select & Publish Daily Live Menu</h2>
+      <button class="btn-publish" onclick="publishDailyMenu()">Publish Daily Live Menu</button>
+      <div class="menu-list" id="kitchen-menu-container">
+        <!-- Complete 102 dishes render here dynamically -->
+      </div>
+
+      <h2 class="section-title" style="margin-top: 20px; border-top: 2px solid #EAEAEA; padding-top: 16px;">Live Incoming Orders</h2>
+      <div id="kitchen-orders-container">
+        <!-- Live Firebase orders appear here -->
+      </div>
+    </section>
+
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 7. KITCHEN CONSOLE VIEW (Protected by PIN: validatefoodies2026)        -->
-  <!-- ====================================================================== -->
-  <section class="container" id="kitchen-view">
-    <div class="kitchen-header">
-      <h2 class="section-title">Kitchen Console (v08)</h2>
-      <button class="btn-kitchen" onclick="exitKitchenMode()">Exit Kitchen</button>
-    </div>
-
-    <!-- 7A. DAILY MENU PUBLISHING & ITEM SELECTION CHECKBOXES -->
-    <h2 class="section-title" style="margin-top: 10px;">Select & Publish Daily Live Menu</h2>
-    <button class="btn-publish" onclick="publishDailyMenu()">Publish Daily Live Menu</button>
-    <div class="menu-list" id="kitchen-menu-container">
-      <!-- Complete 102 dishes render here dynamically with unchecked boxes -->
-    </div>
-
-    <!-- 7B. LIVE INCOMING ORDERS (No Archive Button) -->
-    <h2 class="section-title" style="margin-top: 20px; border-top: 2px solid #EAEAEA; padding-top: 16px;">Live Incoming Orders</h2>
-    <div id="kitchen-orders-container">
-      <!-- Live Firebase orders appear here -->
-    </div>
-  </section>
-
-  <!-- ====================================================================== -->
-  <!-- 8. SECURITY PIN MODAL FOR KITCHEN CONSOLE                              -->
+  <!-- 6. SECURITY PIN MODAL FOR KITCHEN CONSOLE                              -->
   <!-- ====================================================================== -->
   <div class="modal-overlay" id="pin-modal">
     <div class="modal-card">
@@ -450,8 +458,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 9. MAIN APP SCRIPT (v08 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 7. MAIN APP SCRIPT (v09 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=08"></script>
+  <script src="/foodies-point-beta/app.js?v=09"></script>
 </body>
 </html>
