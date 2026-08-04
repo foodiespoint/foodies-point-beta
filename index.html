@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v10 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v11 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=10">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=11">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v10)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v11)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -41,6 +41,12 @@
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    /* DISABLE DRAG-DOWN RELOAD (PULL-TO-REFRESH) */
+    html, body {
+      overscroll-behavior-y: none;
+      overscroll-behavior: none;
     }
 
     body {
@@ -377,7 +383,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v10 - CLEAN & MINIMALIST)         -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v11 - CLEAN & MINIMALIST)         -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -394,7 +400,7 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v10 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v11 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
@@ -402,7 +408,7 @@
     <header class="app-header">
       <div class="app-title">Foodies Point</div>
       <div class="header-actions">
-        <button class="btn-update" onclick="manualAppUpdate()">↻ Update v10</button>
+        <button class="btn-update" onclick="manualAppUpdate()">↻ Update v11</button>
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
       </div>
     </header>
@@ -423,7 +429,7 @@
     <!-- KITCHEN CONSOLE VIEW -->
     <section class="container" id="kitchen-view">
       <div class="kitchen-header">
-        <h2 class="section-title">Kitchen Console (v10)</h2>
+        <h2 class="section-title">Kitchen Console</h2>
         <button class="btn-kitchen" onclick="exitKitchenMode()">Exit Kitchen</button>
       </div>
 
@@ -462,8 +468,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 7. MAIN APP SCRIPT (v10 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 7. MAIN APP SCRIPT (v11 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=10"></script>
+  <script src="/foodies-point-beta/app.js?v=11"></script>
 </body>
 </html>
