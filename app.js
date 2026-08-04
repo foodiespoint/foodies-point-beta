@@ -2,13 +2,13 @@
 // 1. FIREBASE CONFIGURATION & INITIALIZATION
 // ==========================================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyD...YOUR_API_KEY_HERE",
-  authDomain: "your-project-id.firebaseapp.com",
-  databaseURL: "https://your-project-id-default-rtdb.firebaseio.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef123456"
+  apiKey: "AIzaSyDu-pEongNewYbzc9-FG477NRVW2izilzM",
+  authDomain: "foodiespoint-6760.firebaseapp.com",
+  databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "foodiespoint-6760",
+  storageBucket: "foodiespoint-6760.firebasestorage.app",
+  messagingSenderId: "160661145433",
+  appId: "1:160661145433:web:616afe0d7ca7cdf0faae48"
 };
 
 // Initialize Firebase
