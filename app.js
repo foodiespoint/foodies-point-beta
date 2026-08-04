@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v05)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v06)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v05] Initialized successfully.");
+  console.log("[Firebase v06] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v05] Initialization error:", error);
+  console.error("[Firebase v06] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v05] Initialization error:", error);
+  console.error("[OneSignal v06] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v05 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v06 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=05', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=06', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v05] Registered successfully with scope:', reg.scope);
+      console.log('[SW v06] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v05] Registration failed:', err);
+      console.error('[SW v06] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v05 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v06 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v05] Checking for updates...');
+  console.log('[PWA v06] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -209,10 +209,8 @@ const MENU_ITEMS = [
   { id: 'dish-102', category: 'Rice', name: 'Veg. Biryani', price: 180 }
 ];
 
-const cart = {};
-
 // ==========================================================================
-// 6. RENDER MENU DIRECTLY INSIDE THE KITCHEN CONSOLE
+// 6. RENDER MENU IN KITCHEN CONSOLE WITH SELECTION CHECKBOXES (v06)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -221,55 +219,89 @@ function renderKitchenMenu() {
   container.innerHTML = '';
   let currentCategory = '';
 
-  MENU_ITEMS.forEach((dish) => {
-    cart[dish.id] = cart[dish.id] || 0;
+  // Fetch last published menu state from Firebase to pre-check boxes
+  const publishedRef = db ? db.ref('dailyMenu') : null;
+  
+  const renderItems = (activeIds = null) => {
+    container.innerHTML = '';
+    currentCategory = '';
 
-    if (dish.category !== currentCategory) {
-      currentCategory = dish.category;
-      const categoryHeader = document.createElement('h3');
-      categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
-      categoryHeader.textContent = currentCategory;
-      container.appendChild(categoryHeader);
-    }
+    MENU_ITEMS.forEach((dish) => {
+      // If dailyMenu exists in Firebase, use it; otherwise default all checked
+      const isChecked = activeIds ? !!activeIds[dish.id] : true;
 
-    const card = document.createElement('div');
-    card.className = 'menu-card';
-    card.setAttribute('data-item-id', dish.id);
-    card.innerHTML = `
-      <div class="dish-info">
-        <h4>${dish.name}</h4>
-        <div class="price">₹${dish.price}</div>
-      </div>
-      <div class="quantity-stepper">
-        <button type="button" aria-label="Decrease quantity" onclick="updateQuantity('${dish.id}', -1)">−</button>
-        <span id="qty-${dish.id}">${cart[dish.id]}</span>
-        <button type="button" aria-label="Increase quantity" onclick="updateQuantity('${dish.id}', 1)">+</button>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-  console.log("[Kitchen v05] Rendered 102 menu items inside console.");
-}
+      if (dish.category !== currentCategory) {
+        currentCategory = dish.category;
+        const categoryHeader = document.createElement('h3');
+        categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
+        categoryHeader.textContent = currentCategory;
+        container.appendChild(categoryHeader);
+      }
 
-function updateQuantity(dishId, change) {
-  const currentQty = cart[dishId] || 0;
-  let newQty = currentQty + change;
+      const card = document.createElement('div');
+      card.className = 'menu-card';
+      card.setAttribute('data-item-id', dish.id);
+      card.innerHTML = `
+        <div class="dish-select-area">
+          <input type="checkbox" class="dish-checkbox" id="chk-${dish.id}" ${isChecked ? 'checked' : ''}>
+          <div class="dish-info">
+            <h4>${dish.name}</h4>
+            <div class="price">₹${dish.price}</div>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+    console.log("[Kitchen v06] Rendered 102 menu items with selection checkboxes.");
+  };
 
-  if (newQty < 0) newQty = 0;
-  if (newQty > 10) {
-    alert("Quantity cap reached: Maximum 10 items per dish.");
-    newQty = 10;
-  }
-
-  cart[dishId] = newQty;
-  const qtySpan = document.getElementById(`qty-${dishId}`);
-  if (qtySpan) {
-    qtySpan.textContent = newQty;
+  if (publishedRef) {
+    publishedRef.once('value')
+      .then((snap) => renderItems(snap.val()))
+      .catch(() => renderItems(null));
+  } else {
+    renderItems(null);
   }
 }
 
 // ==========================================================================
-// 7. KITCHEN CONSOLE SECURITY PIN LOGIC (Session Caching Enabled)
+// 7. PUBLISH DAILY LIVE MENU TO FIREBASE (v06)
+// ==========================================================================
+function publishDailyMenu() {
+  if (!db) {
+    alert("Database connection is not ready. Please refresh the page.");
+    return;
+  }
+
+  const activeMenu = {};
+  let selectedCount = 0;
+
+  MENU_ITEMS.forEach((dish) => {
+    const checkbox = document.getElementById(`chk-${dish.id}`);
+    if (checkbox && checkbox.checked) {
+      activeMenu[dish.id] = true;
+      selectedCount++;
+    }
+  });
+
+  if (selectedCount === 0) {
+    alert("Please select at least one item to publish on the daily menu.");
+    return;
+  }
+
+  db.ref('dailyMenu').set(activeMenu)
+    .then(() => {
+      alert(`Daily Live Menu published successfully with ${selectedCount} active items!`);
+      console.log(`[v06] Updated dailyMenu in Firebase (${selectedCount} items).`);
+    })
+    .catch((error) => {
+      console.error("Error publishing menu:", error);
+      alert("Failed to publish daily menu. Please check your network connection.");
+    });
+}
+
+// ==========================================================================
+// 8. KITCHEN CONSOLE SECURITY PIN LOGIC (Session Caching Enabled)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 
@@ -305,7 +337,7 @@ function enterKitchenMode() {
   const headerBtn = document.getElementById('header-kitchen-btn');
   if (headerBtn) headerBtn.style.display = 'none';
 
-  // Render the menu AND listen for orders inside the kitchen console
+  // Render the menu with checkboxes AND listen for orders inside console
   renderKitchenMenu();
   listenForKitchenOrders();
 }
@@ -322,7 +354,7 @@ function exitKitchenMode() {
 }
 
 // ==========================================================================
-// 8. LIVE KITCHEN ORDER LISTENER (ONLY Accept & Complete - NO Archive)
+// 9. LIVE KITCHEN ORDER LISTENER (ONLY Accept & Complete - NO Archive)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -377,7 +409,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 9. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
+// 10. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
 // ==========================================================================
 function acceptOrder(firebaseKey) {
   if (!db) return;
