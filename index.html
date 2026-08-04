@@ -19,10 +19,8 @@
   <!-- ====================================================================== -->
   <!-- 2. EXTERNAL SDKS (Firebase Realtime Database & OneSignal)              -->
   <!-- ====================================================================== -->
-  <!-- Firebase App & Realtime Database SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  <!-- OneSignal Push Notifications SDK -->
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
@@ -48,7 +46,7 @@
     body {
       background-color: var(--bg-light);
       color: var(--text-dark);
-      padding-bottom: 80px;
+      padding-bottom: 100px;
     }
 
     /* Top App Header */
@@ -159,6 +157,34 @@
       font-size: 0.9rem;
     }
 
+    /* Place Order Checkout Bar */
+    .checkout-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      padding: 14px 20px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: center;
+      z-index: 900;
+    }
+
+    .btn-place-order {
+      width: 100%;
+      max-width: 560px;
+      background: var(--primary-color);
+      color: var(--white);
+      border: none;
+      padding: 14px;
+      border-radius: 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 75, 58, 0.3);
+    }
+
     /* Kitchen Console View (Hidden by default) */
     #kitchen-view {
       display: none;
@@ -254,8 +280,8 @@
     <div class="header-actions">
       <!-- PWA Manual Cache Bust / App Update Button -->
       <button class="btn-update" onclick="manualAppUpdate()">↻ Update</button>
-      <!-- Kitchen Console PIN Access Trigger -->
-      <button class="btn-kitchen" onclick="openKitchenPINModal()">Kitchen</button>
+      <!-- Kitchen Console Access Button (Hides automatically in Kitchen View) -->
+      <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
     </div>
   </header>
 
@@ -267,23 +293,14 @@
     
     <!-- Menu List Container (Populated dynamically via app.js) -->
     <div class="menu-list" id="menu-list-container">
-      
-      <!-- Example Menu Item Card with Quantity Stepper (Max 10 Cap) -->
-      <div class="menu-card" data-item-id="dish-001">
-        <div class="dish-info">
-          <h4>Paneer Butter Masala</h4>
-          <div class="price">₹220</div>
-        </div>
-        <!-- − | Qty | + Stepper Control -->
-        <div class="quantity-stepper">
-          <button type="button" aria-label="Decrease quantity" onclick="updateQuantity('dish-001', -1)">−</button>
-          <span id="qty-dish-001">0</span>
-          <button type="button" aria-label="Increase quantity" onclick="updateQuantity('dish-001', 1)">+</button>
-        </div>
-      </div>
-
+      <!-- Dishes load here automatically -->
     </div>
   </main>
+
+  <!-- Place Order Bottom Checkout Bar -->
+  <div class="checkout-bar" id="checkout-bar">
+    <button class="btn-place-order" onclick="placeOrder()">Place Order</button>
+  </div>
 
   <!-- ====================================================================== -->
   <!-- 6. KITCHEN CONSOLE VIEW (Protected by PIN: validatefoodies2026)        -->
@@ -296,24 +313,7 @@
 
     <!-- Live Orders Container (Archiving removed - Only Accept & Complete) -->
     <div id="kitchen-orders-container">
-      
-      <!-- Example Order Card (Archive Button Completely Removed) -->
-      <div class="order-card" id="order-card-sample">
-        <div class="order-header">
-          <span>Order #1024</span>
-          <span>PENDING</span>
-        </div>
-        <div class="order-body">
-          <p>2x Paneer Butter Masala</p>
-          <p>4x Butter Naan</p>
-        </div>
-        <div class="order-actions">
-          <button class="btn-action btn-accept" onclick="acceptOrder('1024')">Accept</button>
-          <button class="btn-action btn-complete" onclick="completeOrder('1024')">Complete</button>
-          <!-- NO ARCHIVE BUTTON HERE -->
-        </div>
-      </div>
-
+      <!-- Live Firebase orders appear here -->
     </div>
   </section>
 
