@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v06)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v07)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v06] Initialized successfully.");
+  console.log("[Firebase v07] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v06] Initialization error:", error);
+  console.error("[Firebase v07] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v06] Initialization error:", error);
+  console.error("[OneSignal v07] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v06 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v07 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=06', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=07', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v06] Registered successfully with scope:', reg.scope);
+      console.log('[SW v07] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v06] Registration failed:', err);
+      console.error('[SW v07] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v06 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v07 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v06] Checking for updates...');
+  console.log('[PWA v07] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. COMPLETE FOODIES POINT MENU (102 ITEMS - KITCHEN CONSOLE DATA)
+// 5. COMPLETE FOODIES POINT MENU (102 ITEMS - MASTER DATA)
 // ==========================================================================
 const MENU_ITEMS = [
   // --- ROLLS ---
@@ -209,41 +209,55 @@ const MENU_ITEMS = [
   { id: 'dish-102', category: 'Rice', name: 'Veg. Biryani', price: 180 }
 ];
 
+const cart = {};
+// Keeps track of which items are checked in the kitchen console
+let kitchenCheckedState = {};
+
 // ==========================================================================
-// 6. RENDER MENU IN KITCHEN CONSOLE WITH SELECTION CHECKBOXES (v06)
+// 6. RENDER KITCHEN MENU (Unchecked by Default + Checked Move to Top)
 // ==========================================================================
-function renderKitchenMenu() {
+function renderKitchenMenu(activeIds = null) {
   const container = document.getElementById('kitchen-menu-container');
   if (!container) return;
 
+  // Initialize state: if activeIds provided from Firebase use them, else empty (unchecked by default)
+  if (activeIds) {
+    kitchenCheckedState = { ...activeIds };
+  }
+
   container.innerHTML = '';
-  let currentCategory = '';
 
-  // Fetch last published menu state from Firebase to pre-check boxes
-  const publishedRef = db ? db.ref('dailyMenu') : null;
-  
-  const renderItems = (activeIds = null) => {
-    container.innerHTML = '';
-    currentCategory = '';
+  // Get distinct categories
+  const categories = [...new Set(MENU_ITEMS.map(item => item.category))];
 
-    MENU_ITEMS.forEach((dish) => {
-      // If dailyMenu exists in Firebase, use it; otherwise default all checked
-      const isChecked = activeIds ? !!activeIds[dish.id] : true;
+  categories.forEach((cat) => {
+    // Filter items belonging to this category
+    const catItems = MENU_ITEMS.filter(item => item.category === cat);
 
-      if (dish.category !== currentCategory) {
-        currentCategory = dish.category;
-        const categoryHeader = document.createElement('h3');
-        categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
-        categoryHeader.textContent = currentCategory;
-        container.appendChild(categoryHeader);
-      }
+    // Sort items: checked items appear at the top of the category
+    catItems.sort((a, b) => {
+      const aChecked = !!kitchenCheckedState[a.id];
+      const bChecked = !!kitchenCheckedState[b.id];
+      if (aChecked === bChecked) return 0;
+      return aChecked ? -1 : 1;
+    });
+
+    // Create Category Header
+    const categoryHeader = document.createElement('h3');
+    categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
+    categoryHeader.textContent = cat;
+    container.appendChild(categoryHeader);
+
+    // Render Cards
+    catItems.forEach((dish) => {
+      const isChecked = !!kitchenCheckedState[dish.id];
 
       const card = document.createElement('div');
       card.className = 'menu-card';
       card.setAttribute('data-item-id', dish.id);
       card.innerHTML = `
         <div class="dish-select-area">
-          <input type="checkbox" class="dish-checkbox" id="chk-${dish.id}" ${isChecked ? 'checked' : ''}>
+          <input type="checkbox" class="dish-checkbox" id="chk-${dish.id}" ${isChecked ? 'checked' : ''} onchange="toggleKitchenItem('${dish.id}', this.checked)">
           <div class="dish-info">
             <h4>${dish.name}</h4>
             <div class="price">₹${dish.price}</div>
@@ -252,20 +266,24 @@ function renderKitchenMenu() {
       `;
       container.appendChild(card);
     });
-    console.log("[Kitchen v06] Rendered 102 menu items with selection checkboxes.");
-  };
+  });
 
-  if (publishedRef) {
-    publishedRef.once('value')
-      .then((snap) => renderItems(snap.val()))
-      .catch(() => renderItems(null));
+  console.log("[Kitchen v07] Rendered menu with checked items sorted to top.");
+}
+
+// Moves item to top of category immediately when checked
+function toggleKitchenItem(dishId, isChecked) {
+  if (isChecked) {
+    kitchenCheckedState[dishId] = true;
   } else {
-    renderItems(null);
+    delete kitchenCheckedState[dishId];
   }
+  // Re-render kitchen menu immediately so checked items move to the top
+  renderKitchenMenu();
 }
 
 // ==========================================================================
-// 7. PUBLISH DAILY LIVE MENU TO FIREBASE (v06)
+// 7. PUBLISH DAILY LIVE MENU TO FIREBASE
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -273,26 +291,17 @@ function publishDailyMenu() {
     return;
   }
 
-  const activeMenu = {};
-  let selectedCount = 0;
-
-  MENU_ITEMS.forEach((dish) => {
-    const checkbox = document.getElementById(`chk-${dish.id}`);
-    if (checkbox && checkbox.checked) {
-      activeMenu[dish.id] = true;
-      selectedCount++;
-    }
-  });
+  const selectedCount = Object.keys(kitchenCheckedState).length;
 
   if (selectedCount === 0) {
-    alert("Please select at least one item to publish on the daily menu.");
+    alert("Please select at least one item to publish on today's live menu.");
     return;
   }
 
-  db.ref('dailyMenu').set(activeMenu)
+  db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
-      alert(`Daily Live Menu published successfully with ${selectedCount} active items!`);
-      console.log(`[v06] Updated dailyMenu in Firebase (${selectedCount} items).`);
+      alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
+      console.log(`[v07] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -301,7 +310,135 @@ function publishDailyMenu() {
 }
 
 // ==========================================================================
-// 8. KITCHEN CONSOLE SECURITY PIN LOGIC (Session Caching Enabled)
+// 8. CUSTOMER LIVE MENU LISTENER (Shows ONLY Published Items)
+// ==========================================================================
+function listenForCustomerLiveMenu() {
+  if (!db) return;
+  const container = document.getElementById('customer-menu-container');
+  if (!container) return;
+
+  db.ref('dailyMenu').on('value', (snapshot) => {
+    const activeIds = snapshot.val();
+    container.innerHTML = '';
+
+    if (!activeIds || Object.keys(activeIds).length === 0) {
+      container.innerHTML = `<p style="text-align:center; padding: 40px 20px; color:#666;">The kitchen is preparing today's live menu. Please check back shortly!</p>`;
+      return;
+    }
+
+    let currentCategory = '';
+    let renderedCount = 0;
+
+    MENU_ITEMS.forEach((dish) => {
+      // ONLY render if the kitchen published this item ID
+      if (activeIds[dish.id]) {
+        renderedCount++;
+        cart[dish.id] = cart[dish.id] || 0;
+
+        if (dish.category !== currentCategory) {
+          currentCategory = dish.category;
+          const categoryHeader = document.createElement('h3');
+          categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1.05rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
+          categoryHeader.textContent = currentCategory;
+          container.appendChild(categoryHeader);
+        }
+
+        const card = document.createElement('div');
+        card.className = 'menu-card';
+        card.setAttribute('data-item-id', dish.id);
+        card.innerHTML = `
+          <div class="dish-info">
+            <h4>${dish.name}</h4>
+            <div class="price">₹${dish.price}</div>
+          </div>
+          <div class="quantity-stepper">
+            <button type="button" aria-label="Decrease quantity" onclick="updateQuantity('${dish.id}', -1)">−</button>
+            <span id="qty-${dish.id}">${cart[dish.id]}</span>
+            <button type="button" aria-label="Increase quantity" onclick="updateQuantity('${dish.id}', 1)">+</button>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    });
+
+    console.log(`[Customer v07] Displaying ${renderedCount} live published menu items.`);
+  });
+}
+
+function updateQuantity(dishId, change) {
+  const currentQty = cart[dishId] || 0;
+  let newQty = currentQty + change;
+
+  if (newQty < 0) newQty = 0;
+  if (newQty > 10) {
+    alert("Quantity cap reached: Maximum 10 items per dish.");
+    newQty = 10;
+  }
+
+  cart[dishId] = newQty;
+  const qtySpan = document.getElementById(`qty-${dishId}`);
+  if (qtySpan) {
+    qtySpan.textContent = newQty;
+  }
+}
+
+// ==========================================================================
+// 9. ORDER SUBMISSION TO FIREBASE (Customer Checkout)
+// ==========================================================================
+function placeOrder() {
+  if (!db) {
+    alert("Database connection is not ready. Please refresh the page.");
+    return;
+  }
+
+  const orderItems = [];
+  let totalAmount = 0;
+
+  MENU_ITEMS.forEach((dish) => {
+    const qty = cart[dish.id] || 0;
+    if (qty > 0) {
+      orderItems.push({
+        id: dish.id,
+        name: dish.name,
+        price: dish.price,
+        quantity: qty
+      });
+      totalAmount += dish.price * qty;
+    }
+  });
+
+  if (orderItems.length === 0) {
+    alert("Please add at least one item to your order.");
+    return;
+  }
+
+  const newOrderRef = db.ref('orders').push();
+  const orderData = {
+    orderId: newOrderRef.key.slice(-4).toUpperCase(),
+    items: orderItems,
+    total: totalAmount,
+    status: 'PENDING',
+    timestamp: firebase.database.ServerValue.TIMESTAMP
+  };
+
+  newOrderRef.set(orderData)
+    .then(() => {
+      alert(`Order placed successfully! Your Order ID is #${orderData.orderId}`);
+      MENU_ITEMS.forEach((dish) => { cart[dish.id] = 0; });
+      // Re-render quantities
+      Object.keys(cart).forEach(id => {
+        const span = document.getElementById(`qty-${id}`);
+        if (span) span.textContent = 0;
+      });
+    })
+    .catch((error) => {
+      console.error("Error placing order:", error);
+      alert("Failed to place order. Please check your internet connection.");
+    });
+}
+
+// ==========================================================================
+// 10. KITCHEN CONSOLE SECURITY PIN LOGIC
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 
@@ -331,20 +468,29 @@ function verifyKitchenPIN() {
 
 function enterKitchenMode() {
   document.getElementById('customer-view').style.display = 'none';
+  document.getElementById('checkout-bar').style.display = 'none';
   document.getElementById('kitchen-view').style.display = 'block';
   
   // Hide Kitchen button from header when inside Kitchen Console
   const headerBtn = document.getElementById('header-kitchen-btn');
   if (headerBtn) headerBtn.style.display = 'none';
 
-  // Render the menu with checkboxes AND listen for orders inside console
-  renderKitchenMenu();
+  // Load last published dailyMenu from Firebase and render Kitchen Menu
+  if (db) {
+    db.ref('dailyMenu').once('value')
+      .then((snap) => renderKitchenMenu(snap.val()))
+      .catch(() => renderKitchenMenu(null));
+  } else {
+    renderKitchenMenu(null);
+  }
+
   listenForKitchenOrders();
 }
 
 function exitKitchenMode() {
   document.getElementById('kitchen-view').style.display = 'none';
   document.getElementById('customer-view').style.display = 'block';
+  document.getElementById('checkout-bar').style.display = 'flex';
   
   // Restore Kitchen button when returning to customer view
   const headerBtn = document.getElementById('header-kitchen-btn');
@@ -354,7 +500,7 @@ function exitKitchenMode() {
 }
 
 // ==========================================================================
-// 9. LIVE KITCHEN ORDER LISTENER (ONLY Accept & Complete - NO Archive)
+// 11. LIVE KITCHEN ORDER LISTENER (ONLY Accept & Complete - NO Archive)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -409,7 +555,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 10. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
+// 12. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
 // ==========================================================================
 function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -433,4 +579,13 @@ function completeOrder(firebaseKey) {
         alert("Could not remove completed order.");
       });
   }
+}
+
+// ==========================================================================
+// 13. INITIALIZE CUSTOMER LIVE MENU ON DOM READY
+// ==========================================================================
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', listenForCustomerLiveMenu);
+} else {
+  listenForCustomerLiveMenu();
 }
