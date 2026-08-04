@@ -14,6 +14,7 @@
         .header { background-color: #FF4B3A; color: #FFFFFF; padding: 16px; text-align: center; font-size: 22px; font-weight: 700; box-shadow: 0 4px 20px rgba(255, 75, 58, 0.15); z-index: 10; letter-spacing: -0.5px; flex-shrink: 0; position: relative; }
         .header::after { content: 'LIVE KITCHEN ACCESS'; display: block; font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.8); letter-spacing: 2px; margin-top: 2px; }
         .admin-trigger-btn { position: absolute; right: 16px; top: 22px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+        .update-trigger-btn { position: absolute; left: 16px; top: 22px; background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; }
         .app-layout, .kitchen-layout { display: flex; flex-direction: column; flex-grow: 1; height: calc(100vh - 68px); max-width: 500px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         .top-section { flex: 1.3; overflow-y: auto; padding: 16px; box-sizing: border-box; }
         .bottom-section { flex: 0.9; overflow-y: auto; padding: 16px; background-color: #FFFFFF; border-top: 1px solid #E5E7EB; box-shadow: 0 -4px 15px rgba(0,0,0,0.02); box-sizing: border-box; padding-bottom: 100px; position: relative; }
@@ -45,6 +46,7 @@
     <div id="toast-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; pointer-events: none;"></div>
 
     <div class="header">
+        <button id="manual-update-btn" class="update-trigger-btn" onclick="manualAppUpdate()">↻ Update</button>
         <span id="header-title-text">Foodies Point</span>
         <button id="view-toggle-action" class="admin-trigger-btn" onclick="authenticateConsoleAccess()">Console</button>
     </div>
@@ -115,6 +117,7 @@
         </div>
     </div>
 
+    <!-- GATE 1: Install Modal -->
     <div id="pwa-overlay" class="modal-overlay"></div>
     <div id="pwa-modal" class="centered-blocker" style="z-index: 9999;">
         <img src="icon.png" style="width: 80px; height: 80px; border-radius: 22px; margin-bottom: 18px; box-shadow: 0 8px 20px rgba(255, 75, 58, 0.2);">
@@ -123,6 +126,7 @@
         <button id="pwa-ok-btn" class="blocker-btn" style="background-color: #FF4B3A; box-shadow: 0 6px 20px rgba(255, 75, 58, 0.3);">OK</button>
     </div>
 
+    <!-- GATE 2: Notification Modal -->
     <div id="notification-overlay" class="modal-overlay" style="z-index: 10000;"></div>
     <div id="notification-modal" class="centered-blocker" style="z-index: 10001;">
         <div style="font-size: 44px; margin-bottom: 14px; filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.2));">🔔</div>
@@ -175,6 +179,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
-    <script src="app.js?v=68"></script>
+    <!-- 🚀 Cache-buster applied here -->
+    <script src="app.js?v=72"></script>
 </body>
 </html>
