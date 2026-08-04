@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v11 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v12 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=11">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=12">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v11)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v12)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -259,7 +259,7 @@
       box-shadow: 0 4px 12px rgba(255, 75, 58, 0.3);
     }
 
-    /* Publish Menu Button (Kitchen Console) */
+    /* Publish & Clear Menu Buttons (Kitchen Console) */
     .btn-publish {
       width: 100%;
       background: var(--primary-color);
@@ -270,8 +270,21 @@
       font-size: 0.95rem;
       font-weight: 700;
       cursor: pointer;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
       box-shadow: 0 3px 10px rgba(255, 75, 58, 0.25);
+    }
+
+    .btn-clear-menu {
+      width: 100%;
+      background: #EAEAEA;
+      color: #333;
+      border: none;
+      padding: 11px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 16px;
     }
 
     /* Kitchen Console View (Hidden by default) */
@@ -383,7 +396,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v11 - CLEAN & MINIMALIST)         -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v12)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -400,7 +413,7 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v11 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v12 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
@@ -408,7 +421,7 @@
     <header class="app-header">
       <div class="app-title">Foodies Point</div>
       <div class="header-actions">
-        <button class="btn-update" onclick="manualAppUpdate()">↻ Update v11</button>
+        <button class="btn-update" onclick="manualAppUpdate()">↻ Update v12</button>
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
       </div>
     </header>
@@ -435,6 +448,9 @@
 
       <h2 class="section-title" style="margin-top: 10px;">Select & Publish Daily Live Menu</h2>
       <button class="btn-publish" onclick="publishDailyMenu()">Publish Daily Live Menu</button>
+      <!-- Clear Customer Menu Button -->
+      <button class="btn-clear-menu" onclick="clearDailyMenu()">🗑️ Clear Customer Menu (Remove All Items)</button>
+      
       <div class="menu-list" id="kitchen-menu-container">
         <!-- Complete 102 dishes render here dynamically -->
       </div>
@@ -468,8 +484,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 7. MAIN APP SCRIPT (v11 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 7. MAIN APP SCRIPT (v12 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=11"></script>
+  <script src="/foodies-point-beta/app.js?v=12"></script>
 </body>
 </html>
