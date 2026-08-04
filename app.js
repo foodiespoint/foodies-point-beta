@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. BOOTSTRAP ENGINE (VERSION 69) - ABSOLUTE TOP PRIORITY
+// 1. BOOTSTRAP ENGINE (VERSION 70) - ABSOLUTE TOP PRIORITY
 // ==========================================================================
 window.deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { 
@@ -397,8 +397,21 @@ function renderCustomerMenu() {
         const isStocked = !item.isOutOfStock;
         const opacitySetting = isStocked ? '1.0' : '0.6';
         
+        // Check if item is already in the cart
+        const existingCartItem = cart.find(i => i.id === item.id);
+        const currentQty = existingCartItem ? existingCartItem.quantity : 0;
+        
         const badgeHTML = isStocked ? `<span style="background-color: #EEF2F6; color: #4B5563; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;">${item.category}</span>` : `<span style="background-color: #FEE2E2; color: #EF4444; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px;">OUT OF STOCK</span>`;
-        const actionButtonHTML = isStocked ? `<button onclick="addToCart('${item.id}', '${item.title}', '${item.details}')" style="background-color: #FF4B3A; color: white; padding: 8px 16px; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 4px 10px rgba(255, 75, 58, 0.15);">+ Add</button>` : `<button disabled style="background-color: #F3F4F6; color: #9CA3AF; padding: 8px 14px; border: none; border-radius: 10px; font-weight: 500; font-size: 13px;">N/A</button>`;
+        
+        // Render "+ Add" OR the green active counter badge ("2 Added")
+        let actionButtonHTML;
+        if (!isStocked) {
+            actionButtonHTML = `<button disabled style="background-color: #F3F4F6; color: #9CA3AF; padding: 8px 14px; border: none; border-radius: 10px; font-weight: 500; font-size: 13px;">N/A</button>`;
+        } else if (currentQty > 0) {
+            actionButtonHTML = `<button id="btn-${item.id}" onclick="addToCart('${item.id}', '${item.title}', '${item.details}')" style="background-color: #10B981; color: white; padding: 8px 16px; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); transition: all 0.15s ease;">${currentQty} Added</button>`;
+        } else {
+            actionButtonHTML = `<button id="btn-${item.id}" onclick="addToCart('${item.id}', '${item.title}', '${item.details}')" style="background-color: #FF4B3A; color: white; padding: 8px 16px; border: none; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 4px 10px rgba(255, 75, 58, 0.15); transition: all 0.15s ease;">+ Add</button>`;
+        }
 
         card.style.cssText = `background-color: #FFFFFF; padding: 16px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); border: 1px solid #F3F4F6; opacity: ${opacitySetting}; display: flex; justify-content: space-between; align-items: center;`;
         card.innerHTML = `<div style="flex-grow: 1; padding-right: 16px;"><div style="margin-bottom: 6px; display: inline-block;">${badgeHTML}</div><div style="font-size: 16px; font-weight: 600; color: #111827; letter-spacing: -0.3px; margin-top: 2px;">${item.title}</div><div style="color: #6B7280; font-size: 13px; margin-top: 3px; line-height: 1.4;">${item.details}</div></div><div style="flex-shrink: 0;">${actionButtonHTML}</div>`;
@@ -413,7 +426,27 @@ function addToCart(id, title, details) {
     if (isKitchenBlackoutActive()) return alert("The kitchen is currently closed.");
     const existingItem = cart.find(i => i.id === id);
     if (details.toLowerCase().includes("per plate") && existingItem && existingItem.quantity >= 5) return alert(`⚠️ Order Limit Exceeded!`);
-    if (existingItem) existingItem.quantity += 1; else cart.push({ id, title, details, quantity: 1 });
+    
+    if (existingItem) {
+        existingItem.quantity += 1; 
+    } else {
+        cart.push({ id, title, details, quantity: 1 });
+    }
+    
+    // Find the updated quantity for this specific dish
+    const updatedItem = cart.find(i => i.id === id);
+    
+    // Immediately update the specific button's text and color
+    const itemBtn = document.getElementById(`btn-${id}`);
+    if (itemBtn) {
+        itemBtn.innerText = `${updatedItem.quantity} Added`;
+        itemBtn.style.backgroundColor = "#10B981";
+        itemBtn.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.2)";
+        
+        itemBtn.style.transform = "scale(1.08)";
+        setTimeout(() => { itemBtn.style.transform = "scale(1)"; }, 150);
+    }
+
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     const cartBtn = document.getElementById('cart-btn');
     if (cartBtn) {
@@ -860,7 +893,7 @@ window.addEventListener('popstate', (event) => {
 // ==========================================================================
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=69').catch(err => console.error("SW Error:", err));
+        navigator.serviceWorker.register('sw.js?v=70').catch(err => console.error("SW Error:", err));
     }
 });
 
