@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v09 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v10 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=09">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=10">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v09 - INVERTED GATE CSS)          -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v10)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -67,7 +67,7 @@
 
     .install-modal-card {
       background: var(--white);
-      padding: 30px 24px;
+      padding: 32px 26px;
       border-radius: 18px;
       width: 92%;
       max-width: 380px;
@@ -78,26 +78,15 @@
     .install-modal-card h2 {
       color: var(--primary-color);
       font-size: 1.4rem;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       font-weight: 800;
     }
 
     .install-modal-card p {
       color: #444;
-      font-size: 0.95rem;
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-
-    .install-instructions-box {
-      font-size: 0.85rem;
-      color: #333;
-      background: #FFF5F4;
-      padding: 16px;
-      border-radius: 12px;
-      border: 1px solid #FFD8D4;
-      text-align: left;
+      font-size: 0.98rem;
       line-height: 1.6;
+      margin-bottom: 10px;
     }
 
     /* ====================================================================== */
@@ -332,7 +321,7 @@
       color: var(--white);
     }
 
-    /* PIN Modal */
+    /* PASSCODE MODAL & EYE TOGGLE */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -347,26 +336,48 @@
       background: var(--white);
       padding: 24px;
       border-radius: 12px;
-      width: 85%;
-      max-width: 320px;
+      width: 88%;
+      max-width: 340px;
       text-align: center;
     }
 
-    .modal-card input {
+    .passcode-input-wrapper {
+      position: relative;
+      margin: 16px 0;
+    }
+
+    .passcode-input-wrapper input {
       width: 100%;
-      padding: 10px;
-      margin: 14px 0;
+      padding: 11px 44px 11px 12px;
       border: 1px solid var(--border-color);
-      border-radius: 6px;
+      border-radius: 8px;
       text-align: center;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
+      outline: none;
+    }
+
+    .passcode-input-wrapper input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .eye-toggle-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1.25rem;
+      color: #666;
+      padding: 0;
     }
   </style>
 </head>
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v09 - ACTIVE BY DEFAULT)          -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v10 - CLEAN & MINIMALIST)         -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -375,27 +386,15 @@
         To access the live menu and place orders, you must install the Foodies Point app to your home screen. Browser access is disabled.
       </p>
       
-      <!-- Native OS Install Button (Appears automatically when Chrome/Android allows prompt) -->
-      <button id="btn-native-install" class="btn-publish" style="display: none; margin-bottom: 18px;">
+      <!-- Native OS Install Button (Appears automatically when supported) -->
+      <button id="btn-native-install" class="btn-publish" style="display: none; margin-top: 14px; margin-bottom: 0;">
         📲 Install App Now
       </button>
-
-      <!-- Step-by-Step Installation Instructions -->
-      <div class="install-instructions-box">
-        <p style="margin-bottom: 10px;">
-          <strong>📱 iOS / iPhone:</strong><br>
-          Tap the Share button (<span style="font-size: 1.15em;">⎋</span>) at the bottom of Safari and select <strong>"Add to Home Screen"</strong> (<span style="font-size: 1.15em;">➕</span>).
-        </p>
-        <p>
-          <strong>🤖 Android / Chrome:</strong><br>
-          Tap the browser menu (<strong>⋮</strong>) in the top right corner and select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
-        </p>
-      </div>
     </div>
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v09 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v10 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
@@ -403,7 +402,7 @@
     <header class="app-header">
       <div class="app-title">Foodies Point</div>
       <div class="header-actions">
-        <button class="btn-update" onclick="manualAppUpdate()">↻ Update v09</button>
+        <button class="btn-update" onclick="manualAppUpdate()">↻ Update v10</button>
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
       </div>
     </header>
@@ -424,7 +423,7 @@
     <!-- KITCHEN CONSOLE VIEW -->
     <section class="container" id="kitchen-view">
       <div class="kitchen-header">
-        <h2 class="section-title">Kitchen Console (v09)</h2>
+        <h2 class="section-title">Kitchen Console (v10)</h2>
         <button class="btn-kitchen" onclick="exitKitchenMode()">Exit Kitchen</button>
       </div>
 
@@ -443,13 +442,18 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 6. SECURITY PIN MODAL FOR KITCHEN CONSOLE                              -->
+  <!-- 6. KITCHEN PASSCODE MODAL (With Eye Toggle & Alphanumeric Labels)       -->
   <!-- ====================================================================== -->
   <div class="modal-overlay" id="pin-modal">
     <div class="modal-card">
       <h3>Kitchen Console</h3>
-      <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Enter PIN to manage orders & menu</p>
-      <input type="password" id="kitchen-pin-input" placeholder="Enter PIN" maxlength="20">
+      <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Enter security passcode to manage console</p>
+      
+      <div class="passcode-input-wrapper">
+        <input type="password" id="kitchen-pin-input" placeholder="Enter Kitchen Passcode" maxlength="30">
+        <button type="button" class="eye-toggle-btn" id="toggle-passcode-eye" onclick="togglePasscodeVisibility()" aria-label="Toggle password visibility">👁️</button>
+      </div>
+
       <div style="display: flex; gap: 8px;">
         <button class="btn-action" style="background: #EAEAEA;" onclick="closePINModal()">Cancel</button>
         <button class="btn-action btn-complete" onclick="verifyKitchenPIN()">Enter</button>
@@ -458,8 +462,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 7. MAIN APP SCRIPT (v09 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 7. MAIN APP SCRIPT (v10 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=09"></script>
+  <script src="/foodies-point-beta/app.js?v=10"></script>
 </body>
 </html>
