@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. BOOTSTRAP ENGINE (VERSION 73) - ABSOLUTE TOP PRIORITY
+// 1. BOOTSTRAP ENGINE (VERSION 74) - ABSOLUTE TOP PRIORITY
 // ==========================================================================
 window.deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { 
@@ -376,7 +376,6 @@ function enforceBlackoutUILayout() {
     }
 }
 
-// Generates either "+ Add" button or "[ - | Qty | + ]" stepper pill
 function renderItemActionUI(item, qty) {
     if (item.isOutOfStock) {
         return `<button disabled style="background-color: #F3F4F6; color: #9CA3AF; padding: 8px 14px; border: none; border-radius: 10px; font-weight: 500; font-size: 13px;">N/A</button>`;
@@ -450,7 +449,6 @@ function addToCart(id, title, details) {
         cart.push({ id, title, details, quantity: 1 });
     }
     
-    // Seamlessly update only this item's UI stepper wrapper
     const actionWrap = document.getElementById(`action-wrap-${id}`);
     const liveItem = currentLiveMenuArray.find(m => m.id === id);
     if (actionWrap && liveItem) {
@@ -929,11 +927,11 @@ window.addEventListener('popstate', (event) => {
 });
 
 // ==========================================================================
-// 10. SW REGISTRATION, UPDATE CHECKER & CACHE NUKE UTILITY
+// 10. SW REGISTRATION, AGGRESSIVE MANUAL UPDATER & CACHE NUKE UTILITY
 // ==========================================================================
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=73').catch(err => console.error("SW Error:", err));
+        navigator.serviceWorker.register('sw.js?v=74').catch(err => console.error("SW Error:", err));
     }
 });
 
@@ -944,6 +942,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// 🚀 Aggressive Manual App Updater (Bypasses the PWA Cache Trap)
 async function manualAppUpdate() {
     const updateBtn = document.getElementById('manual-update-btn');
     if (updateBtn) {
@@ -951,22 +950,27 @@ async function manualAppUpdate() {
         updateBtn.disabled = true;
     }
 
-    triggerInstantNotification("Checking for application updates...", "info");
+    triggerInstantNotification("Downloading latest application files...", "info");
 
     try {
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(cache => caches.delete(cache)));
+        }
+
         if ('serviceWorker' in navigator) {
-            const reg = await navigator.serviceWorker.getRegistration();
-            if (reg) {
-                await reg.update();
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (let i = 0; i < registrations.length; i++) {
+                await registrations[i].unregister();
             }
         }
     } catch (e) {
-        console.warn("Manual SW update check failed:", e);
+        console.warn("Manual update override warning:", e);
     }
 
     setTimeout(() => {
         window.location.reload(true);
-    }, 600);
+    }, 500);
 }
 window.manualAppUpdate = manualAppUpdate;
 
