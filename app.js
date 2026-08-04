@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v12)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v13)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v12] Initialized successfully.");
+  console.log("[Firebase v13] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v12] Initialization error:", error);
+  console.error("[Firebase v13] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v12] Initialization error:", error);
+  console.error("[OneSignal v13] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v12 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v13 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=12', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=13', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v12] Registered successfully with scope:', reg.scope);
+      console.log('[SW v13] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v12] Registration failed:', err);
+      console.error('[SW v13] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v12 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v13 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v12] Checking for updates...');
+  console.log('[PWA v13] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v12)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v13)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v12] User accepted installation prompt.');
+          console.log('[PWA v13] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v12] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v13] Standalone PWA mode verified. Application unlocked.");
   } else {
-    console.log("[PWA v12] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v13] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -304,7 +304,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v12] Rendered menu. All items unchecked by default.");
+  console.log("[Kitchen v13] Rendered menu. All items unchecked by default.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -337,7 +337,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v12] Published dailyMenu to Firebase.`);
+      console.log(`[v13] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -357,7 +357,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v12] Cleared dailyMenu from Firebase.`);
+        console.log(`[v13] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -417,7 +417,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v12] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v13] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
