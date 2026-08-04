@@ -2,7 +2,7 @@
 // FOODIES POINT - SERVICE WORKER (V68)
 // ==========================================================================
 
-const CACHE_NAME = 'foodies-cache-v95';
+const CACHE_NAME = 'foodies-cache-v96';
 const ASSETS = ['', 'index.html', 'app.js?v=68', 'manifest.json', 'icon.png'];
 
 self.addEventListener('install', (event) => {
