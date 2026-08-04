@@ -1,13 +1,13 @@
 // ==========================================================================
 // 1. CACHE CONFIGURATION (VERSION v02 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
-const CACHE_NAME = 'foodies-point-cache-v05';
+const CACHE_NAME = 'foodies-point-cache-v01';
 
 // Explicit GitHub Pages repository paths to prevent root-domain 404 errors
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
   '/foodies-point-beta/index.html',
-  '/foodies-point-beta/app.js?v=04',
+  '/foodies-point-beta/app.js?v=05',
   '/foodies-point-beta/manifest.json',
   '/foodies-point-beta/icon.png'
 ];
