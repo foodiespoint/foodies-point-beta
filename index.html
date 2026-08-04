@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v05 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v06 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=05">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=06">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -102,13 +102,13 @@
       font-weight: 700;
     }
 
-    /* Customer Welcome / Status View */
+    /* Customer Landing View */
     #customer-view {
       text-align: center;
       padding: 40px 16px;
     }
 
-    /* Menu Card & Quantity Stepper (− | Qty | +) inside Kitchen Console */
+    /* Menu Card & Checkbox inside Kitchen Console */
     .menu-list {
       display: flex;
       flex-direction: column;
@@ -126,6 +126,20 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     }
 
+    .dish-select-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .dish-checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary-color);
+      cursor: pointer;
+    }
+
     .dish-info h4 {
       font-size: 1rem;
       margin-bottom: 4px;
@@ -137,31 +151,19 @@
       font-size: 0.95rem;
     }
 
-    .quantity-stepper {
-      display: flex;
-      align-items: center;
-      background: var(--bg-light);
-      border: 1px solid var(--border-color);
-      border-radius: 24px;
-      overflow: hidden;
-    }
-
-    .quantity-stepper button {
+    /* Publish Menu Button */
+    .btn-publish {
+      width: 100%;
+      background: var(--primary-color);
+      color: var(--white);
       border: none;
-      background: transparent;
-      width: 32px;
-      height: 32px;
-      font-size: 1.1rem;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
       font-weight: 700;
-      color: var(--primary-color);
       cursor: pointer;
-    }
-
-    .quantity-stepper span {
-      min-width: 28px;
-      text-align: center;
-      font-weight: 600;
-      font-size: 0.9rem;
+      margin-bottom: 16px;
+      box-shadow: 0 3px 10px rgba(255, 75, 58, 0.25);
     }
 
     /* Kitchen Console View (Hidden by default) */
@@ -256,8 +258,8 @@
   <header class="app-header">
     <div class="app-title">Foodies Point</div>
     <div class="header-actions">
-      <!-- PWA Manual Cache Bust / App Update Button (v05) -->
-      <button class="btn-update" onclick="manualAppUpdate()">↻ Update v05</button>
+      <!-- PWA Manual Cache Bust / App Update Button (v06) -->
+      <button class="btn-update" onclick="manualAppUpdate()">↻ Update v06</button>
       <!-- Kitchen Console Access Button (Hides automatically inside Kitchen View) -->
       <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
     </div>
@@ -276,14 +278,15 @@
   <!-- ====================================================================== -->
   <section class="container" id="kitchen-view">
     <div class="kitchen-header">
-      <h2 class="section-title">Kitchen Console (v05)</h2>
+      <h2 class="section-title">Kitchen Console (v06)</h2>
       <button class="btn-kitchen" onclick="exitKitchenMode()">Exit Kitchen</button>
     </div>
 
-    <!-- 6A. COMPLETE 102-ITEM MENU LIST (Inside Kitchen Console) -->
-    <h2 class="section-title" style="margin-top: 10px;">Kitchen Menu & Stock Control</h2>
+    <!-- 6A. DAILY MENU PUBLISHING & ITEM SELECTION CHECKBOXES -->
+    <h2 class="section-title" style="margin-top: 10px;">Select & Publish Daily Live Menu</h2>
+    <button class="btn-publish" onclick="publishDailyMenu()">Publish Daily Live Menu</button>
     <div class="menu-list" id="kitchen-menu-container">
-      <!-- Complete 102 dishes render here dynamically -->
+      <!-- Complete 102 dishes render here dynamically with checkboxes -->
     </div>
 
     <!-- 6B. LIVE INCOMING ORDERS (No Archive Button) -->
@@ -309,8 +312,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 8. MAIN APP SCRIPT (v05 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 8. MAIN APP SCRIPT (v06 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=05"></script>
+  <script src="/foodies-point-beta/app.js?v=06"></script>
 </body>
 </html>
