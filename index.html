@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v02 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v05 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=04">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=05">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -46,7 +46,7 @@
     body {
       background-color: var(--bg-light);
       color: var(--text-dark);
-      padding-bottom: 100px;
+      padding-bottom: 40px;
     }
 
     /* Top App Header */
@@ -102,11 +102,18 @@
       font-weight: 700;
     }
 
-    /* Menu Card & Quantity Stepper (− | Qty | +) */
+    /* Customer Welcome / Status View */
+    #customer-view {
+      text-align: center;
+      padding: 40px 16px;
+    }
+
+    /* Menu Card & Quantity Stepper (− | Qty | +) inside Kitchen Console */
     .menu-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
+      margin-bottom: 30px;
     }
 
     .menu-card {
@@ -157,38 +164,9 @@
       font-size: 0.9rem;
     }
 
-    /* Place Order Checkout Bar */
-    .checkout-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--white);
-      padding: 14px 20px;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
-      display: flex;
-      justify-content: center;
-      z-index: 900;
-    }
-
-    .btn-place-order {
-      width: 100%;
-      max-width: 560px;
-      background: var(--primary-color);
-      color: var(--white);
-      border: none;
-      padding: 14px;
-      border-radius: 28px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(255, 75, 58, 0.3);
-    }
-
     /* Kitchen Console View (Hidden by default) */
     #kitchen-view {
       display: none;
-      margin-top: 20px;
     }
 
     .kitchen-header {
@@ -278,40 +256,38 @@
   <header class="app-header">
     <div class="app-title">Foodies Point</div>
     <div class="header-actions">
-      <!-- PWA Manual Cache Bust / App Update Button -->
-      <button class="btn-update" onclick="manualAppUpdate()">↻ Update</button>
-      <!-- Kitchen Console Access Button (Hides automatically in Kitchen View) -->
+      <!-- PWA Manual Cache Bust / App Update Button (v05) -->
+      <button class="btn-update" onclick="manualAppUpdate()">↻ Update v05</button>
+      <!-- Kitchen Console Access Button (Hides automatically inside Kitchen View) -->
       <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
     </div>
   </header>
 
   <!-- ====================================================================== -->
-  <!-- 5. CUSTOMER MENU & ORDERING VIEW                                       -->
+  <!-- 5. CUSTOMER LANDING VIEW                                               -->
   <!-- ====================================================================== -->
   <main class="container" id="customer-view">
-    <h2 class="section-title">Live Kitchen Menu</h2>
-    
-    <!-- Menu List Container (Populated dynamically via app.js) -->
-    <div class="menu-list" id="menu-list-container">
-      <!-- Dishes load here automatically -->
-    </div>
+    <h2 style="font-size: 1.4rem; color: #FF4B3A; margin-bottom: 8px;">Welcome to Foodies Point</h2>
+    <p style="color: #666; font-size: 0.95rem;">Staff & Kitchen order management console is ready. Click the Kitchen button above to access the live menu and incoming orders.</p>
   </main>
-
-  <!-- Place Order Bottom Checkout Bar -->
-  <div class="checkout-bar" id="checkout-bar">
-    <button class="btn-place-order" onclick="placeOrder()">Place Order</button>
-  </div>
 
   <!-- ====================================================================== -->
   <!-- 6. KITCHEN CONSOLE VIEW (Protected by PIN: validatefoodies2026)        -->
   <!-- ====================================================================== -->
   <section class="container" id="kitchen-view">
     <div class="kitchen-header">
-      <h2 class="section-title">Live Incoming Orders</h2>
+      <h2 class="section-title">Kitchen Console (v05)</h2>
       <button class="btn-kitchen" onclick="exitKitchenMode()">Exit Kitchen</button>
     </div>
 
-    <!-- Live Orders Container (Archiving removed - Only Accept & Complete) -->
+    <!-- 6A. COMPLETE 102-ITEM MENU LIST (Inside Kitchen Console) -->
+    <h2 class="section-title" style="margin-top: 10px;">Kitchen Menu & Stock Control</h2>
+    <div class="menu-list" id="kitchen-menu-container">
+      <!-- Complete 102 dishes render here dynamically -->
+    </div>
+
+    <!-- 6B. LIVE INCOMING ORDERS (No Archive Button) -->
+    <h2 class="section-title" style="margin-top: 20px; border-top: 2px solid #EAEAEA; padding-top: 16px;">Live Incoming Orders</h2>
     <div id="kitchen-orders-container">
       <!-- Live Firebase orders appear here -->
     </div>
@@ -323,7 +299,7 @@
   <div class="modal-overlay" id="pin-modal">
     <div class="modal-card">
       <h3>Kitchen Console</h3>
-      <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Enter PIN to manage orders</p>
+      <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Enter PIN to manage orders & menu</p>
       <input type="password" id="kitchen-pin-input" placeholder="Enter PIN" maxlength="20">
       <div style="display: flex; gap: 8px;">
         <button class="btn-action" style="background: #EAEAEA;" onclick="closePINModal()">Cancel</button>
@@ -333,8 +309,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 8. MAIN APP SCRIPT (v02 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 8. MAIN APP SCRIPT (v05 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=04"></script>
+  <script src="/foodies-point-beta/app.js?v=05"></script>
 </body>
 </html>
