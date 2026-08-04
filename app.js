@@ -931,7 +931,7 @@ window.addEventListener('popstate', (event) => {
 // ==========================================================================
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=74').catch(err => console.error("SW Error:", err));
+        navigator.serviceWorker.register('sw.js?v=01').catch(err => console.error("SW Error:", err));
     }
 });
 
