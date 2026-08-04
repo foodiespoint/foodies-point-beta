@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. BOOTSTRAP ENGINE (VERSION 71) - ABSOLUTE TOP PRIORITY
+// 1. BOOTSTRAP ENGINE (VERSION 72) - ABSOLUTE TOP PRIORITY
 // ==========================================================================
 window.deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => { 
@@ -887,7 +887,7 @@ window.addEventListener('popstate', (event) => {
 // ==========================================================================
 window.addEventListener('load', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js?v=71').catch(err => console.error("SW Error:", err));
+        navigator.serviceWorker.register('sw.js?v=72').catch(err => console.error("SW Error:", err));
     }
 });
 
@@ -898,7 +898,6 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// 🚀 Dedicated Manual App Updater for Top-Left Header Button
 async function manualAppUpdate() {
     const updateBtn = document.getElementById('manual-update-btn');
     if (updateBtn) {
