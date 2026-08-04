@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v07)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v08)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v07] Initialized successfully.");
+  console.log("[Firebase v08] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v07] Initialization error:", error);
+  console.error("[Firebase v08] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v07] Initialization error:", error);
+  console.error("[OneSignal v08] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v07 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v08 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=07', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=08', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v07] Registered successfully with scope:', reg.scope);
+      console.log('[SW v08] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v07] Registration failed:', err);
+      console.error('[SW v08] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v07 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v08 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v07] Checking for updates...');
+  console.log('[PWA v08] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,64 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. COMPLETE FOODIES POINT MENU (102 ITEMS - MASTER DATA)
+// 5. STANDALONE DETECTION & IRREMOVABLE INSTALL GATE OVERLAY (v08)
+// ==========================================================================
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  
+  const installBtn = document.getElementById('btn-native-install');
+  if (installBtn) {
+    installBtn.style.display = 'block';
+    installBtn.onclick = () => {
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('[PWA v08] User accepted the installation prompt.');
+        }
+        deferredInstallPrompt = null;
+      });
+    };
+  }
+});
+
+function isStandalonePWA() {
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true ||
+    document.referrer.includes('android-app://')
+  );
+}
+
+function enforceInstallGate() {
+  const installGate = document.getElementById('install-gate-overlay');
+  const header = document.getElementById('app-header');
+  const customerView = document.getElementById('customer-view');
+  const checkoutBar = document.getElementById('checkout-bar');
+  const kitchenView = document.getElementById('kitchen-view');
+
+  if (!isStandalonePWA()) {
+    // LOCK DOWN ENTIRE WEB APP WHEN RUNNING INSIDE REGULAR BROWSER
+    if (installGate) installGate.style.display = 'flex';
+    if (header) header.style.display = 'none';
+    if (customerView) customerView.style.display = 'none';
+    if (checkoutBar) checkoutBar.style.display = 'none';
+    if (kitchenView) kitchenView.style.display = 'none';
+    console.log("[PWA v08] Running in web browser. Irremovable Install Gate enforced.");
+  } else {
+    // UNLOCK APP WHEN RUNNING AS STANDALONE HOME-SCREEN PWA
+    if (installGate) installGate.style.display = 'none';
+    if (header) header.style.display = 'flex';
+    if (customerView) customerView.style.display = 'block';
+    if (checkoutBar) checkoutBar.style.display = 'flex';
+    console.log("[PWA v08] Standalone PWA mode verified. Application unlocked.");
+  }
+}
+
+// ==========================================================================
+// 6. COMPLETE FOODIES POINT MENU (102 ITEMS - MASTER DATA)
 // ==========================================================================
 const MENU_ITEMS = [
   // --- ROLLS ---
@@ -210,31 +267,26 @@ const MENU_ITEMS = [
 ];
 
 const cart = {};
-// Keeps track of which items are checked in the kitchen console
 let kitchenCheckedState = {};
 
 // ==========================================================================
-// 6. RENDER KITCHEN MENU (Unchecked by Default + Checked Move to Top)
+// 7. RENDER KITCHEN MENU (Unchecked by Default + Checked Move to Top)
 // ==========================================================================
 function renderKitchenMenu(activeIds = null) {
   const container = document.getElementById('kitchen-menu-container');
   if (!container) return;
 
-  // Initialize state: if activeIds provided from Firebase use them, else empty (unchecked by default)
   if (activeIds) {
     kitchenCheckedState = { ...activeIds };
   }
 
   container.innerHTML = '';
-
-  // Get distinct categories
   const categories = [...new Set(MENU_ITEMS.map(item => item.category))];
 
   categories.forEach((cat) => {
-    // Filter items belonging to this category
     const catItems = MENU_ITEMS.filter(item => item.category === cat);
 
-    // Sort items: checked items appear at the top of the category
+    // Checked items automatically sort to the top of their category
     catItems.sort((a, b) => {
       const aChecked = !!kitchenCheckedState[a.id];
       const bChecked = !!kitchenCheckedState[b.id];
@@ -242,13 +294,11 @@ function renderKitchenMenu(activeIds = null) {
       return aChecked ? -1 : 1;
     });
 
-    // Create Category Header
     const categoryHeader = document.createElement('h3');
     categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
     categoryHeader.textContent = cat;
     container.appendChild(categoryHeader);
 
-    // Render Cards
     catItems.forEach((dish) => {
       const isChecked = !!kitchenCheckedState[dish.id];
 
@@ -268,22 +318,20 @@ function renderKitchenMenu(activeIds = null) {
     });
   });
 
-  console.log("[Kitchen v07] Rendered menu with checked items sorted to top.");
+  console.log("[Kitchen v08] Rendered menu with checked items sorted to top.");
 }
 
-// Moves item to top of category immediately when checked
 function toggleKitchenItem(dishId, isChecked) {
   if (isChecked) {
     kitchenCheckedState[dishId] = true;
   } else {
     delete kitchenCheckedState[dishId];
   }
-  // Re-render kitchen menu immediately so checked items move to the top
   renderKitchenMenu();
 }
 
 // ==========================================================================
-// 7. PUBLISH DAILY LIVE MENU TO FIREBASE
+// 8. PUBLISH DAILY LIVE MENU TO FIREBASE
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -301,7 +349,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v07] Published dailyMenu to Firebase.`);
+      console.log(`[v08] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -310,7 +358,7 @@ function publishDailyMenu() {
 }
 
 // ==========================================================================
-// 8. CUSTOMER LIVE MENU LISTENER (Shows ONLY Published Items)
+// 9. CUSTOMER LIVE MENU LISTENER (Shows ONLY Published Items)
 // ==========================================================================
 function listenForCustomerLiveMenu() {
   if (!db) return;
@@ -330,7 +378,6 @@ function listenForCustomerLiveMenu() {
     let renderedCount = 0;
 
     MENU_ITEMS.forEach((dish) => {
-      // ONLY render if the kitchen published this item ID
       if (activeIds[dish.id]) {
         renderedCount++;
         cart[dish.id] = cart[dish.id] || 0;
@@ -361,7 +408,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v07] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v08] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -383,7 +430,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 9. ORDER SUBMISSION TO FIREBASE (Customer Checkout)
+// 10. ORDER SUBMISSION TO FIREBASE (Customer Checkout)
 // ==========================================================================
 function placeOrder() {
   if (!db) {
@@ -425,7 +472,6 @@ function placeOrder() {
     .then(() => {
       alert(`Order placed successfully! Your Order ID is #${orderData.orderId}`);
       MENU_ITEMS.forEach((dish) => { cart[dish.id] = 0; });
-      // Re-render quantities
       Object.keys(cart).forEach(id => {
         const span = document.getElementById(`qty-${id}`);
         if (span) span.textContent = 0;
@@ -438,7 +484,7 @@ function placeOrder() {
 }
 
 // ==========================================================================
-// 10. KITCHEN CONSOLE SECURITY PIN LOGIC
+// 11. KITCHEN CONSOLE SECURITY PIN LOGIC
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 
@@ -471,11 +517,9 @@ function enterKitchenMode() {
   document.getElementById('checkout-bar').style.display = 'none';
   document.getElementById('kitchen-view').style.display = 'block';
   
-  // Hide Kitchen button from header when inside Kitchen Console
   const headerBtn = document.getElementById('header-kitchen-btn');
   if (headerBtn) headerBtn.style.display = 'none';
 
-  // Load last published dailyMenu from Firebase and render Kitchen Menu
   if (db) {
     db.ref('dailyMenu').once('value')
       .then((snap) => renderKitchenMenu(snap.val()))
@@ -492,7 +536,6 @@ function exitKitchenMode() {
   document.getElementById('customer-view').style.display = 'block';
   document.getElementById('checkout-bar').style.display = 'flex';
   
-  // Restore Kitchen button when returning to customer view
   const headerBtn = document.getElementById('header-kitchen-btn');
   if (headerBtn) headerBtn.style.display = 'inline-block';
 
@@ -500,7 +543,7 @@ function exitKitchenMode() {
 }
 
 // ==========================================================================
-// 11. LIVE KITCHEN ORDER LISTENER (ONLY Accept & Complete - NO Archive)
+// 12. LIVE KITCHEN ORDER LISTENER (ONLY Accept & Complete - NO Archive)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -555,7 +598,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 12. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
+// 13. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
 // ==========================================================================
 function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -582,10 +625,15 @@ function completeOrder(firebaseKey) {
 }
 
 // ==========================================================================
-// 13. INITIALIZE CUSTOMER LIVE MENU ON DOM READY
+// 14. INITIALIZE APP & ENFORCE INSTALL GATE ON DOM READY
 // ==========================================================================
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', listenForCustomerLiveMenu);
-} else {
+function initFoodiesPoint() {
+  enforceInstallGate();
   listenForCustomerLiveMenu();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initFoodiesPoint);
+} else {
+  initFoodiesPoint();
 }
