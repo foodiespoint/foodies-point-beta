@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (Protected with Try/Catch)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v05)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase] Initialized successfully.");
+  console.log("[Firebase v05] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase] Initialization error:", error);
+  console.error("[Firebase v05] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. ONESIGNAL PUSH NOTIFICATION SETUP (Protected with Try/Catch)
+// 2. ONESIGNAL PUSH NOTIFICATION SETUP
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal] Initialization error:", error);
+  console.error("[OneSignal v05] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v05 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=04', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=05', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v02] Registered successfully with scope:', reg.scope);
+      console.log('[SW v05] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v02] Registration failed:', err);
+      console.error('[SW v05] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v05 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA] Checking for updates...');
+  console.log('[PWA v05] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. COMPLETE FOODIES POINT MENU (102 ITEMS WITH CATEGORIES)
+// 5. COMPLETE FOODIES POINT MENU (102 ITEMS - KITCHEN CONSOLE DATA)
 // ==========================================================================
 const MENU_ITEMS = [
   // --- ROLLS ---
@@ -183,7 +183,7 @@ const MENU_ITEMS = [
   { id: 'dish-080', category: 'Sabzi', name: 'Shaahi Paneer', price: 300 },
   { id: 'dish-081', category: 'Sabzi', name: 'Paneer Masala', price: 220 },
   { id: 'dish-082', category: 'Sabzi', name: 'Paneer Angara', price: 280 },
-  { id: 'dish-083', category: 'Sabzi', name: 'Paneer Korma', price: 260 }, // Defaulted to ₹260
+  { id: 'dish-083', category: 'Sabzi', name: 'Paneer Korma', price: 260 },
   { id: 'dish-084', category: 'Sabzi', name: 'Palak Paneer', price: 200 },
   { id: 'dish-085', category: 'Sabzi', name: 'Matar Paneer', price: 200 },
 
@@ -212,10 +212,10 @@ const MENU_ITEMS = [
 const cart = {};
 
 // ==========================================================================
-// 6. MENU RENDERING WITH AUTOMATIC CATEGORY DIVIDERS
+// 6. RENDER MENU DIRECTLY INSIDE THE KITCHEN CONSOLE
 // ==========================================================================
-function renderMenu() {
-  const container = document.getElementById('menu-list-container');
+function renderKitchenMenu() {
+  const container = document.getElementById('kitchen-menu-container');
   if (!container) return;
 
   container.innerHTML = '';
@@ -224,11 +224,10 @@ function renderMenu() {
   MENU_ITEMS.forEach((dish) => {
     cart[dish.id] = cart[dish.id] || 0;
 
-    // Automatically generate a section divider whenever category changes
     if (dish.category !== currentCategory) {
       currentCategory = dish.category;
       const categoryHeader = document.createElement('h3');
-      categoryHeader.style.cssText = "margin: 20px 0 6px 0; font-size: 1.05rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
+      categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
       categoryHeader.textContent = currentCategory;
       container.appendChild(categoryHeader);
     }
@@ -249,7 +248,7 @@ function renderMenu() {
     `;
     container.appendChild(card);
   });
-  console.log("[Menu] Rendered 102 items successfully.");
+  console.log("[Kitchen v05] Rendered 102 menu items inside console.");
 }
 
 function updateQuantity(dishId, change) {
@@ -258,7 +257,7 @@ function updateQuantity(dishId, change) {
 
   if (newQty < 0) newQty = 0;
   if (newQty > 10) {
-    alert("You can order a maximum of 10 items per dish.");
+    alert("Quantity cap reached: Maximum 10 items per dish.");
     newQty = 10;
   }
 
@@ -270,58 +269,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 7. ORDER SUBMISSION TO FIREBASE
-// ==========================================================================
-function placeOrder() {
-  if (!db) {
-    alert("Database connection is not ready. Please refresh the page.");
-    return;
-  }
-
-  const orderItems = [];
-  let totalAmount = 0;
-
-  MENU_ITEMS.forEach((dish) => {
-    const qty = cart[dish.id] || 0;
-    if (qty > 0) {
-      orderItems.push({
-        id: dish.id,
-        name: dish.name,
-        price: dish.price,
-        quantity: qty
-      });
-      totalAmount += dish.price * qty;
-    }
-  });
-
-  if (orderItems.length === 0) {
-    alert("Please add at least one item to your order.");
-    return;
-  }
-
-  const newOrderRef = db.ref('orders').push();
-  const orderData = {
-    orderId: newOrderRef.key.slice(-4).toUpperCase(),
-    items: orderItems,
-    total: totalAmount,
-    status: 'PENDING',
-    timestamp: firebase.database.ServerValue.TIMESTAMP
-  };
-
-  newOrderRef.set(orderData)
-    .then(() => {
-      alert(`Order placed successfully! Your Order ID is #${orderData.orderId}`);
-      MENU_ITEMS.forEach((dish) => { cart[dish.id] = 0; });
-      renderMenu();
-    })
-    .catch((error) => {
-      console.error("Error placing order:", error);
-      alert("Failed to place order. Please check your internet connection.");
-    });
-}
-
-// ==========================================================================
-// 8. KITCHEN CONSOLE SECURITY PIN LOGIC (With Session Caching)
+// 7. KITCHEN CONSOLE SECURITY PIN LOGIC (Session Caching Enabled)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 
@@ -351,22 +299,22 @@ function verifyKitchenPIN() {
 
 function enterKitchenMode() {
   document.getElementById('customer-view').style.display = 'none';
-  document.getElementById('checkout-bar').style.display = 'none';
   document.getElementById('kitchen-view').style.display = 'block';
   
-  // Hides Kitchen button while inside Kitchen Console
+  // Hide Kitchen button from header when inside Kitchen Console
   const headerBtn = document.getElementById('header-kitchen-btn');
   if (headerBtn) headerBtn.style.display = 'none';
 
+  // Render the menu AND listen for orders inside the kitchen console
+  renderKitchenMenu();
   listenForKitchenOrders();
 }
 
 function exitKitchenMode() {
   document.getElementById('kitchen-view').style.display = 'none';
   document.getElementById('customer-view').style.display = 'block';
-  document.getElementById('checkout-bar').style.display = 'flex';
   
-  // Restores Kitchen button when returning to customer view
+  // Restore Kitchen button when returning to customer view
   const headerBtn = document.getElementById('header-kitchen-btn');
   if (headerBtn) headerBtn.style.display = 'inline-block';
 
@@ -374,7 +322,7 @@ function exitKitchenMode() {
 }
 
 // ==========================================================================
-// 9. LIVE KITCHEN ORDER LISTENER (NO ARCHIVING INCLUDED)
+// 8. LIVE KITCHEN ORDER LISTENER (ONLY Accept & Complete - NO Archive)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -429,7 +377,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 10. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
+// 9. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
 // ==========================================================================
 function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -453,13 +401,4 @@ function completeOrder(firebaseKey) {
         alert("Could not remove completed order.");
       });
   }
-}
-
-// ==========================================================================
-// 11. INITIALIZE APP ON DOM READY (Foolproof Menu Rendering)
-// ==========================================================================
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', renderMenu);
-} else {
-  renderMenu();
 }
