@@ -1,22 +1,22 @@
 // ==========================================================================
-// 1. CACHE CONFIGURATION (VERSION v01)
+// 1. CACHE CONFIGURATION (VERSION v02 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 const CACHE_NAME = 'foodies-point-cache-v01';
 
-// All internal links synced to v01 exactly as called in index.html
+// Explicit GitHub Pages repository paths to prevent root-domain 404 errors
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './app.js?v=01',
-  './manifest.json',
-  './icon.png'
+  '/foodies-point-beta/',
+  '/foodies-point-beta/index.html',
+  '/foodies-point-beta/app.js?v=02',
+  '/foodies-point-beta/manifest.json',
+  '/foodies-point-beta/icon.png'
 ];
 
 // ==========================================================================
 // 2. INSTALL EVENT - Pre-cache App Shell & Force Instant Activation
 // ==========================================================================
 self.addEventListener('install', (event) => {
-  console.log('[SW v01] Installing new Service Worker...');
+  console.log('[SW v02] Installing new Service Worker...');
   
   // Force the new Service Worker to activate immediately without waiting
   // for open browser tabs to close (prevents the "waiting worker" deadlock)
@@ -24,12 +24,12 @@ self.addEventListener('install', (event) => {
 
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW v01] Pre-caching App Shell assets:', ASSETS_TO_CACHE);
-      // Use allSettled/resilient fetching so a single missing icon doesn't block install
+      console.log('[SW v02] Pre-caching App Shell assets:', ASSETS_TO_CACHE);
+      // Use resilient fetching so a single missing asset doesn't block install
       return Promise.all(
         ASSETS_TO_CACHE.map((url) => {
           return cache.add(url).catch((err) => {
-            console.warn(`[SW v01] Non-fatal cache skip for ${url}:`, err);
+            console.warn(`[SW v02] Non-fatal cache skip for ${url}:`, err);
           });
         })
       );
@@ -41,22 +41,22 @@ self.addEventListener('install', (event) => {
 // 3. ACTIVATE EVENT - Clean Up Old Caches & Take Immediate Control
 // ==========================================================================
 self.addEventListener('activate', (event) => {
-  console.log('[SW v01] Activating Service Worker & purging old caches...');
+  console.log('[SW v02] Activating Service Worker & purging old caches...');
 
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          // Delete any cache bucket that doesn't match 'foodies-point-cache-v01'
+          // Delete any cache bucket that doesn't match 'foodies-point-cache-v02'
           if (cacheName !== CACHE_NAME) {
-            console.log('[SW v01] Deleting obsolete cache bucket:', cacheName);
+            console.log('[SW v02] Deleting obsolete cache bucket:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
       // Immediately take control of all open pages/clients
-      console.log('[SW v01] Claiming clients for instant control...');
+      console.log('[SW v02] Claiming clients for instant control...');
       return self.clients.claim();
     })
   );
@@ -87,7 +87,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // -- MAIN STRATEGY: Network-First, fallback to Cache
-  // Why? Guarantees users get live HTML/JS updates when online, but keeps the app
+  // Guarantees users get live HTML/JS updates when online, but keeps the app
   // fully working offline if they lose internet connection.
   event.respondWith(
     fetch(event.request)
@@ -103,16 +103,16 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(async () => {
         // If network fails (offline), fall back to the local Cache Storage
-        console.log('[SW v01] Network unreachable. Serving from offline cache:', event.request.url);
+        console.log('[SW v02] Network unreachable. Serving from offline cache:', event.request.url);
         const cachedResponse = await caches.match(event.request);
         
         if (cachedResponse) {
           return cachedResponse;
         }
 
-        // If navigation request fails and isn't cached, fall back to index.html
+        // If navigation request fails and isn't cached, fall back to the repo index.html
         if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
+          return caches.match('/foodies-point-beta/index.html');
         }
 
         return new Response('Offline content unavailable.', {
@@ -129,7 +129,7 @@ self.addEventListener('fetch', (event) => {
 // ==========================================================================
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[SW v01] Received SKIP_WAITING signal.');
+    console.log('[SW v02] Received SKIP_WAITING signal.');
     self.skipWaiting();
   }
 });
