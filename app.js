@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v09)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v10)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v09] Initialized successfully.");
+  console.log("[Firebase v10] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v09] Initialization error:", error);
+  console.error("[Firebase v10] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v09] Initialization error:", error);
+  console.error("[OneSignal v10] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v09 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v10 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=09', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=10', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v09] Registered successfully with scope:', reg.scope);
+      console.log('[SW v10] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v09] Registration failed:', err);
+      console.error('[SW v10] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v09 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v10 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v09] Checking for updates...');
+  console.log('[PWA v10] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v09)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v10)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v09] User accepted installation prompt.');
+          console.log('[PWA v10] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,10 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v09] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v10] Standalone PWA mode verified. Application unlocked.");
   } else {
-    // Remains locked by default CSS in all desktop & mobile browser tabs
-    console.log("[PWA v09] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v10] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -310,7 +309,7 @@ function renderKitchenMenu(activeIds = null) {
     });
   });
 
-  console.log("[Kitchen v09] Rendered menu with checked items sorted to top.");
+  console.log("[Kitchen v10] Rendered menu with checked items sorted to top.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -341,7 +340,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v09] Published dailyMenu to Firebase.`);
+      console.log(`[v10] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -400,7 +399,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v09] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v10] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -476,7 +475,7 @@ function placeOrder() {
 }
 
 // ==========================================================================
-// 11. KITCHEN CONSOLE SECURITY PIN LOGIC
+// 11. KITCHEN CONSOLE SECURITY PASSCODE LOGIC (With Eye Toggle)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 
@@ -486,11 +485,34 @@ function openKitchenPINModal() {
     return;
   }
   document.getElementById('pin-modal').style.display = 'flex';
-  document.getElementById('kitchen-pin-input').value = '';
+  
+  const input = document.getElementById('kitchen-pin-input');
+  const eyeBtn = document.getElementById('toggle-passcode-eye');
+  if (input) {
+    input.value = '';
+    input.type = 'password';
+  }
+  if (eyeBtn) {
+    eyeBtn.textContent = '👁️';
+  }
 }
 
 function closePINModal() {
   document.getElementById('pin-modal').style.display = 'none';
+}
+
+function togglePasscodeVisibility() {
+  const input = document.getElementById('kitchen-pin-input');
+  const eyeBtn = document.getElementById('toggle-passcode-eye');
+  if (!input) return;
+
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (eyeBtn) eyeBtn.textContent = '🔒';
+  } else {
+    input.type = 'password';
+    if (eyeBtn) eyeBtn.textContent = '👁️';
+  }
 }
 
 function verifyKitchenPIN() {
@@ -500,7 +522,7 @@ function verifyKitchenPIN() {
     closePINModal();
     enterKitchenMode();
   } else {
-    alert("Incorrect PIN. Access denied.");
+    alert("Incorrect passcode. Access denied.");
   }
 }
 
