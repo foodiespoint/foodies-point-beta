@@ -1,20 +1,38 @@
 {
   "name": "Foodies Point",
-  "short_name": "Foodies",
-  "start_url": "./index.html",
+  "short_name": "Foodies Point",
+  "version": "1.0.0",
+  "description": "Seamless food ordering with real-time tracking and live kitchen menu sync.",
+  "id": "/",
+  "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
   "theme_color": "#FF4B3A",
+  "categories": [
+    "food",
+    "shopping"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
