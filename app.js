@@ -1,35 +1,43 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (Protected with Try/Catch)
 // ==========================================================================
-const firebaseConfig = {
-  apiKey: "AIzaSyDu-pEongNewYbzc9-FG477NRVW2izilzM",
-  authDomain: "foodiespoint-6760.firebaseapp.com",
-  databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "foodiespoint-6760",
-  storageBucket: "foodiespoint-6760.firebasestorage.app",
-  messagingSenderId: "160661145433",
-  appId: "1:160661145433:web:616afe0d7ca7cdf0faae48"
-};
+let db = null;
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
+try {
+  const firebaseConfig = {
+    apiKey: "AIzaSyDu-pEongNewYbzc9-FG477NRVW2izilzM",
+    authDomain: "foodiespoint-6760.firebaseapp.com",
+    databaseURL: "https://foodiespoint-6760-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "foodiespoint-6760",
+    storageBucket: "foodiespoint-6760.firebasestorage.app",
+    messagingSenderId: "160661145433",
+    appId: "1:160661145433:web:616afe0d7ca7cdf0faae48"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  db = firebase.database();
+  console.log("[Firebase] Initialized successfully.");
+} catch (error) {
+  console.error("[Firebase] Initialization error:", error);
 }
-const db = firebase.database();
 
 // ==========================================================================
-// 2. ONESIGNAL PUSH NOTIFICATION SETUP
+// 2. ONESIGNAL PUSH NOTIFICATION SETUP (Protected with Try/Catch)
 // ==========================================================================
-window.OneSignal = window.OneSignal || [];
-OneSignal.push(function() {
-  OneSignal.init({
-    appId: "YOUR_ONESIGNAL_APP_ID_HERE",
-    allowLocalhostAsSecureOrigin: true,
-    notifyButton: {
-      enable: false
-    }
+try {
+  window.OneSignal = window.OneSignal || [];
+  OneSignal.push(function() {
+    OneSignal.init({
+      appId: "YOUR_ONESIGNAL_APP_ID_HERE",
+      allowLocalhostAsSecureOrigin: true,
+      notifyButton: { enable: false }
+    });
   });
-});
+} catch (error) {
+  console.error("[OneSignal] Initialization error:", error);
+}
 
 // ==========================================================================
 // 3. SERVICE WORKER REGISTRATION (LOCKED TO /foodies-point-beta/)
@@ -56,18 +64,14 @@ if ('serviceWorker' in navigator) {
 // ==========================================================================
 function manualAppUpdate() {
   console.log('[PWA] Checking for updates...');
-  
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
-        console.log('[PWA] New worker waiting. Sending SKIP_WAITING...');
         swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
       }
-      // Force page reload to grab clean v02 files
       window.location.reload(true);
     });
   } else {
-    // Fallback if SW wasn't ready
     window.location.reload(true);
   }
 }
@@ -82,7 +86,7 @@ const MENU_ITEMS = [
   { id: 'dish-004', name: 'Veg Hakka Noodles', price: 160 }
 ];
 
-const cart = {}; // Stores item quantities: { 'dish-001': 2 }
+const cart = {};
 
 function renderMenu() {
   const container = document.getElementById('menu-list-container');
@@ -108,13 +112,13 @@ function renderMenu() {
     `;
     container.appendChild(card);
   });
+  console.log("[Menu] Rendered successfully.");
 }
 
 function updateQuantity(dishId, change) {
   const currentQty = cart[dishId] || 0;
   let newQty = currentQty + change;
 
-  // Enforce limits: minimum 0, maximum 10 per dish
   if (newQty < 0) newQty = 0;
   if (newQty > 10) {
     alert("You can order a maximum of 10 items per dish.");
@@ -132,6 +136,11 @@ function updateQuantity(dishId, change) {
 // 6. ORDER SUBMISSION TO FIREBASE
 // ==========================================================================
 function placeOrder() {
+  if (!db) {
+    alert("Database connection is not ready. Please refresh the page.");
+    return;
+  }
+
   const orderItems = [];
   let totalAmount = 0;
 
@@ -165,7 +174,6 @@ function placeOrder() {
   newOrderRef.set(orderData)
     .then(() => {
       alert(`Order placed successfully! Your Order ID is #${orderData.orderId}`);
-      // Reset cart quantities
       MENU_ITEMS.forEach((dish) => { cart[dish.id] = 0; });
       renderMenu();
     })
@@ -176,11 +184,16 @@ function placeOrder() {
 }
 
 // ==========================================================================
-// 7. KITCHEN CONSOLE SECURITY PIN LOGIC
+// 7. KITCHEN CONSOLE SECURITY PIN LOGIC (With Session Caching)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 
 function openKitchenPINModal() {
+  // If already authenticated during this session, bypass the PIN modal
+  if (sessionStorage.getItem('fp_kitchen_auth') === 'true') {
+    enterKitchenMode();
+    return;
+  }
   document.getElementById('pin-modal').style.display = 'flex';
   document.getElementById('kitchen-pin-input').value = '';
 }
@@ -192,6 +205,8 @@ function closePINModal() {
 function verifyKitchenPIN() {
   const inputPin = document.getElementById('kitchen-pin-input').value;
   if (inputPin === KITCHEN_PIN) {
+    // Save authentication state in browser session
+    sessionStorage.setItem('fp_kitchen_auth', 'true');
     closePINModal();
     enterKitchenMode();
   } else {
@@ -201,21 +216,33 @@ function verifyKitchenPIN() {
 
 function enterKitchenMode() {
   document.getElementById('customer-view').style.display = 'none';
+  document.getElementById('checkout-bar').style.display = 'none';
   document.getElementById('kitchen-view').style.display = 'block';
+  
+  // Hide the "Kitchen" button in the header while inside Kitchen Console
+  const headerBtn = document.getElementById('header-kitchen-btn');
+  if (headerBtn) headerBtn.style.display = 'none';
+
   listenForKitchenOrders();
 }
 
 function exitKitchenMode() {
   document.getElementById('kitchen-view').style.display = 'none';
   document.getElementById('customer-view').style.display = 'block';
-  // Stop listening to save data when back in customer view
-  db.ref('orders').off();
+  document.getElementById('checkout-bar').style.display = 'flex';
+  
+  // Restore the "Kitchen" button in the header
+  const headerBtn = document.getElementById('header-kitchen-btn');
+  if (headerBtn) headerBtn.style.display = 'inline-block';
+
+  if (db) db.ref('orders').off();
 }
 
 // ==========================================================================
 // 8. LIVE KITCHEN ORDER LISTENER (NO ARCHIVING INCLUDED)
 // ==========================================================================
 function listenForKitchenOrders() {
+  if (!db) return;
   const ordersContainer = document.getElementById('kitchen-orders-container');
   
   db.ref('orders').on('value', (snapshot) => {
@@ -228,7 +255,6 @@ function listenForKitchenOrders() {
       return;
     }
 
-    // Convert object to array and sort newest first
     const ordersArray = Object.keys(orders).map(key => ({
       firebaseKey: key,
       ...orders[key]
@@ -239,12 +265,10 @@ function listenForKitchenOrders() {
       const card = document.createElement('div');
       card.className = 'order-card';
       
-      // Generate items list text
       const itemsListHtml = order.items
         .map(i => `<p style="margin: 4px 0;"><strong>${i.quantity}x</strong> ${i.name}</p>`)
         .join('');
 
-      // ONLY Accept and Complete buttons are rendered - Archive button is removed
       card.innerHTML = `
         <div class="order-header">
           <span>Order #${order.orderId}</span>
@@ -272,9 +296,8 @@ function listenForKitchenOrders() {
 // ==========================================================================
 // 9. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
 // ==========================================================================
-
-// Mark order as accepted in Firebase
 function acceptOrder(firebaseKey) {
+  if (!db) return;
   db.ref(`orders/${firebaseKey}`).update({
     status: 'ACCEPTED'
   }).catch((error) => {
@@ -283,10 +306,9 @@ function acceptOrder(firebaseKey) {
   });
 }
 
-// Permanently delete order from Firebase (NO ARCHIVE SAVED)
 function completeOrder(firebaseKey) {
+  if (!db) return;
   if (confirm("Mark this order as complete? It will be permanently removed from active orders.")) {
-    // Simply remove from the orders node. Nothing is saved to any archive/history node.
     db.ref(`orders/${firebaseKey}`).remove()
       .then(() => {
         console.log(`Order ${firebaseKey} permanently deleted.`);
@@ -299,8 +321,10 @@ function completeOrder(firebaseKey) {
 }
 
 // ==========================================================================
-// 10. INITIALIZE APP ON DOM READY
+// 10. INITIALIZE APP ON DOM READY (Foolproof Menu Rendering)
 // ==========================================================================
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderMenu);
+} else {
   renderMenu();
-});
+}
