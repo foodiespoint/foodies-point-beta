@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v11)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v12)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v11] Initialized successfully.");
+  console.log("[Firebase v12] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v11] Initialization error:", error);
+  console.error("[Firebase v12] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v11] Initialization error:", error);
+  console.error("[OneSignal v12] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v11 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v12 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=11', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=12', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v11] Registered successfully with scope:', reg.scope);
+      console.log('[SW v12] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v11] Registration failed:', err);
+      console.error('[SW v12] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v11 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v12 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v11] Checking for updates...');
+  console.log('[PWA v12] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v11)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v12)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v11] User accepted installation prompt.');
+          console.log('[PWA v12] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v11] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v12] Standalone PWA mode verified. Application unlocked.");
   } else {
-    console.log("[PWA v11] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v12] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -273,7 +273,6 @@ function renderKitchenMenu() {
   categories.forEach((cat) => {
     const catItems = MENU_ITEMS.filter(item => item.category === cat);
 
-    // Checked items automatically sort to the top of their category
     catItems.sort((a, b) => {
       const aChecked = !!kitchenCheckedState[a.id];
       const bChecked = !!kitchenCheckedState[b.id];
@@ -305,7 +304,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v11] Rendered menu. All items unchecked by default.");
+  console.log("[Kitchen v12] Rendered menu. All items unchecked by default.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -318,7 +317,7 @@ function toggleKitchenItem(dishId, isChecked) {
 }
 
 // ==========================================================================
-// 8. PUBLISH DAILY LIVE MENU TO FIREBASE
+// 8. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -329,19 +328,42 @@ function publishDailyMenu() {
   const selectedCount = Object.keys(kitchenCheckedState).length;
 
   if (selectedCount === 0) {
-    alert("Please select at least one item to publish on today's live menu.");
+    if (confirm("No items selected. Do you want to clear all items from the customer's live menu page?")) {
+      clearDailyMenu();
+    }
     return;
   }
 
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v11] Published dailyMenu to Firebase.`);
+      console.log(`[v12] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
       alert("Failed to publish daily menu. Please check your network connection.");
     });
+}
+
+function clearDailyMenu() {
+  if (!db) {
+    alert("Database connection is not ready. Please refresh the page.");
+    return;
+  }
+
+  if (confirm("Remove all items from the customer's live menu page?")) {
+    db.ref('dailyMenu').remove()
+      .then(() => {
+        kitchenCheckedState = {};
+        renderKitchenMenu();
+        alert("All items have been removed from the customer page!");
+        console.log(`[v12] Cleared dailyMenu from Firebase.`);
+      })
+      .catch((error) => {
+        console.error("Error clearing daily menu:", error);
+        alert("Could not remove items from customer page. Check network connection.");
+      });
+  }
 }
 
 // ==========================================================================
@@ -395,7 +417,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v11] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v12] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -471,12 +493,13 @@ function placeOrder() {
 }
 
 // ==========================================================================
-// 11. KITCHEN CONSOLE SECURITY PASSCODE LOGIC (With Eye Toggle)
+// 11. PERMANENT KITCHEN LOGIN LOGIC (localStorage Enabled)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 
 function openKitchenPINModal() {
-  if (sessionStorage.getItem('fp_kitchen_auth') === 'true') {
+  // Uses localStorage so this specific device stays logged in permanently
+  if (localStorage.getItem('fp_kitchen_auth') === 'true') {
     enterKitchenMode();
     return;
   }
@@ -514,7 +537,8 @@ function togglePasscodeVisibility() {
 function verifyKitchenPIN() {
   const inputPin = document.getElementById('kitchen-pin-input').value;
   if (inputPin === KITCHEN_PIN) {
-    sessionStorage.setItem('fp_kitchen_auth', 'true');
+    // Save authentication state permanently in device storage
+    localStorage.setItem('fp_kitchen_auth', 'true');
     closePINModal();
     enterKitchenMode();
   } else {
@@ -530,7 +554,7 @@ function enterKitchenMode() {
   const headerBtn = document.getElementById('header-kitchen-btn');
   if (headerBtn) headerBtn.style.display = 'none';
 
-  // Always reset checked state so every checkbox starts UNCHECKED by default
+  // Always start with 0 checkboxes selected by default
   kitchenCheckedState = {};
   renderKitchenMenu();
 
