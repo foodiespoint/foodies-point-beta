@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v06 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v07 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=06">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=07">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -46,7 +46,7 @@
     body {
       background-color: var(--bg-light);
       color: var(--text-dark);
-      padding-bottom: 40px;
+      padding-bottom: 90px;
     }
 
     /* Top App Header */
@@ -102,18 +102,17 @@
       font-weight: 700;
     }
 
-    /* Customer Landing View */
+    /* Customer Landing & Ordering View */
     #customer-view {
-      text-align: center;
-      padding: 40px 16px;
+      padding-top: 10px;
     }
 
-    /* Menu Card & Checkbox inside Kitchen Console */
+    /* Menu Card & Quantity Stepper (− | Qty | +) */
     .menu-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
     }
 
     .menu-card {
@@ -124,6 +123,7 @@
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+      transition: all 0.25s ease;
     }
 
     .dish-select-area {
@@ -151,7 +151,62 @@
       font-size: 0.95rem;
     }
 
-    /* Publish Menu Button */
+    .quantity-stepper {
+      display: flex;
+      align-items: center;
+      background: var(--bg-light);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    .quantity-stepper button {
+      border: none;
+      background: transparent;
+      width: 32px;
+      height: 32px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      cursor: pointer;
+    }
+
+    .quantity-stepper span {
+      min-width: 28px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    /* Place Order Checkout Bar (Customer View Only) */
+    .checkout-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      padding: 14px 20px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: center;
+      z-index: 900;
+    }
+
+    .btn-place-order {
+      width: 100%;
+      max-width: 560px;
+      background: var(--primary-color);
+      color: var(--white);
+      border: none;
+      padding: 14px;
+      border-radius: 28px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 75, 58, 0.3);
+    }
+
+    /* Publish Menu Button (Kitchen Console) */
     .btn-publish {
       width: 100%;
       background: var(--primary-color);
@@ -258,27 +313,35 @@
   <header class="app-header">
     <div class="app-title">Foodies Point</div>
     <div class="header-actions">
-      <!-- PWA Manual Cache Bust / App Update Button (v06) -->
-      <button class="btn-update" onclick="manualAppUpdate()">↻ Update v06</button>
+      <!-- PWA Manual Cache Bust / App Update Button (v07) -->
+      <button class="btn-update" onclick="manualAppUpdate()">↻ Update v07</button>
       <!-- Kitchen Console Access Button (Hides automatically inside Kitchen View) -->
       <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
     </div>
   </header>
 
   <!-- ====================================================================== -->
-  <!-- 5. CUSTOMER LANDING VIEW                                               -->
+  <!-- 5. CUSTOMER LIVE MENU VIEW (Shows ONLY Published Items)                -->
   <!-- ====================================================================== -->
   <main class="container" id="customer-view">
-    <h2 style="font-size: 1.4rem; color: #FF4B3A; margin-bottom: 8px;">Welcome to Foodies Point</h2>
-    <p style="color: #666; font-size: 0.95rem;">Staff & Kitchen order management console is ready. Click the Kitchen button above to access the live menu and incoming orders.</p>
+    <h2 class="section-title">Today's Live Menu</h2>
+    <!-- Customer Live Menu List Container -->
+    <div class="menu-list" id="customer-menu-container">
+      <p style="text-align:center; padding: 30px; color:#666;">Loading live menu...</p>
+    </div>
   </main>
+
+  <!-- Floating Checkout Bar (Hidden automatically when in Kitchen View) -->
+  <div class="checkout-bar" id="checkout-bar">
+    <button class="btn-place-order" onclick="placeOrder()">Place Order</button>
+  </div>
 
   <!-- ====================================================================== -->
   <!-- 6. KITCHEN CONSOLE VIEW (Protected by PIN: validatefoodies2026)        -->
   <!-- ====================================================================== -->
   <section class="container" id="kitchen-view">
     <div class="kitchen-header">
-      <h2 class="section-title">Kitchen Console (v06)</h2>
+      <h2 class="section-title">Kitchen Console (v07)</h2>
       <button class="btn-kitchen" onclick="exitKitchenMode()">Exit Kitchen</button>
     </div>
 
@@ -286,7 +349,7 @@
     <h2 class="section-title" style="margin-top: 10px;">Select & Publish Daily Live Menu</h2>
     <button class="btn-publish" onclick="publishDailyMenu()">Publish Daily Live Menu</button>
     <div class="menu-list" id="kitchen-menu-container">
-      <!-- Complete 102 dishes render here dynamically with checkboxes -->
+      <!-- Complete 102 dishes render here dynamically with unchecked boxes -->
     </div>
 
     <!-- 6B. LIVE INCOMING ORDERS (No Archive Button) -->
@@ -312,8 +375,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 8. MAIN APP SCRIPT (v06 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 8. MAIN APP SCRIPT (v07 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=06"></script>
+  <script src="/foodies-point-beta/app.js?v=07"></script>
 </body>
 </html>
