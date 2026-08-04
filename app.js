@@ -46,7 +46,7 @@ let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=02', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=03', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
