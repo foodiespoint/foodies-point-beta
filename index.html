@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v16 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v17 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=16">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=17">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v16)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v17)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -102,16 +102,17 @@
       display: none !important;
     }
 
-    /* Top App Header - Update on left, Kitchen on right */
+    /* Top App Header - Explicit 56px height so Kitchen Console docks below it */
     .app-header {
       position: sticky;
       top: 0;
-      z-index: 1000;
+      z-index: 2000;
       background: var(--white);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 18px;
+      padding: 0 18px;
+      height: 56px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
@@ -286,23 +287,16 @@
       color: #333;
     }
 
-    /* Centered Footer Branding */
-    .app-footer {
-      text-align: center;
-      padding: 24px 16px 36px 16px;
-      font-weight: 700;
-      color: var(--primary-color);
-      font-size: 1.05rem;
-      letter-spacing: 0.5px;
-    }
-
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v16 - GUARANTEED 50/50 SCROLL)      */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v17 - DOCKED BELOW 56PX HEADER)     */
     /* ====================================================================== */
     #kitchen-view {
       display: none; /* Controlled via app.js -> 'flex' */
       position: fixed;
-      inset: 0;
+      top: 56px; /* Docks cleanly below the Foodies Point header */
+      bottom: 0;
+      left: 0;
+      right: 0;
       z-index: 1500;
       background: var(--bg-light);
       flex-direction: column;
@@ -446,7 +440,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v16)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v17)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -463,13 +457,13 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v16 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v17 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
     <!-- APP HEADER (Update on Left, Title Centered, Kitchen on Right) -->
     <header class="app-header" id="app-header">
-      <button class="btn-update" id="header-update-btn" onclick="manualAppUpdate()">↻ Update v16</button>
+      <button class="btn-update" id="header-update-btn" onclick="manualAppUpdate()">↻ Update v17</button>
       <div class="app-title">Foodies Point</div>
       <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
     </header>
@@ -480,11 +474,6 @@
       <div class="menu-list" id="customer-menu-container">
         <p style="text-align:center; padding: 30px; color:#666;">Loading live menu...</p>
       </div>
-
-      <!-- CENTERED FOOTER BRANDING -->
-      <footer class="app-footer">
-        Foodies Point
-      </footer>
     </main>
 
     <!-- CHECKOUT BAR -->
@@ -493,7 +482,7 @@
     </div>
 
     <!-- ==================================================================== -->
-    <!-- KITCHEN CONSOLE VIEW (v16 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
+    <!-- KITCHEN CONSOLE VIEW (v17 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
     <!-- ==================================================================== -->
     <section id="kitchen-view">
       
@@ -524,11 +513,6 @@
         <div id="kitchen-orders-container">
           <!-- Live Firebase orders appear here -->
         </div>
-
-        <!-- CENTERED FOOTER BRANDING -->
-        <footer class="app-footer">
-          Foodies Point
-        </footer>
       </div>
 
     </section>
@@ -556,8 +540,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 7. MAIN APP SCRIPT (v16 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 7. MAIN APP SCRIPT (v17 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=16"></script>
+  <script src="/foodies-point-beta/app.js?v=17"></script>
 </body>
 </html>
