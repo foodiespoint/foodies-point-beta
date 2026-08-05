@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v15 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v16 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=15">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=16">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v15)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v16)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -297,45 +297,49 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v15)                                */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v16 - GUARANTEED 50/50 SCROLL)      */
     /* ====================================================================== */
     #kitchen-view {
       display: none; /* Controlled via app.js -> 'flex' */
+      position: fixed;
+      inset: 0;
+      z-index: 1500;
+      background: var(--bg-light);
       flex-direction: column;
-      height: 100vh;
       max-width: 600px;
       margin: 0 auto;
-      padding: 14px 16px 0 16px;
     }
 
     .kitchen-half {
-      flex: 1;
+      flex: 1 1 50%;
+      min-height: 0; /* CRITICAL: Prevents flex child from growing past 50%! */
       overflow-y: auto;
-      padding-right: 4px;
+      padding: 14px 16px;
+      -webkit-overflow-scrolling: touch;
     }
 
     /* Upper Half: Menu & Controls (Top 50%) */
     .kitchen-upper {
       border-bottom: 3px solid var(--primary-color);
-      padding-bottom: 14px;
-      margin-bottom: 12px;
+      background: var(--bg-light);
     }
 
     /* Lower Half: Live Orders (Bottom 50%) */
     .kitchen-lower {
-      padding-top: 4px;
+      background: var(--white);
     }
 
     .sticky-section-title {
       position: sticky;
       top: 0;
-      background: var(--bg-light);
-      padding: 8px 0;
+      background: var(--white);
+      padding: 8px 0 10px 0;
       margin-bottom: 10px;
       z-index: 10;
       font-size: 1.1rem;
       font-weight: 700;
       color: var(--primary-color);
+      border-bottom: 1px solid var(--border-color);
     }
 
     .kitchen-header {
@@ -346,7 +350,7 @@
     }
 
     .order-card {
-      background: var(--white);
+      background: var(--bg-light);
       border-left: 4px solid var(--primary-color);
       border-radius: 8px;
       padding: 14px;
@@ -442,7 +446,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v15)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v16)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -459,13 +463,13 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v15 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v16 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
     <!-- APP HEADER (Update on Left, Title Centered, Kitchen on Right) -->
     <header class="app-header" id="app-header">
-      <button class="btn-update" id="header-update-btn" onclick="manualAppUpdate()">↻ Update v15</button>
+      <button class="btn-update" id="header-update-btn" onclick="manualAppUpdate()">↻ Update v16</button>
       <div class="app-title">Foodies Point</div>
       <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
     </header>
@@ -489,7 +493,7 @@
     </div>
 
     <!-- ==================================================================== -->
-    <!-- KITCHEN CONSOLE VIEW (v15 - SPLIT IN 2 EQUAL HALVES: 50% TOP / 50% BOT) -->
+    <!-- KITCHEN CONSOLE VIEW (v16 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
     <!-- ==================================================================== -->
     <section id="kitchen-view">
       
@@ -552,8 +556,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 7. MAIN APP SCRIPT (v15 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 7. MAIN APP SCRIPT (v16 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=15"></script>
+  <script src="/foodies-point-beta/app.js?v=16"></script>
 </body>
 </html>
