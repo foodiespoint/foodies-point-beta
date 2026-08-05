@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v16)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v17)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v16] Initialized successfully.");
+  console.log("[Firebase v17] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v16] Initialization error:", error);
+  console.error("[Firebase v17] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v16] Initialization error:", error);
+  console.error("[OneSignal v17] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v16 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v17 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=16', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=17', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v16] Registered successfully with scope:', reg.scope);
+      console.log('[SW v17] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v16] Registration failed:', err);
+      console.error('[SW v17] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v16 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v17 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v16] Checking for updates...');
+  console.log('[PWA v17] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v16)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v17)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v16] User accepted installation prompt.');
+          console.log('[PWA v17] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v16] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v17] Standalone PWA mode verified. Application unlocked.");
   } else {
-    console.log("[PWA v16] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v17] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -304,7 +304,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v16] Rendered menu. All items unchecked by default.");
+  console.log("[Kitchen v17] Rendered menu. All items unchecked by default.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -337,7 +337,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v16] Published dailyMenu to Firebase.`);
+      console.log(`[v17] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -357,7 +357,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v16] Cleared dailyMenu from Firebase.`);
+        console.log(`[v17] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -417,7 +417,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v16] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v17] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -493,7 +493,7 @@ function placeOrder() {
 }
 
 // ==========================================================================
-// 11. PERMANENT KITCHEN LOGIN & SPLIT-SCREEN LOGIC (v16)
+// 11. PERMANENT KITCHEN LOGIN & SPLIT-SCREEN LOGIC (v17)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 
@@ -545,12 +545,18 @@ function verifyKitchenPIN() {
 }
 
 function enterKitchenMode() {
-  document.getElementById('app-header').style.display = 'none';
+  // Hide customer views & lock outer body scrolling
   document.getElementById('customer-view').style.display = 'none';
   document.getElementById('checkout-bar').style.display = 'none';
   document.body.style.overflow = 'hidden';
 
-  // Activate Fixed 50/50 Split Screen Overlay ('flex')
+  // HIDE ONLY the buttons in the Foodies Point header so the brand name remains visible at top
+  const headerKitchenBtn = document.getElementById('header-kitchen-btn');
+  const headerUpdateBtn = document.getElementById('header-update-btn');
+  if (headerKitchenBtn) headerKitchenBtn.style.display = 'none';
+  if (headerUpdateBtn) headerUpdateBtn.style.display = 'none';
+
+  // Activate Fixed 50/50 Split Screen Overlay ('flex') docked below the 56px header
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'flex';
 
@@ -564,10 +570,15 @@ function exitKitchenMode() {
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'none';
 
-  document.getElementById('app-header').style.display = 'flex';
   document.getElementById('customer-view').style.display = 'block';
   document.getElementById('checkout-bar').style.display = 'flex';
   document.body.style.overflow = '';
+
+  // RESTORE both header buttons for customer view
+  const headerKitchenBtn = document.getElementById('header-kitchen-btn');
+  const headerUpdateBtn = document.getElementById('header-update-btn');
+  if (headerKitchenBtn) headerKitchenBtn.style.display = 'inline-block';
+  if (headerUpdateBtn) headerUpdateBtn.style.display = 'inline-block';
 
   if (db) db.ref('orders').off();
 }
