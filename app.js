@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v21)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v22)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v21] Initialized successfully.");
+  console.log("[Firebase v22] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v21] Initialization error:", error);
+  console.error("[Firebase v22] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v21] Initialization error:", error);
+  console.error("[OneSignal v22] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v21 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v22 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=21', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=22', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v21] Registered successfully with scope:', reg.scope);
+      console.log('[SW v22] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v21] Registration failed:', err);
+      console.error('[SW v22] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v21 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v22 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v21] Checking for updates...');
+  console.log('[PWA v22] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v21)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v22)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v21] User accepted installation prompt.');
+          console.log('[PWA v22] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v21] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v22] Standalone PWA mode verified. Application unlocked.");
   } else {
-    console.log("[PWA v21] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v22] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -315,7 +315,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v21] Rendered menu with persistent live checkboxes & Out of Stock controls.");
+  console.log("[Kitchen v22] Rendered menu with persistent live checkboxes & Out of Stock controls.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -360,7 +360,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v21] Published dailyMenu to Firebase.`);
+      console.log(`[v22] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -380,7 +380,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v21] Cleared dailyMenu from Firebase.`);
+        console.log(`[v22] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -451,7 +451,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v21] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v22] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -473,7 +473,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v21)
+// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v22)
 // ==========================================================================
 function placeOrder() {
   if (!db) {
@@ -598,11 +598,11 @@ function listenForCustomerOrderUpdates() {
       const liveOrder = activeOrders[myOrder.firebaseKey];
       if (liveOrder) {
         if (myOrder.status !== liveOrder.status) {
-          myOrder.status = liveOrder.status; // e.g., PENDING -> ACCEPTED
+          myOrder.status = liveOrder.status; // PENDING -> ACCEPTED / DENIED
           hasChanges = true;
         }
       } else if (myOrder.status === 'PENDING' || myOrder.status === 'ACCEPTED') {
-        // Was active in Firebase, but removed by kitchen -> mark COMPLETED
+        // Was active in Firebase, but removed by kitchen after completion -> mark COMPLETED
         myOrder.status = 'COMPLETED';
         hasChanges = true;
       }
@@ -733,7 +733,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 12. LIVE KITCHEN ORDER LISTENER (ONLY Accept & Complete - NO Archive)
+// 12. LIVE KITCHEN ORDER LISTENER (With Accept, Deny & Complete Actions)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -763,22 +763,32 @@ function listenForKitchenOrders() {
         .map(i => `<p style="margin: 4px 0;"><strong>${i.quantity}x</strong> ${i.name}</p>`)
         .join('');
 
+      // Status badge color formatting
+      const statusColors = {
+        PENDING: '#EF6C00',
+        ACCEPTED: '#2E7D32',
+        DENIED: '#C62828',
+        COMPLETED: '#1565C0'
+      };
+      const statusColor = statusColors[order.status] || '#FF4B3A';
+
+      // Dynamic action buttons depending on whether order is PENDING or ACCEPTED
+      const actionButtonsHtml = (order.status === 'PENDING')
+        ? `<button class="btn-action btn-accept" onclick="acceptOrder('${order.firebaseKey}')">Accept</button>
+           <button class="btn-action btn-deny" onclick="denyOrder('${order.firebaseKey}')">Deny</button>`
+        : `<button class="btn-action btn-complete" onclick="completeOrder('${order.firebaseKey}')">Complete</button>`;
+
       card.innerHTML = `
         <div class="order-header">
           <span>Order #${order.orderId}</span>
-          <span style="color: ${order.status === 'ACCEPTED' ? '#2E7D32' : '#FF4B3A'};">${order.status}</span>
+          <span style="color: ${statusColor}; font-weight: 700;">${order.status}</span>
         </div>
         <div class="order-body" style="margin-bottom: 12px;">
           ${itemsListHtml}
           <p style="margin-top: 8px; font-weight: bold;">Total: ₹${order.total}</p>
         </div>
         <div class="order-actions">
-          ${
-            order.status === 'PENDING'
-              ? `<button class="btn-action btn-accept" onclick="acceptOrder('${order.firebaseKey}')">Accept</button>`
-              : ''
-          }
-          <button class="btn-action btn-complete" onclick="completeOrder('${order.firebaseKey}')">Complete</button>
+          ${actionButtonsHtml}
         </div>
       `;
 
@@ -788,7 +798,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 13. ORDER ACTIONS (ONLY ACCEPT AND PERMANENT COMPLETE)
+// 13. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
 // ==========================================================================
 function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -798,6 +808,24 @@ function acceptOrder(firebaseKey) {
     console.error("Error accepting order:", error);
     alert("Could not update order status.");
   });
+}
+
+function denyOrder(firebaseKey) {
+  if (!db) return;
+  if (confirm("Deny this order? The customer will see that their order was declined.")) {
+    // Set status to DENIED first so the customer's live history instantly updates
+    db.ref(`orders/${firebaseKey}`).update({
+      status: 'DENIED'
+    }).then(() => {
+      // Automatically clean up the denied order after 2 seconds
+      setTimeout(() => {
+        db.ref(`orders/${firebaseKey}`).remove();
+      }, 2000);
+    }).catch((error) => {
+      console.error("Error denying order:", error);
+      alert("Could not update order status.");
+    });
+  }
 }
 
 function completeOrder(firebaseKey) {
