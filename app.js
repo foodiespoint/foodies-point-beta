@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v15)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v16)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v15] Initialized successfully.");
+  console.log("[Firebase v16] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v15] Initialization error:", error);
+  console.error("[Firebase v16] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v15] Initialization error:", error);
+  console.error("[OneSignal v16] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v15 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v16 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=15', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=16', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v15] Registered successfully with scope:', reg.scope);
+      console.log('[SW v16] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v15] Registration failed:', err);
+      console.error('[SW v16] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v15 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v16 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v15] Checking for updates...');
+  console.log('[PWA v16] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v15)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v16)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v15] User accepted installation prompt.');
+          console.log('[PWA v16] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v15] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v16] Standalone PWA mode verified. Application unlocked.");
   } else {
-    console.log("[PWA v15] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v16] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -304,7 +304,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v15] Rendered menu. All items unchecked by default.");
+  console.log("[Kitchen v16] Rendered menu. All items unchecked by default.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -337,7 +337,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v15] Published dailyMenu to Firebase.`);
+      console.log(`[v16] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -357,7 +357,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v15] Cleared dailyMenu from Firebase.`);
+        console.log(`[v16] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -417,7 +417,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v15] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v16] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -493,7 +493,7 @@ function placeOrder() {
 }
 
 // ==========================================================================
-// 11. PERMANENT KITCHEN LOGIN & SPLIT-SCREEN LOGIC (v15)
+// 11. PERMANENT KITCHEN LOGIN & SPLIT-SCREEN LOGIC (v16)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 
@@ -545,13 +545,12 @@ function verifyKitchenPIN() {
 }
 
 function enterKitchenMode() {
-  // Hide customer views & lock outer body scrolling
   document.getElementById('app-header').style.display = 'none';
   document.getElementById('customer-view').style.display = 'none';
   document.getElementById('checkout-bar').style.display = 'none';
   document.body.style.overflow = 'hidden';
 
-  // Activate 2-Half Split Screen Layout ('flex')
+  // Activate Fixed 50/50 Split Screen Overlay ('flex')
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'flex';
 
@@ -562,7 +561,6 @@ function enterKitchenMode() {
 }
 
 function exitKitchenMode() {
-  // Hide Kitchen View & restore normal page scrolling
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'none';
 
