@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v19)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v20)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v19] Initialized successfully.");
+  console.log("[Firebase v20] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v19] Initialization error:", error);
+  console.error("[Firebase v20] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v19] Initialization error:", error);
+  console.error("[OneSignal v20] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v19 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v20 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=19', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=20', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v19] Registered successfully with scope:', reg.scope);
+      console.log('[SW v20] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v19] Registration failed:', err);
+      console.error('[SW v20] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v19 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v20 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v19] Checking for updates...');
+  console.log('[PWA v20] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v19)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v20)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v19] User accepted installation prompt.');
+          console.log('[PWA v20] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v19] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v20] Standalone PWA mode verified. Application unlocked.");
   } else {
-    console.log("[PWA v19] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v20] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -315,7 +315,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v19] Rendered menu with persistent live checkboxes & Out of Stock controls.");
+  console.log("[Kitchen v20] Rendered menu with persistent live checkboxes & Out of Stock controls.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -360,7 +360,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v19] Published dailyMenu to Firebase.`);
+      console.log(`[v20] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -380,7 +380,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v19] Cleared dailyMenu from Firebase.`);
+        console.log(`[v20] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -451,7 +451,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v19] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v20] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -473,7 +473,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 10. ORDER SUBMISSION TO FIREBASE (Customer Checkout)
+// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v20)
 // ==========================================================================
 function placeOrder() {
   if (!db) {
@@ -514,6 +514,22 @@ function placeOrder() {
   newOrderRef.set(orderData)
     .then(() => {
       alert(`Order placed successfully! Your Order ID is #${orderData.orderId}`);
+      
+      // SAVE ORDER TO DEVICE LOCALSTORAGE FOR BOTTOM HALF HISTORY
+      const myOrder = {
+        firebaseKey: newOrderRef.key,
+        orderId: orderData.orderId,
+        items: orderItems,
+        total: totalAmount,
+        status: 'PENDING',
+        timestamp: Date.now()
+      };
+      const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
+      pastOrders.unshift(myOrder); // Put newest order at top of history
+      localStorage.setItem('fp_customer_orders', JSON.stringify(pastOrders));
+      renderCustomerOrderHistory();
+
+      // Clear quantity counters
       MENU_ITEMS.forEach((dish) => { cart[dish.id] = 0; });
       Object.keys(cart).forEach(id => {
         const span = document.getElementById(`qty-${id}`);
@@ -524,6 +540,79 @@ function placeOrder() {
       console.error("Error placing order:", error);
       alert("Failed to place order. Please check your internet connection.");
     });
+}
+
+function renderCustomerOrderHistory() {
+  const container = document.getElementById('customer-orders-container');
+  if (!container) return;
+
+  const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
+
+  if (pastOrders.length === 0) {
+    container.innerHTML = `<p style="text-align:center; padding: 20px; color:#666;">No past orders yet. Orders placed from this device will appear here!</p>`;
+    return;
+  }
+
+  container.innerHTML = '';
+
+  pastOrders.forEach((myOrder) => {
+    const card = document.createElement('div');
+    card.className = 'customer-order-card';
+
+    const itemsSummary = myOrder.items
+      .map(i => `<strong>${i.quantity}x</strong> ${i.name}`)
+      .join(', ');
+
+    const dateStr = new Date(myOrder.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    card.innerHTML = `
+      <div class="customer-order-header">
+        <span><strong>Order #${myOrder.orderId}</strong> (${dateStr})</span>
+        <span class="status-badge status-${myOrder.status}">${myOrder.status}</span>
+      </div>
+      <p style="font-size: 0.88rem; color: #444; margin-bottom: 6px; line-height: 1.4;">${itemsSummary}</p>
+      <div style="font-weight: 700; color: #FF4B3A; font-size: 0.95rem;">Total: ₹${myOrder.total}</div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function clearCustomerHistory() {
+  if (confirm("Clear your order history from this device?")) {
+    localStorage.removeItem('fp_customer_orders');
+    renderCustomerOrderHistory();
+  }
+}
+
+// LISTEN TO LIVE FIREBASE ORDERS TO KEEP CUSTOMER STATUS UPDATED IN REAL-TIME
+function listenForCustomerOrderUpdates() {
+  if (!db) return;
+
+  db.ref('orders').on('value', (snapshot) => {
+    const activeOrders = snapshot.val() || {};
+    const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
+    let hasChanges = false;
+
+    pastOrders.forEach((myOrder) => {
+      const liveOrder = activeOrders[myOrder.firebaseKey];
+      if (liveOrder) {
+        if (myOrder.status !== liveOrder.status) {
+          myOrder.status = liveOrder.status; // e.g., PENDING -> ACCEPTED
+          hasChanges = true;
+        }
+      } else if (myOrder.status === 'PENDING' || myOrder.status === 'ACCEPTED') {
+        // Was active in Firebase, but removed by kitchen -> mark COMPLETED
+        myOrder.status = 'COMPLETED';
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      localStorage.setItem('fp_customer_orders', JSON.stringify(pastOrders));
+      renderCustomerOrderHistory();
+    }
+  });
 }
 
 // ==========================================================================
@@ -586,10 +675,8 @@ function enterKitchenMode() {
   }
   isKitchenMode = true;
 
-  // Hide customer view & lock outer body scrolling
+  // Hide customer view
   document.getElementById('customer-view').style.display = 'none';
-  document.getElementById('checkout-bar').style.display = 'none';
-  document.body.style.overflow = 'hidden';
 
   // Update Header Buttons: Show Back on Left and Exit on Right
   document.getElementById('header-update-btn').style.display = 'none';
@@ -626,9 +713,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'none';
 
-  document.getElementById('customer-view').style.display = 'block';
-  document.getElementById('checkout-bar').style.display = 'flex';
-  document.body.style.overflow = '';
+  document.getElementById('customer-view').style.display = 'flex';
 
   // Restore Customer Mode Header Buttons (Update Left, Kitchen Right)
   document.getElementById('header-update-btn').style.display = 'inline-block';
@@ -735,6 +820,8 @@ function completeOrder(firebaseKey) {
 function initFoodiesPoint() {
   enforceInstallGate();
   listenForCustomerLiveMenu();
+  renderCustomerOrderHistory();
+  listenForCustomerOrderUpdates();
 }
 
 if (document.readyState === 'loading') {
