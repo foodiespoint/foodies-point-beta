@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v18 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v19 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=18">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=19">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v18)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v19)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -203,6 +203,36 @@
       font-size: 0.95rem;
     }
 
+    /* OUT OF STOCK BUTTONS & BADGES (v19) */
+    .btn-oos {
+      border: 1px solid var(--primary-color);
+      background: var(--white);
+      color: var(--primary-color);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-oos.is-oos {
+      background: var(--primary-color);
+      color: var(--white);
+    }
+
+    .badge-oos {
+      background: #EAEAEA;
+      color: #666;
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
     .quantity-stepper {
       display: flex;
       align-items: center;
@@ -288,7 +318,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v18 - DOCKED BELOW 56PX HEADER)     */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v19 - DOCKED BELOW 56PX HEADER)     */
     /* ====================================================================== */
     #kitchen-view {
       display: none; /* Controlled via app.js -> 'flex' */
@@ -433,7 +463,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v18)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v19)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -450,14 +480,14 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v18 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v19 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
     <!-- APP HEADER (Customer Mode: Update left, Kitchen right | Kitchen Mode: Back left, Exit right) -->
     <header class="app-header" id="app-header">
       <!-- Left Side Buttons -->
-      <button class="btn-update" id="header-update-btn" onclick="manualAppUpdate()">↻ Update v18</button>
+      <button class="btn-update" id="header-update-btn" onclick="manualAppUpdate()">↻ Update v19</button>
       <button class="btn-kitchen" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">← Back</button>
 
       <!-- Center Title (Always Visible) -->
@@ -482,7 +512,7 @@
     </div>
 
     <!-- ==================================================================== -->
-    <!-- KITCHEN CONSOLE VIEW (v18 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
+    <!-- KITCHEN CONSOLE VIEW (v19 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
     <!-- ==================================================================== -->
     <section id="kitchen-view">
       
@@ -536,8 +566,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 7. MAIN APP SCRIPT (v18 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 7. MAIN APP SCRIPT (v19 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=18"></script>
+  <script src="/foodies-point-beta/app.js?v=19"></script>
 </body>
 </html>
