@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v20)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v21)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v20] Initialized successfully.");
+  console.log("[Firebase v21] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v20] Initialization error:", error);
+  console.error("[Firebase v21] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v20] Initialization error:", error);
+  console.error("[OneSignal v21] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v20 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v21 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=20', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=21', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v20] Registered successfully with scope:', reg.scope);
+      console.log('[SW v21] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v20] Registration failed:', err);
+      console.error('[SW v21] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v20 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v21 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v20] Checking for updates...');
+  console.log('[PWA v21] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v20)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v21)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v20] User accepted installation prompt.');
+          console.log('[PWA v21] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v20] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v21] Standalone PWA mode verified. Application unlocked.");
   } else {
-    console.log("[PWA v20] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v21] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -315,7 +315,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v20] Rendered menu with persistent live checkboxes & Out of Stock controls.");
+  console.log("[Kitchen v21] Rendered menu with persistent live checkboxes & Out of Stock controls.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -360,7 +360,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v20] Published dailyMenu to Firebase.`);
+      console.log(`[v21] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -380,7 +380,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v20] Cleared dailyMenu from Firebase.`);
+        console.log(`[v21] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -451,7 +451,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v20] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v21] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -473,7 +473,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v20)
+// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v21)
 // ==========================================================================
 function placeOrder() {
   if (!db) {
