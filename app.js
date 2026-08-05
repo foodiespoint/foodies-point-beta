@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v18)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v19)
 // ==========================================================================
 let db = null;
 
@@ -18,9 +18,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v18] Initialized successfully.");
+  console.log("[Firebase v19] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v18] Initialization error:", error);
+  console.error("[Firebase v19] Initialization error:", error);
 }
 
 // ==========================================================================
@@ -36,34 +36,34 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v18] Initialization error:", error);
+  console.error("[OneSignal v19] Initialization error:", error);
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v18 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v19 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=18', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=19', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v18] Registered successfully with scope:', reg.scope);
+      console.log('[SW v19] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v18] Registration failed:', err);
+      console.error('[SW v19] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v18 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v19 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v18] Checking for updates...');
+  console.log('[PWA v19] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +77,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v18)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v19)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +92,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v18] User accepted installation prompt.');
+          console.log('[PWA v19] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +118,9 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v18] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v19] Standalone PWA mode verified. Application unlocked.");
   } else {
-    console.log("[PWA v18] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v19] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -261,7 +261,7 @@ const cart = {};
 let kitchenCheckedState = {};
 
 // ==========================================================================
-// 7. RENDER KITCHEN MENU (Unchecked by Default + Checked Move to Top)
+// 7. RENDER KITCHEN MENU (Live Items Stay Checked + Out of Stock Button)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -273,6 +273,7 @@ function renderKitchenMenu() {
   categories.forEach((cat) => {
     const catItems = MENU_ITEMS.filter(item => item.category === cat);
 
+    // Live checked items automatically sort to top of category
     catItems.sort((a, b) => {
       const aChecked = !!kitchenCheckedState[a.id];
       const bChecked = !!kitchenCheckedState[b.id];
@@ -287,10 +288,19 @@ function renderKitchenMenu() {
 
     catItems.forEach((dish) => {
       const isChecked = !!kitchenCheckedState[dish.id];
+      const isOOS = (kitchenCheckedState[dish.id] === 'OOS');
 
       const card = document.createElement('div');
       card.className = 'menu-card';
       card.setAttribute('data-item-id', dish.id);
+      
+      // ONLY render the Out of Stock button when the dish checkbox is checked!
+      const oosButtonHtml = isChecked
+        ? `<button type="button" class="btn-oos ${isOOS ? 'is-oos' : ''}" onclick="toggleOutOfStock('${dish.id}')">
+            ${isOOS ? '🔴 Out of Stock' : '🟢 In Stock'}
+           </button>`
+        : '';
+
       card.innerHTML = `
         <div class="dish-select-area">
           <input type="checkbox" class="dish-checkbox" id="chk-${dish.id}" ${isChecked ? 'checked' : ''} onchange="toggleKitchenItem('${dish.id}', this.checked)">
@@ -299,12 +309,13 @@ function renderKitchenMenu() {
             <div class="price">₹${dish.price}</div>
           </div>
         </div>
+        ${oosButtonHtml}
       `;
       container.appendChild(card);
     });
   });
 
-  console.log("[Kitchen v18] Rendered menu. All items unchecked by default.");
+  console.log("[Kitchen v19] Rendered menu with persistent live checkboxes & Out of Stock controls.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -312,6 +323,18 @@ function toggleKitchenItem(dishId, isChecked) {
     kitchenCheckedState[dishId] = true;
   } else {
     delete kitchenCheckedState[dishId];
+  }
+  renderKitchenMenu();
+}
+
+function toggleOutOfStock(dishId) {
+  const current = kitchenCheckedState[dishId];
+  const newState = (current === 'OOS') ? true : 'OOS';
+  kitchenCheckedState[dishId] = newState;
+
+  // Immediately sync Out of Stock state to Firebase so kitchen staff don't have to hit Publish!
+  if (db) {
+    db.ref(`dailyMenu/${dishId}`).set(newState);
   }
   renderKitchenMenu();
 }
@@ -337,7 +360,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v18] Published dailyMenu to Firebase.`);
+      console.log(`[v19] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -357,7 +380,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v18] Cleared dailyMenu from Firebase.`);
+        console.log(`[v19] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -367,7 +390,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 9. CUSTOMER LIVE MENU LISTENER (Shows ONLY Published Items)
+// 9. CUSTOMER LIVE MENU LISTENER (Handles Out of Stock Badges)
 // ==========================================================================
 function listenForCustomerLiveMenu() {
   if (!db) return;
@@ -390,6 +413,12 @@ function listenForCustomerLiveMenu() {
       if (activeIds[dish.id]) {
         renderedCount++;
         cart[dish.id] = cart[dish.id] || 0;
+        const isOOS = (activeIds[dish.id] === 'OOS');
+
+        // Reset cart quantity if item becomes Out of Stock
+        if (isOOS && cart[dish.id] > 0) {
+          cart[dish.id] = 0;
+        }
 
         if (dish.category !== currentCategory) {
           currentCategory = dish.category;
@@ -402,22 +431,27 @@ function listenForCustomerLiveMenu() {
         const card = document.createElement('div');
         card.className = 'menu-card';
         card.setAttribute('data-item-id', dish.id);
+
+        const actionAreaHtml = isOOS
+          ? `<span class="badge-oos">Out of Stock</span>`
+          : `<div class="quantity-stepper">
+               <button type="button" aria-label="Decrease quantity" onclick="updateQuantity('${dish.id}', -1)">−</button>
+               <span id="qty-${dish.id}">${cart[dish.id]}</span>
+               <button type="button" aria-label="Increase quantity" onclick="updateQuantity('${dish.id}', 1)">+</button>
+             </div>`;
+
         card.innerHTML = `
-          <div class="dish-info">
+          <div class="dish-info" style="${isOOS ? 'opacity: 0.5;' : ''}">
             <h4>${dish.name}</h4>
             <div class="price">₹${dish.price}</div>
           </div>
-          <div class="quantity-stepper">
-            <button type="button" aria-label="Decrease quantity" onclick="updateQuantity('${dish.id}', -1)">−</button>
-            <span id="qty-${dish.id}">${cart[dish.id]}</span>
-            <button type="button" aria-label="Increase quantity" onclick="updateQuantity('${dish.id}', 1)">+</button>
-          </div>
+          ${actionAreaHtml}
         `;
         container.appendChild(card);
       }
     });
 
-    console.log(`[Customer v18] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v19] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -493,7 +527,7 @@ function placeOrder() {
 }
 
 // ==========================================================================
-// 11. PERMANENT KITCHEN LOGIN & HISTORY BACK BUTTON INTERCEPTION (v18)
+// 11. PERMANENT KITCHEN LOGIN, PERSISTENT CHECKBOXES & HISTORY BACK BUTTON
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -567,8 +601,15 @@ function enterKitchenMode() {
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'flex';
 
-  kitchenCheckedState = {};
-  renderKitchenMenu();
+  // LOAD LIVE ITEMS FROM FIREBASE SO THEY STAY CHECKED
+  if (db) {
+    db.ref('dailyMenu').once('value', (snapshot) => {
+      kitchenCheckedState = snapshot.val() || {};
+      renderKitchenMenu();
+    });
+  } else {
+    renderKitchenMenu();
+  }
 
   listenForKitchenOrders();
 }
