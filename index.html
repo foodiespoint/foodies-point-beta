@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v21 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v22 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=21">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=22">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v21)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v22)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -148,7 +148,7 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v21 - GUARANTEED FIXED BOUNDARIES)          */
+    /* 50/50 SPLIT CUSTOMER PAGE (v22 - GUARANTEED FIXED BOUNDARIES)          */
     /* ====================================================================== */
     #customer-view {
       display: flex; /* Controlled via app.js -> 'flex' */
@@ -265,7 +265,7 @@
       font-size: 0.95rem;
     }
 
-    /* OUT OF STOCK BUTTONS & BADGES (v21) */
+    /* OUT OF STOCK BUTTONS & BADGES (v22) */
     .btn-oos {
       border: 1px solid var(--primary-color);
       background: var(--white);
@@ -361,6 +361,11 @@
       color: #1565C0;
     }
 
+    .status-DENIED {
+      background: #FFEBEE;
+      color: #C62828;
+    }
+
     /* Publish & Clear Menu Side-by-Side Container */
     .kitchen-menu-actions {
       display: flex;
@@ -391,7 +396,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v21 - DOCKED BELOW 56PX HEADER)     */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v22 - DOCKED BELOW 56PX HEADER)     */
     /* ====================================================================== */
     #kitchen-view {
       display: none; /* Controlled via app.js -> 'flex' */
@@ -478,6 +483,11 @@
       color: #2E7D32;
     }
 
+    .btn-deny {
+      background: #FFEBEE;
+      color: #C62828;
+    }
+
     .btn-complete {
       background: var(--primary-color);
       color: var(--white);
@@ -539,7 +549,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v21)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v22)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -556,14 +566,14 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v21 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v22 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
     <!-- APP HEADER (Customer Mode: Update left, Kitchen right | Kitchen Mode: Back left, Exit right) -->
     <header class="app-header" id="app-header">
       <!-- Left Side Buttons -->
-      <button class="btn-update" id="header-update-btn" onclick="manualAppUpdate()">↻ Update v21</button>
+      <button class="btn-update" id="header-update-btn" onclick="manualAppUpdate()">↻ Update v22</button>
       <button class="btn-kitchen" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">← Back</button>
 
       <!-- Center Title (Always Visible) -->
@@ -575,7 +585,7 @@
     </header>
 
     <!-- ==================================================================== -->
-    <!-- CUSTOMER LIVE MENU VIEW (v21 - 50% TOP MENU / 50% BOTTOM HISTORY)    -->
+    <!-- CUSTOMER LIVE MENU VIEW (v22 - 50% TOP MENU / 50% BOTTOM HISTORY)    -->
     <!-- ==================================================================== -->
     <main id="customer-view">
       
@@ -609,7 +619,7 @@
     </main>
 
     <!-- ==================================================================== -->
-    <!-- KITCHEN CONSOLE VIEW (v21 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
+    <!-- KITCHEN CONSOLE VIEW (v22 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
     <!-- ==================================================================== -->
     <section id="kitchen-view">
       
@@ -665,8 +675,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 7. MAIN APP SCRIPT (v21 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 7. MAIN APP SCRIPT (v22 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=21"></script>
+  <script src="/foodies-point-beta/app.js?v=22"></script>
 </body>
 </html>
