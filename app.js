@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v28)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v29)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v28] Initialized successfully.");
+  console.log("[Firebase v29] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v28] Initialization error:", error);
+  console.error("[Firebase v29] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v28)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v29)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -48,7 +48,7 @@ function checkDaily6PMReset() {
     if (db) {
       db.ref('dailyMenu').remove()
         .then(() => {
-          console.log("[v28] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
+          console.log("[v29] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
           renderKitchenMenu();
         })
         .catch((err) => console.error("Error clearing menu at 6 PM:", err));
@@ -59,7 +59,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v28)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v29)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -77,7 +77,7 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v28] Initialization error:", error);
+  console.error("[OneSignal v29] Initialization error:", error);
 }
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
@@ -96,39 +96,39 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
     // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v28] Notification permission status:', permission);
+        console.log('[PWA v29] Notification permission status:', permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v28] Error requesting permission:', err);
+    console.error('[Notification v29] Error requesting permission:', err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v28 - LOCKED TO /foodies-point-beta/)
+// 4. SERVICE WORKER REGISTRATION (v29 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=28', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=29', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v28] Registered successfully with scope:', reg.scope);
+      console.log('[SW v29] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v28] Registration failed:', err);
+      console.error('[SW v29] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 5. PWA MANUAL UPDATE ENGINE (↻ Update v28 Button)
+// 5. PWA MANUAL UPDATE ENGINE (↻ Update v29 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v28] Checking for updates...');
+  console.log('[PWA v29] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -142,7 +142,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 6. INVERTED STANDALONE DETECTION & GATE ENGINE (v28)
+// 6. INVERTED STANDALONE DETECTION & GATE ENGINE (v29)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -157,7 +157,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v28] User accepted installation prompt.');
+          console.log('[PWA v29] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -183,12 +183,12 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v28] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v29] Standalone PWA mode verified. Application unlocked.");
     
     // Automatically prompt for Notification Permission after opening installed PWA
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v28] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v29] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -330,7 +330,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null; // Cache to re-render menu automatically when 9 PM arrives
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v28: MASTER SELECTED TOP SECTION + CATEGORIES)
+// 8. RENDER KITCHEN MENU (v29: CLEAN TOP CHECKED LIST WITHOUT EXTRA HEADER BAR)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -338,90 +338,62 @@ function renderKitchenMenu() {
 
   container.innerHTML = '';
 
-  // 1. MASTER TOP SECTION: ALL CHECKED ITEMS AT THE VERY TOP OF KITCHEN CONSOLE
+  // 1. RENDER ALL SELECTED/CHECKED ITEMS AT THE VERY TOP OF THE LIST (NO HEADING BAR)
   const checkedDishes = MENU_ITEMS.filter(d => kitchenCheckedState[d.id]);
 
-  if (checkedDishes.length > 0) {
-    const topHeader = document.createElement('h3');
-    topHeader.style.cssText = "margin: 8px 0 10px 0; font-size: 0.95rem; color: #FFFFFF; background: #FF4B3A; padding: 10px 14px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(255, 75, 58, 0.3);";
-    topHeader.innerHTML = `<span>★ SELECTED / LIVE TODAY</span> <span>(${checkedDishes.length} ITEMS)</span>`;
-    container.appendChild(topHeader);
+  checkedDishes.forEach((dish) => {
+    const isOOS = (kitchenCheckedState[dish.id] === 'OOS');
+    const card = document.createElement('div');
+    card.className = 'menu-card';
+    card.setAttribute('data-item-id', dish.id);
 
-    checkedDishes.forEach((dish) => {
-      const isOOS = (kitchenCheckedState[dish.id] === 'OOS');
-      const card = document.createElement('div');
-      card.className = 'menu-card';
-      card.style.cssText = "border-left: 4px solid #FF4B3A; background: #FFF9F8;";
-      card.setAttribute('data-item-id', dish.id);
-
-      card.innerHTML = `
-        <div class="dish-select-area">
-          <input type="checkbox" class="dish-checkbox" id="chk-top-${dish.id}" checked onchange="toggleKitchenItem('${dish.id}', false)">
-          <div class="dish-info">
-            <h4>${dish.name} <span style="font-size:0.78rem; color:#777; font-weight:normal;">(${dish.category})</span></h4>
-            <div class="price">₹${dish.price}</div>
-          </div>
+    card.innerHTML = `
+      <div class="dish-select-area">
+        <input type="checkbox" class="dish-checkbox" id="chk-top-${dish.id}" checked onchange="toggleKitchenItem('${dish.id}', false)">
+        <div class="dish-info">
+          <h4>${dish.name} <span style="font-size:0.78rem; color:#777; font-weight:normal;">(${dish.category})</span></h4>
+          <div class="price">₹${dish.price}</div>
         </div>
-        <button type="button" class="btn-oos ${isOOS ? 'is-oos' : ''}" onclick="toggleOutOfStock('${dish.id}')">
-          ${isOOS ? '🔴 Out of Stock' : '🟢 In Stock'}
-        </button>
-      `;
-      container.appendChild(card);
-    });
-
-    const divider = document.createElement('div');
-    divider.style.cssText = "margin: 22px 0 6px 0; border-top: 2px dashed #CCCCCC; padding-top: 12px; font-size: 0.85rem; font-weight: 700; color: #666; text-transform: uppercase; text-align: center;";
-    divider.textContent = "All Menu Categories (Add More Below)";
-    container.appendChild(divider);
-  }
-
-  // 2. ALL CATEGORIES BELOW
-  const categories = [...new Set(MENU_ITEMS.map(item => item.category))];
-  categories.forEach((cat) => {
-    const catItems = MENU_ITEMS.filter(item => item.category === cat);
-
-    // Sort checked items to the top within each category as well
-    catItems.sort((a, b) => {
-      const aChecked = !!kitchenCheckedState[a.id];
-      const bChecked = !!kitchenCheckedState[b.id];
-      if (aChecked === bChecked) return 0;
-      return aChecked ? -1 : 1;
-    });
-
-    const categoryHeader = document.createElement('h3');
-    categoryHeader.style.cssText = "margin: 16px 0 6px 0; font-size: 0.95rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
-    categoryHeader.textContent = cat;
-    container.appendChild(categoryHeader);
-
-    catItems.forEach((dish) => {
-      const isChecked = !!kitchenCheckedState[dish.id];
-      const isOOS = (kitchenCheckedState[dish.id] === 'OOS');
-
-      const card = document.createElement('div');
-      card.className = 'menu-card';
-      card.setAttribute('data-item-id', dish.id);
-
-      const oosButtonHtml = isChecked
-        ? `<button type="button" class="btn-oos ${isOOS ? 'is-oos' : ''}" onclick="toggleOutOfStock('${dish.id}')">
-            ${isOOS ? '🔴 Out of Stock' : '🟢 In Stock'}
-           </button>`
-        : '';
-
-      card.innerHTML = `
-        <div class="dish-select-area">
-          <input type="checkbox" class="dish-checkbox" id="chk-${dish.id}" ${isChecked ? 'checked' : ''} onchange="toggleKitchenItem('${dish.id}', this.checked)">
-          <div class="dish-info">
-            <h4>${dish.name}</h4>
-            <div class="price">₹${dish.price}</div>
-          </div>
-        </div>
-        ${oosButtonHtml}
-      `;
-      container.appendChild(card);
-    });
+      </div>
+      <button type="button" class="btn-oos ${isOOS ? 'is-oos' : ''}" onclick="toggleOutOfStock('${dish.id}')">
+        ${isOOS ? '🔴 Out of Stock' : '🟢 In Stock'}
+      </button>
+    `;
+    container.appendChild(card);
   });
 
-  console.log("[Kitchen v28] Rendered menu with Master Checked Items Top Section.");
+  // 2. RENDER UNCHECKED ITEMS GROUPED UNDER THEIR RESPECTIVE CATEGORIES BELOW
+  const categories = [...new Set(MENU_ITEMS.map(item => item.category))];
+  categories.forEach((cat) => {
+    const uncheckedCatItems = MENU_ITEMS.filter(item => item.category === cat && !kitchenCheckedState[item.id]);
+
+    // Only render category heading if there is at least one unchecked item inside it
+    if (uncheckedCatItems.length > 0) {
+      const categoryHeader = document.createElement('h3');
+      categoryHeader.style.cssText = "margin: 16px 0 6px 0; font-size: 0.95rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
+      categoryHeader.textContent = cat;
+      container.appendChild(categoryHeader);
+
+      uncheckedCatItems.forEach((dish) => {
+        const card = document.createElement('div');
+        card.className = 'menu-card';
+        card.setAttribute('data-item-id', dish.id);
+
+        card.innerHTML = `
+          <div class="dish-select-area">
+            <input type="checkbox" class="dish-checkbox" id="chk-${dish.id}" onchange="toggleKitchenItem('${dish.id}', true)">
+            <div class="dish-info">
+              <h4>${dish.name}</h4>
+              <div class="price">₹${dish.price}</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+  });
+
+  console.log("[Kitchen v29] Rendered menu with selected items cleanly at top & unchecked categories below.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -446,7 +418,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v29: WITH CONFIRMATION)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -463,14 +435,19 @@ function publishDailyMenu() {
     return;
   }
 
+  // Pre-Publish Confirmation Box
+  const confirmMsg = isDuringBreakWindow()
+    ? `It is currently between 6:00 PM and 9:00 PM.\n\nAre you sure you want to publish these ${selectedCount} selected items? (They will automatically go live for customers at 9:00 PM tonight for tomorrow's orders.)`
+    : `Are you sure you want to publish ${selectedCount} selected items to the live customer menu?`;
+
+  if (!confirm(confirmMsg)) {
+    return;
+  }
+
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
-      if (isDuringBreakWindow()) {
-        alert(`Daily Live Menu published successfully (${selectedCount} items)!\n\nNote: It is currently between 6:00 PM and 9:00 PM. This menu will automatically go live for customers at 9:00 PM tonight for tomorrow's orders.`);
-      } else {
-        alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      }
-      console.log(`[v28] Published dailyMenu to Firebase.`);
+      alert(`Daily Live Menu published successfully (${selectedCount} items)!`);
+      console.log(`[v29] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -490,7 +467,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v28] Cleared dailyMenu from Firebase.`);
+        console.log(`[v29] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -578,7 +555,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     }
   });
 
-  console.log(`[Customer v28] Displaying ${renderedCount} live published menu items.`);
+  console.log(`[Customer v29] Displaying ${renderedCount} live published menu items.`);
 }
 
 function listenForCustomerLiveMenu() {
@@ -608,7 +585,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v28)
+// 11. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v29)
 // ==========================================================================
 function placeOrder() {
   if (isDuringBreakWindow()) {
