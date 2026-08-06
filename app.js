@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v26)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v27)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v26] Initialized successfully.");
+  console.log("[Firebase v27] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v26] Initialization error:", error);
+  console.error("[Firebase v27] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v26)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v27)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -39,15 +39,16 @@ function checkDaily6PMReset() {
   const todayStr = now.toDateString();
   const lastResetDate = localStorage.getItem('fp_last_reset_date');
 
-  // If it is 6:00 PM or later (hour >= 18) and we haven't performed today's reset yet:
-  if (hour >= 18 && lastResetDate !== todayStr) {
+  // STRICT WINDOW: Only trigger between 18:00 (6 PM) and 20:59:59 (before 9 PM).
+  // This guarantees any menu published by kitchen for tomorrow will NOT be wiped at 9 PM!
+  if (hour >= 18 && hour < 21 && lastResetDate !== todayStr) {
     localStorage.setItem('fp_last_reset_date', todayStr);
     kitchenCheckedState = {};
 
     if (db) {
       db.ref('dailyMenu').remove()
         .then(() => {
-          console.log("[v26] 6:00 PM reached: Automatically reset kitchen checks & cleared customer live menu.");
+          console.log("[v27] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
           renderKitchenMenu();
         })
         .catch((err) => console.error("Error clearing menu at 6 PM:", err));
@@ -58,7 +59,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v26)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v27)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -76,7 +77,7 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v26] Initialization error:", error);
+  console.error("[OneSignal v27] Initialization error:", error);
 }
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
@@ -95,39 +96,39 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
     // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v26] Notification permission status:', permission);
+        console.log('[PWA v27] Notification permission status:', permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v26] Error requesting permission:', err);
+    console.error('[Notification v27] Error requesting permission:', err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v26 - LOCKED TO /foodies-point-beta/)
+// 4. SERVICE WORKER REGISTRATION (v27 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=26', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=27', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v26] Registered successfully with scope:', reg.scope);
+      console.log('[SW v27] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v26] Registration failed:', err);
+      console.error('[SW v27] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 5. PWA MANUAL UPDATE ENGINE (↻ Update v26 Button)
+// 5. PWA MANUAL UPDATE ENGINE (↻ Update v27 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v26] Checking for updates...');
+  console.log('[PWA v27] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -141,7 +142,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 6. INVERTED STANDALONE DETECTION & GATE ENGINE (v26)
+// 6. INVERTED STANDALONE DETECTION & GATE ENGINE (v27)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -156,7 +157,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v26] User accepted installation prompt.');
+          console.log('[PWA v27] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -182,12 +183,12 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v26] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v27] Standalone PWA mode verified. Application unlocked.");
     
     // Automatically prompt for Notification Permission after opening installed PWA
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v26] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v27] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -383,7 +384,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v26] Rendered menu with persistent live checkboxes & Out of Stock controls.");
+  console.log("[Kitchen v27] Rendered menu with persistent live checkboxes & Out of Stock controls.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -432,7 +433,7 @@ function publishDailyMenu() {
       } else {
         alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
       }
-      console.log(`[v26] Published dailyMenu to Firebase.`);
+      console.log(`[v27] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -452,7 +453,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v26] Cleared dailyMenu from Firebase.`);
+        console.log(`[v27] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -478,7 +479,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
         <div style="font-size: 2.5rem; margin-bottom: 12px;">🌙</div>
         <h3 style="color:#FF4B3A; font-size: 1.15rem; margin-bottom: 8px;">We're Closed for the Day!</h3>
         <p style="font-size: 0.95rem; line-height: 1.5; color: #666;">
-          Orders are closed for today.<br>
+          Orders are now closed for today.<br>
           Tomorrow's live menu will be available starting at <strong>9:00 PM tonight</strong>!
         </p>
       </div>
@@ -540,7 +541,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     }
   });
 
-  console.log(`[Customer v26] Displaying ${renderedCount} live published menu items.`);
+  console.log(`[Customer v27] Displaying ${renderedCount} live published menu items.`);
 }
 
 function listenForCustomerLiveMenu() {
@@ -570,7 +571,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v26)
+// 11. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v27)
 // ==========================================================================
 function placeOrder() {
   if (isDuringBreakWindow()) {
@@ -718,7 +719,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, PERSISTENT CHECKBOXES & HISTORY BACK BUTTON
+// 12. PERMANENT KITCHEN LOGIN, REAL-TIME MENU CHECKBOX SYNC & BACK BUTTON
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -790,9 +791,9 @@ function enterKitchenMode() {
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'flex';
 
-  // LOAD LIVE ITEMS FROM FIREBASE SO THEY STAY CHECKED
+  // LISTEN IN REAL-TIME TO FIREBASE SO WHEN A 6 PM RESET HAPPENS, CHECKBOXES UNCHECK IMMEDIATELY
   if (db) {
-    db.ref('dailyMenu').once('value', (snapshot) => {
+    db.ref('dailyMenu').on('value', (snapshot) => {
       kitchenCheckedState = snapshot.val() || {};
       renderKitchenMenu();
     });
@@ -823,7 +824,10 @@ function exitKitchenMode(triggerHistoryBack = true) {
   document.getElementById('header-back-btn').style.display = 'none';
   document.getElementById('header-exit-btn').style.display = 'none';
 
-  if (db) db.ref('orders').off();
+  if (db) {
+    db.ref('orders').off();
+    db.ref('dailyMenu').off(); // Clean up kitchen menu listener
+  }
 }
 
 // INTERCEPT PHONE PHYSICAL/SWIPE BACK BUTTON
