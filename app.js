@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v24)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v25)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,23 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v24] Initialized successfully.");
+  console.log("[Firebase v25] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v24] Initialization error:", error);
+  console.error("[Firebase v25] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v24)
+// 2. TIME-BOUND OPERATING WINDOW ENGINE (v25: Closed 6:00 PM - 9:00 PM)
+// ==========================================================================
+function isDuringBreakWindow() {
+  const now = new Date();
+  const hour = now.getHours();
+  // Returns true between 18:00 (6:00 PM) and 20:59:59 (before 9:00 PM)
+  return (hour >= 18 && hour < 21);
+}
+
+// ==========================================================================
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v25)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -42,7 +52,7 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v24] Initialization error:", error);
+  console.error("[OneSignal v25] Initialization error:", error);
 }
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
@@ -61,39 +71,39 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
     // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v24] Notification permission status:', permission);
+        console.log('[PWA v25] Notification permission status:', permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v24] Error requesting permission:', err);
+    console.error('[Notification v25] Error requesting permission:', err);
   }
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v24 - LOCKED TO /foodies-point-beta/)
+// 4. SERVICE WORKER REGISTRATION (v25 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=24', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=25', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v24] Registered successfully with scope:', reg.scope);
+      console.log('[SW v25] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v24] Registration failed:', err);
+      console.error('[SW v25] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v24 Button)
+// 5. PWA MANUAL UPDATE ENGINE (↻ Update v25 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v24] Checking for updates...');
+  console.log('[PWA v25] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -107,7 +117,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v24)
+// 6. INVERTED STANDALONE DETECTION & GATE ENGINE (v25)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -122,7 +132,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v24] User accepted installation prompt.');
+          console.log('[PWA v25] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -148,17 +158,17 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v24] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v25] Standalone PWA mode verified. Application unlocked.");
     
     // Automatically prompt for Notification Permission after opening installed PWA
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v24] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v25] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
 // ==========================================================================
-// 6. COMPLETE FOODIES POINT MENU (102 ITEMS - MASTER DATA)
+// 7. COMPLETE FOODIES POINT MENU (102 ITEMS - MASTER DATA)
 // ==========================================================================
 const MENU_ITEMS = [
   // --- ROLLS ---
@@ -292,9 +302,10 @@ const MENU_ITEMS = [
 
 const cart = {};
 let kitchenCheckedState = {};
+let latestFirebaseMenuSnapshot = null; // Cache to re-render menu automatically when 9 PM arrives
 
 // ==========================================================================
-// 7. RENDER KITCHEN MENU (Live Items Stay Checked + Out of Stock Button)
+// 8. RENDER KITCHEN MENU (Live Items Stay Checked + Out of Stock Button)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -348,7 +359,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v24] Rendered menu with persistent live checkboxes & Out of Stock controls.");
+  console.log("[Kitchen v25] Rendered menu with persistent live checkboxes & Out of Stock controls.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -373,7 +384,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 8. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -392,8 +403,12 @@ function publishDailyMenu() {
 
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
-      alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v24] Published dailyMenu to Firebase.`);
+      if (isDuringBreakWindow()) {
+        alert(`Daily Live Menu published successfully (${selectedCount} items)!\n\nNote: It is currently between 6:00 PM and 9:00 PM. Customers will see the menu automatically at 9:00 PM.`);
+      } else {
+        alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
+      }
+      console.log(`[v25] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -413,7 +428,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v24] Cleared dailyMenu from Firebase.`);
+        console.log(`[v25] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -423,68 +438,93 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 9. CUSTOMER LIVE MENU LISTENER (Handles Out of Stock Badges)
+// 10. CUSTOMER LIVE MENU LISTENER (With 6 PM - 9 PM Break Check)
 // ==========================================================================
-function listenForCustomerLiveMenu() {
-  if (!db) return;
+function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
+  const placeOrderBtn = document.getElementById('btn-place-order');
   if (!container) return;
 
-  db.ref('dailyMenu').on('value', (snapshot) => {
-    const activeIds = snapshot.val();
-    container.innerHTML = '';
+  container.innerHTML = '';
 
-    if (!activeIds || Object.keys(activeIds).length === 0) {
-      container.innerHTML = `<p style="text-align:center; padding: 40px 20px; color:#666;">The kitchen is preparing today's live menu. Please check back shortly!</p>`;
-      return;
-    }
+  // 1. IF DURING THE 6 PM - 9 PM BREAK WINDOW: Hide menu & show break banner
+  if (isDuringBreakWindow()) {
+    container.innerHTML = `
+      <div style="text-align:center; padding: 40px 20px; color:#555;">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">⏸️</div>
+        <h3 style="color:#FF4B3A; font-size: 1.15rem; margin-bottom: 8px;">We're on a Quick Break!</h3>
+        <p style="font-size: 0.95rem; line-height: 1.5; color: #666;">
+          Orders are paused between <strong>6:00 PM and 9:00 PM</strong>.<br>
+          Today's live menu will automatically appear at <strong>9:00 PM</strong>.
+        </p>
+      </div>
+    `;
+    if (placeOrderBtn) placeOrderBtn.disabled = true;
+    return;
+  }
 
-    let currentCategory = '';
-    let renderedCount = 0;
+  // 2. IF NORMAL OPERATING HOURS
+  if (placeOrderBtn) placeOrderBtn.disabled = false;
 
-    MENU_ITEMS.forEach((dish) => {
-      if (activeIds[dish.id]) {
-        renderedCount++;
-        cart[dish.id] = cart[dish.id] || 0;
-        const isOOS = (activeIds[dish.id] === 'OOS');
+  if (!activeIds || Object.keys(activeIds).length === 0) {
+    container.innerHTML = `<p style="text-align:center; padding: 40px 20px; color:#666;">The kitchen is preparing today's live menu. Please check back shortly!</p>`;
+    return;
+  }
 
-        // Reset cart quantity if item becomes Out of Stock
-        if (isOOS && cart[dish.id] > 0) {
-          cart[dish.id] = 0;
-        }
+  let currentCategory = '';
+  let renderedCount = 0;
 
-        if (dish.category !== currentCategory) {
-          currentCategory = dish.category;
-          const categoryHeader = document.createElement('h3');
-          categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1.05rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
-          categoryHeader.textContent = currentCategory;
-          container.appendChild(categoryHeader);
-        }
+  MENU_ITEMS.forEach((dish) => {
+    if (activeIds[dish.id]) {
+      renderedCount++;
+      cart[dish.id] = cart[dish.id] || 0;
+      const isOOS = (activeIds[dish.id] === 'OOS');
 
-        const card = document.createElement('div');
-        card.className = 'menu-card';
-        card.setAttribute('data-item-id', dish.id);
-
-        const actionAreaHtml = isOOS
-          ? `<span class="badge-oos">Out of Stock</span>`
-          : `<div class="quantity-stepper">
-               <button type="button" aria-label="Decrease quantity" onclick="updateQuantity('${dish.id}', -1)">−</button>
-               <span id="qty-${dish.id}">${cart[dish.id]}</span>
-               <button type="button" aria-label="Increase quantity" onclick="updateQuantity('${dish.id}', 1)">+</button>
-             </div>`;
-
-        card.innerHTML = `
-          <div class="dish-info" style="${isOOS ? 'opacity: 0.5;' : ''}">
-            <h4>${dish.name}</h4>
-            <div class="price">₹${dish.price}</div>
-          </div>
-          ${actionAreaHtml}
-        `;
-        container.appendChild(card);
+      // Reset cart quantity if item becomes Out of Stock
+      if (isOOS && cart[dish.id] > 0) {
+        cart[dish.id] = 0;
       }
-    });
 
-    console.log(`[Customer v24] Displaying ${renderedCount} live published menu items.`);
+      if (dish.category !== currentCategory) {
+        currentCategory = dish.category;
+        const categoryHeader = document.createElement('h3');
+        categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1.05rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
+        categoryHeader.textContent = currentCategory;
+        container.appendChild(categoryHeader);
+      }
+
+      const card = document.createElement('div');
+      card.className = 'menu-card';
+      card.setAttribute('data-item-id', dish.id);
+
+      const actionAreaHtml = isOOS
+        ? `<span class="badge-oos">Out of Stock</span>`
+        : `<div class="quantity-stepper">
+             <button type="button" aria-label="Decrease quantity" onclick="updateQuantity('${dish.id}', -1)">−</button>
+             <span id="qty-${dish.id}">${cart[dish.id]}</span>
+             <button type="button" aria-label="Increase quantity" onclick="updateQuantity('${dish.id}', 1)">+</button>
+           </div>`;
+
+      card.innerHTML = `
+        <div class="dish-info" style="${isOOS ? 'opacity: 0.5;' : ''}">
+          <h4>${dish.name}</h4>
+          <div class="price">₹${dish.price}</div>
+        </div>
+        ${actionAreaHtml}
+      `;
+      container.appendChild(card);
+    }
+  });
+
+  console.log(`[Customer v25] Displaying ${renderedCount} live published menu items.`);
+}
+
+function listenForCustomerLiveMenu() {
+  if (!db) return;
+
+  db.ref('dailyMenu').on('value', (snapshot) => {
+    latestFirebaseMenuSnapshot = snapshot.val();
+    renderCustomerMenuFromSnapshot(latestFirebaseMenuSnapshot);
   });
 }
 
@@ -506,9 +546,14 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v24)
+// 11. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v25)
 // ==========================================================================
 function placeOrder() {
+  if (isDuringBreakWindow()) {
+    alert("Orders are currently paused between 6:00 PM and 9:00 PM. Please check back after 9:00 PM!");
+    return;
+  }
+
   if (!db) {
     alert("Database connection is not ready. Please refresh the page.");
     return;
@@ -649,7 +694,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 11. PERMANENT KITCHEN LOGIN, PERSISTENT CHECKBOXES & HISTORY BACK BUTTON
+// 12. PERMANENT KITCHEN LOGIN, PERSISTENT CHECKBOXES & HISTORY BACK BUTTON
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -766,7 +811,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 12. LIVE KITCHEN ORDER LISTENER (With Accept, Deny & Complete Actions)
+// 13. LIVE KITCHEN ORDER LISTENER (With Accept, Deny & Complete Actions)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -831,7 +876,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 13. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
+// 14. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
 // ==========================================================================
 function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -876,13 +921,20 @@ function completeOrder(firebaseKey) {
 }
 
 // ==========================================================================
-// 14. INITIALIZE APP & ENFORCE INVERTED INSTALL GATE ON DOM READY
+// 15. INITIALIZE APP & ENFORCE INVERTED INSTALL GATE ON DOM READY
 // ==========================================================================
 function initFoodiesPoint() {
   enforceInstallGate();
   listenForCustomerLiveMenu();
   renderCustomerOrderHistory();
   listenForCustomerOrderUpdates();
+
+  // Periodic 30-second clock check: Re-renders the customer screen the moment 9:00 PM arrives
+  setInterval(() => {
+    if (!isKitchenMode && latestFirebaseMenuSnapshot) {
+      renderCustomerMenuFromSnapshot(latestFirebaseMenuSnapshot);
+    }
+  }, 30000);
 }
 
 if (document.readyState === 'loading') {
