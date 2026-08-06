@@ -7,7 +7,7 @@ const CACHE_NAME = 'foodies-point-cache-v01';
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
   '/foodies-point-beta/index.html',
-  '/foodies-point-beta/app.js?v=22',
+  '/foodies-point-beta/app.js?v=23',
   '/foodies-point-beta/manifest.json',
   '/foodies-point-beta/icon.png'
 ];
