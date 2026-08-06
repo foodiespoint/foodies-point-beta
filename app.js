@@ -105,15 +105,49 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v31 - LOCKED TO /foodies-point-beta/)
+// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v31)
 // ==========================================================================
+let swRegistration = null;
+let isRefreshing = false;
+
 if ('serviceWorker' in navigator) {
+  // 1. Listen for when a new Service Worker takes control, then reload automatically
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (isRefreshing) return;
+    isRefreshing = true;
+    console.log('[PWA v31] New service worker activated! Reloading screen to apply updates...');
+    window.location.reload();
+  });
+
+  // 2. Register Service Worker and check for waiting updates on launch
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=31', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
       console.log('[SW v31] Registered successfully with scope:', reg.scope);
+      swRegistration = reg;
+
+      // Check for updates every time the app comes to the foreground
+      reg.update();
+
+      // If a new worker is already waiting in the background, force it to activate
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+
+      // Detect when a new worker finishes installing while the app is open
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[PWA v31] Update downloaded. Forcing immediate activation...');
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        }
+      });
     })
     .catch((err) => {
       console.error('[SW v31] Registration failed:', err);
