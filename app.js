@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v29)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v30)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v29] Initialized successfully.");
+  console.log("[Firebase v30] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v29] Initialization error:", error);
+  console.error("[Firebase v30] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v29)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v30)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -48,7 +48,7 @@ function checkDaily6PMReset() {
     if (db) {
       db.ref('dailyMenu').remove()
         .then(() => {
-          console.log("[v29] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
+          console.log("[v30] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
           renderKitchenMenu();
         })
         .catch((err) => console.error("Error clearing menu at 6 PM:", err));
@@ -59,7 +59,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v29)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v30)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -77,7 +77,7 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v29] Initialization error:", error);
+  console.error("[OneSignal v30] Initialization error:", error);
 }
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
@@ -96,53 +96,33 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
     // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v29] Notification permission status:', permission);
+        console.log('[PWA v30] Notification permission status:', permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v29] Error requesting permission:', err);
+    console.error('[Notification v30] Error requesting permission:', err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v29 - LOCKED TO /foodies-point-beta/)
+// 4. SERVICE WORKER REGISTRATION (v30 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
-let swRegistration = null;
-
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=29', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=30', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v29] Registered successfully with scope:', reg.scope);
-      swRegistration = reg;
+      console.log('[SW v30] Registered successfully with scope:', reg.scope);
     })
     .catch((err) => {
-      console.error('[SW v29] Registration failed:', err);
+      console.error('[SW v30] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 5. PWA MANUAL UPDATE ENGINE (↻ Update v29 Button)
-// ==========================================================================
-function manualAppUpdate() {
-  console.log('[PWA v29] Checking for updates...');
-  if (swRegistration) {
-    swRegistration.update().then(() => {
-      if (swRegistration.waiting) {
-        swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
-      window.location.reload(true);
-    });
-  } else {
-    window.location.reload(true);
-  }
-}
-
-// ==========================================================================
-// 6. INVERTED STANDALONE DETECTION & GATE ENGINE (v29)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v30)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -157,7 +137,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v29] User accepted installation prompt.');
+          console.log('[PWA v30] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -183,17 +163,17 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v29] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v30] Standalone PWA mode verified. Application unlocked.");
     
     // Automatically prompt for Notification Permission after opening installed PWA
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v29] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v30] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
 // ==========================================================================
-// 7. COMPLETE FOODIES POINT MENU (102 ITEMS - MASTER DATA)
+// 6. COMPLETE FOODIES POINT MENU (102 ITEMS - MASTER DATA)
 // ==========================================================================
 const MENU_ITEMS = [
   // --- ROLLS ---
@@ -330,7 +310,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null; // Cache to re-render menu automatically when 9 PM arrives
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v29: CLEAN TOP CHECKED LIST WITHOUT EXTRA HEADER BAR)
+// 7. RENDER KITCHEN MENU (v30: CLEAN TOP CHECKED LIST WITHOUT EXTRA HEADER BAR)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -393,7 +373,7 @@ function renderKitchenMenu() {
     }
   });
 
-  console.log("[Kitchen v29] Rendered menu with selected items cleanly at top & unchecked categories below.");
+  console.log("[Kitchen v30] Rendered menu with selected items cleanly at top & unchecked categories below.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -418,7 +398,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v29: WITH CONFIRMATION)
+// 8. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v30: WITH CONFIRMATION)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -447,7 +427,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully (${selectedCount} items)!`);
-      console.log(`[v29] Published dailyMenu to Firebase.`);
+      console.log(`[v30] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -467,7 +447,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v29] Cleared dailyMenu from Firebase.`);
+        console.log(`[v30] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -477,7 +457,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (With 6 PM - 9 PM Closed for Day Banner)
+// 9. CUSTOMER LIVE MENU LISTENER (With 6 PM - 9 PM Closed for Day Banner)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -555,7 +535,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     }
   });
 
-  console.log(`[Customer v29] Displaying ${renderedCount} live published menu items.`);
+  console.log(`[Customer v30] Displaying ${renderedCount} live published menu items.`);
 }
 
 function listenForCustomerLiveMenu() {
@@ -585,7 +565,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v29)
+// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v30)
 // ==========================================================================
 function placeOrder() {
   if (isDuringBreakWindow()) {
@@ -733,7 +713,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, REAL-TIME MENU CHECKBOX SYNC & BACK BUTTON
+// 11. PERMANENT KITCHEN LOGIN, REAL-TIME MENU CHECKBOX SYNC & BACK BUTTON
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -792,11 +772,14 @@ function enterKitchenMode() {
   }
   isKitchenMode = true;
 
+  // Change Header Title to display version in Kitchen Console
+  const titleEl = document.getElementById('main-app-title');
+  if (titleEl) titleEl.textContent = 'Foodies Point v30';
+
   // Hide customer view
   document.getElementById('customer-view').style.display = 'none';
 
   // Update Header Buttons: Show Back on Left and Exit on Right
-  document.getElementById('header-update-btn').style.display = 'none';
   document.getElementById('header-kitchen-btn').style.display = 'none';
   document.getElementById('header-back-btn').style.display = 'inline-block';
   document.getElementById('header-exit-btn').style.display = 'inline-block';
@@ -827,13 +810,16 @@ function exitKitchenMode(triggerHistoryBack = true) {
     history.back();
   }
 
+  // Restore Customer Mode Header Title
+  const titleEl = document.getElementById('main-app-title');
+  if (titleEl) titleEl.textContent = 'Foodies Point';
+
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'none';
 
   document.getElementById('customer-view').style.display = 'flex';
 
-  // Restore Customer Mode Header Buttons (Update Left, Kitchen Right)
-  document.getElementById('header-update-btn').style.display = 'inline-block';
+  // Restore Customer Mode Header Buttons (Kitchen button Right)
   document.getElementById('header-kitchen-btn').style.display = 'inline-block';
   document.getElementById('header-back-btn').style.display = 'none';
   document.getElementById('header-exit-btn').style.display = 'none';
@@ -853,7 +839,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 13. LIVE KITCHEN ORDER LISTENER (With Accept, Deny & Complete Actions)
+// 12. LIVE KITCHEN ORDER LISTENER (With Accept, Deny & Complete Actions)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -918,7 +904,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 14. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
+// 13. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
 // ==========================================================================
 function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -963,7 +949,7 @@ function completeOrder(firebaseKey) {
 }
 
 // ==========================================================================
-// 15. INITIALIZE APP & ENFORCE INVERTED INSTALL GATE ON DOM READY
+// 14. INITIALIZE APP & ENFORCE INVERTED INSTALL GATE ON DOM READY
 // ==========================================================================
 function initFoodiesPoint() {
   enforceInstallGate();
