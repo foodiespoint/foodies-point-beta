@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v30)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v31)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v30] Initialized successfully.");
+  console.log("[Firebase v31] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v30] Initialization error:", error);
+  console.error("[Firebase v31] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v30)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v31)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -48,7 +48,7 @@ function checkDaily6PMReset() {
     if (db) {
       db.ref('dailyMenu').remove()
         .then(() => {
-          console.log("[v30] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
+          console.log("[v31] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
           renderKitchenMenu();
         })
         .catch((err) => console.error("Error clearing menu at 6 PM:", err));
@@ -59,7 +59,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v30)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v31)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -77,7 +77,7 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v30] Initialization error:", error);
+  console.error("[OneSignal v31] Initialization error:", error);
 }
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
@@ -96,33 +96,33 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
     // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v30] Notification permission status:', permission);
+        console.log('[PWA v31] Notification permission status:', permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v30] Error requesting permission:', err);
+    console.error('[Notification v31] Error requesting permission:', err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v30 - LOCKED TO /foodies-point-beta/)
+// 4. SERVICE WORKER REGISTRATION (v31 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=30', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=31', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v30] Registered successfully with scope:', reg.scope);
+      console.log('[SW v31] Registered successfully with scope:', reg.scope);
     })
     .catch((err) => {
-      console.error('[SW v30] Registration failed:', err);
+      console.error('[SW v31] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v30)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v31)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -137,7 +137,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v30] User accepted installation prompt.');
+          console.log('[PWA v31] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -163,12 +163,12 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v30] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v31] Standalone PWA mode verified. Application unlocked.");
     
     // Automatically prompt for Notification Permission after opening installed PWA
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v30] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v31] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -310,7 +310,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null; // Cache to re-render menu automatically when 9 PM arrives
 
 // ==========================================================================
-// 7. RENDER KITCHEN MENU (v30: CLEAN TOP CHECKED LIST WITHOUT EXTRA HEADER BAR)
+// 7. RENDER KITCHEN MENU (v31: CLEAN TOP CHECKED LIST WITHOUT EXTRA HEADER BAR)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -373,7 +373,7 @@ function renderKitchenMenu() {
     }
   });
 
-  console.log("[Kitchen v30] Rendered menu with selected items cleanly at top & unchecked categories below.");
+  console.log("[Kitchen v31] Rendered menu with selected items cleanly at top & unchecked categories below.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -398,7 +398,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 8. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v30: WITH CONFIRMATION)
+// 8. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v31: WITH CONFIRMATION)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -427,7 +427,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully (${selectedCount} items)!`);
-      console.log(`[v30] Published dailyMenu to Firebase.`);
+      console.log(`[v31] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -447,7 +447,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v30] Cleared dailyMenu from Firebase.`);
+        console.log(`[v31] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -535,7 +535,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     }
   });
 
-  console.log(`[Customer v30] Displaying ${renderedCount} live published menu items.`);
+  console.log(`[Customer v31] Displaying ${renderedCount} live published menu items.`);
 }
 
 function listenForCustomerLiveMenu() {
@@ -565,7 +565,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v30)
+// 10. ORDER SUBMISSION & FIRST-TIME CUSTOMER CREDENTIALS ENGINE (v31)
 // ==========================================================================
 function placeOrder() {
   if (isDuringBreakWindow()) {
@@ -599,12 +599,72 @@ function placeOrder() {
     return;
   }
 
+  // 1. CHECK IF CUSTOMER CREDENTIALS ARE SAVED
+  const profileStr = localStorage.getItem('fp_customer_profile');
+  if (!profileStr) {
+    // Open modal to ask for Name and Mobile Number for the first time
+    const profileModal = document.getElementById('profile-modal');
+    if (profileModal) profileModal.style.display = 'flex';
+    return;
+  }
+
+  const customerProfile = JSON.parse(profileStr);
+  executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile);
+}
+
+function closeProfileModal() {
+  const profileModal = document.getElementById('profile-modal');
+  if (profileModal) profileModal.style.display = 'none';
+}
+
+function saveProfileAndPlaceOrder() {
+  const nameInput = document.getElementById('cust-name-input');
+  const mobileInput = document.getElementById('cust-mobile-input');
+  
+  const nameVal = nameInput ? nameInput.value.trim() : '';
+  const mobileVal = mobileInput ? mobileInput.value.trim() : '';
+
+  if (nameVal.length < 2) {
+    alert("Please enter a valid Name (at least 2 characters).");
+    return;
+  }
+  if (!/^[0-9]{10}$/.test(mobileVal)) {
+    alert("Please enter a valid 10-digit Mobile Number.");
+    return;
+  }
+
+  const customerProfile = {
+    name: nameVal,
+    mobile: mobileVal
+  };
+
+  // Save credentials locally so the user is never prompted again
+  localStorage.setItem('fp_customer_profile', JSON.stringify(customerProfile));
+  closeProfileModal();
+
+  // Re-collect active cart items & submit immediately
+  const orderItems = [];
+  let totalAmount = 0;
+  MENU_ITEMS.forEach((dish) => {
+    const qty = cart[dish.id] || 0;
+    if (qty > 0) {
+      orderItems.push({ id: dish.id, name: dish.name, price: dish.price, quantity: qty });
+      totalAmount += dish.price * qty;
+    }
+  });
+
+  executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile);
+}
+
+function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile) {
   const newOrderRef = db.ref('orders').push();
   const orderData = {
     orderId: newOrderRef.key.slice(-4).toUpperCase(),
     items: orderItems,
     total: totalAmount,
     status: 'PENDING',
+    customerName: customerProfile.name,
+    customerMobile: customerProfile.mobile,
     timestamp: firebase.database.ServerValue.TIMESTAMP
   };
 
@@ -772,9 +832,11 @@ function enterKitchenMode() {
   }
   isKitchenMode = true;
 
-  // Change Header Title to display version in Kitchen Console
+  // Change Header Title: smaller, grey version displayed only in Kitchen Console
   const titleEl = document.getElementById('main-app-title');
-  if (titleEl) titleEl.textContent = 'Foodies Point v30';
+  if (titleEl) {
+    titleEl.innerHTML = 'Foodies Point <span style="font-size: 0.75rem; color: #888; font-weight: normal;">v31</span>';
+  }
 
   // Hide customer view
   document.getElementById('customer-view').style.display = 'none';
@@ -810,7 +872,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
     history.back();
   }
 
-  // Restore Customer Mode Header Title
+  // Restore Customer Mode Header Title (without grey version number)
   const titleEl = document.getElementById('main-app-title');
   if (titleEl) titleEl.textContent = 'Foodies Point';
 
@@ -819,7 +881,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 
   document.getElementById('customer-view').style.display = 'flex';
 
-  // Restore Customer Mode Header Buttons (Kitchen button Right)
+  // Restore Customer Mode Header Buttons (Kitchen button pinned right)
   document.getElementById('header-kitchen-btn').style.display = 'inline-block';
   document.getElementById('header-back-btn').style.display = 'none';
   document.getElementById('header-exit-btn').style.display = 'none';
@@ -839,7 +901,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 12. LIVE KITCHEN ORDER LISTENER (With Accept, Deny & Complete Actions)
+// 12. LIVE KITCHEN ORDER LISTENER (With Customer Name & Mobile No. Display)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -886,10 +948,15 @@ function listenForKitchenOrders() {
 
       card.innerHTML = `
         <div class="order-header">
-          <span>Order #${order.orderId}</span>
+          <div>
+            <div style="font-size: 1.05rem;">Order #${order.orderId}</div>
+            <div style="font-size: 0.85rem; color: #444; margin-top: 3px; font-weight: 500;">
+              👤 <strong>${order.customerName || 'Guest'}</strong> (${order.customerMobile || 'N/A'})
+            </div>
+          </div>
           <span style="color: ${statusColor}; font-weight: 700;">${order.status}</span>
         </div>
-        <div class="order-body" style="margin-bottom: 12px;">
+        <div class="order-body" style="margin: 6px 0 12px 0;">
           ${itemsListHtml}
           <p style="margin-top: 8px; font-weight: bold;">Total: ₹${order.total}</p>
         </div>
