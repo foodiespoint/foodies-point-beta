@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v23)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v24)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v23] Initialized successfully.");
+  console.log("[Firebase v24] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v23] Initialization error:", error);
+  console.error("[Firebase v24] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. ONESIGNAL PUSH NOTIFICATION SETUP
+// 2. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v24)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -32,38 +32,68 @@ try {
     OneSignal.init({
       appId: "YOUR_ONESIGNAL_APP_ID_HERE",
       allowLocalhostAsSecureOrigin: true,
-      notifyButton: { enable: false }
+      notifyButton: { enable: false },
+      promptOptions: {
+        slidedown: {
+          enabled: true,
+          autoPrompt: true
+        }
+      }
     });
   });
 } catch (error) {
-  console.error("[OneSignal v23] Initialization error:", error);
+  console.error("[OneSignal v24] Initialization error:", error);
+}
+
+function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
+  try {
+    // 1. Trigger OneSignal push registration & slidedown prompt
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function() {
+      if (typeof OneSignal.showSlidedownPrompt === 'function') {
+        OneSignal.showSlidedownPrompt({ force: true });
+      }
+      if (typeof OneSignal.registerForPushNotifications === 'function') {
+        OneSignal.registerForPushNotifications();
+      }
+    });
+
+    // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then((permission) => {
+        console.log('[PWA v24] Notification permission status:', permission);
+      });
+    }
+  } catch (err) {
+    console.error('[Notification v24] Error requesting permission:', err);
+  }
 }
 
 // ==========================================================================
-// 3. SERVICE WORKER REGISTRATION (v23 - LOCKED TO /foodies-point-beta/)
+// 3. SERVICE WORKER REGISTRATION (v24 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=23', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=24', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v23] Registered successfully with scope:', reg.scope);
+      console.log('[SW v24] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v23] Registration failed:', err);
+      console.error('[SW v24] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 4. PWA MANUAL UPDATE ENGINE (↻ Update v23 Button)
+// 4. PWA MANUAL UPDATE ENGINE (↻ Update v24 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v23] Checking for updates...');
+  console.log('[PWA v24] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -77,7 +107,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v23)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v24)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -92,7 +122,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v23] User accepted installation prompt.');
+          console.log('[PWA v24] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -118,9 +148,12 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v23] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v24] Standalone PWA mode verified. Application unlocked.");
+    
+    // Automatically prompt for Notification Permission after opening installed PWA
+    setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v23] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v24] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -315,7 +348,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v23] Rendered menu with persistent live checkboxes & Out of Stock controls.");
+  console.log("[Kitchen v24] Rendered menu with persistent live checkboxes & Out of Stock controls.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -360,7 +393,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
-      console.log(`[v23] Published dailyMenu to Firebase.`);
+      console.log(`[v24] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -380,7 +413,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v23] Cleared dailyMenu from Firebase.`);
+        console.log(`[v24] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -451,7 +484,7 @@ function listenForCustomerLiveMenu() {
       }
     });
 
-    console.log(`[Customer v23] Displaying ${renderedCount} live published menu items.`);
+    console.log(`[Customer v24] Displaying ${renderedCount} live published menu items.`);
   });
 }
 
@@ -473,7 +506,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v23)
+// 10. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v24)
 // ==========================================================================
 function placeOrder() {
   if (!db) {
