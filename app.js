@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v25)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v26)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v25] Initialized successfully.");
+  console.log("[Firebase v26] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v25] Initialization error:", error);
+  console.error("[Firebase v26] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW ENGINE (v25: Closed 6:00 PM - 9:00 PM)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v26)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -33,8 +33,32 @@ function isDuringBreakWindow() {
   return (hour >= 18 && hour < 21);
 }
 
+function checkDaily6PMReset() {
+  const now = new Date();
+  const hour = now.getHours();
+  const todayStr = now.toDateString();
+  const lastResetDate = localStorage.getItem('fp_last_reset_date');
+
+  // If it is 6:00 PM or later (hour >= 18) and we haven't performed today's reset yet:
+  if (hour >= 18 && lastResetDate !== todayStr) {
+    localStorage.setItem('fp_last_reset_date', todayStr);
+    kitchenCheckedState = {};
+
+    if (db) {
+      db.ref('dailyMenu').remove()
+        .then(() => {
+          console.log("[v26] 6:00 PM reached: Automatically reset kitchen checks & cleared customer live menu.");
+          renderKitchenMenu();
+        })
+        .catch((err) => console.error("Error clearing menu at 6 PM:", err));
+    } else {
+      renderKitchenMenu();
+    }
+  }
+}
+
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v25)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v26)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -52,7 +76,7 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v25] Initialization error:", error);
+  console.error("[OneSignal v26] Initialization error:", error);
 }
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
@@ -71,39 +95,39 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
     // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v25] Notification permission status:', permission);
+        console.log('[PWA v26] Notification permission status:', permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v25] Error requesting permission:', err);
+    console.error('[Notification v26] Error requesting permission:', err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v25 - LOCKED TO /foodies-point-beta/)
+// 4. SERVICE WORKER REGISTRATION (v26 - LOCKED TO /foodies-point-beta/)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=25', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=26', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v25] Registered successfully with scope:', reg.scope);
+      console.log('[SW v26] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
     })
     .catch((err) => {
-      console.error('[SW v25] Registration failed:', err);
+      console.error('[SW v26] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 5. PWA MANUAL UPDATE ENGINE (↻ Update v25 Button)
+// 5. PWA MANUAL UPDATE ENGINE (↻ Update v26 Button)
 // ==========================================================================
 function manualAppUpdate() {
-  console.log('[PWA v25] Checking for updates...');
+  console.log('[PWA v26] Checking for updates...');
   if (swRegistration) {
     swRegistration.update().then(() => {
       if (swRegistration.waiting) {
@@ -117,7 +141,7 @@ function manualAppUpdate() {
 }
 
 // ==========================================================================
-// 6. INVERTED STANDALONE DETECTION & GATE ENGINE (v25)
+// 6. INVERTED STANDALONE DETECTION & GATE ENGINE (v26)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -132,7 +156,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v25] User accepted installation prompt.');
+          console.log('[PWA v26] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -158,12 +182,12 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v25] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v26] Standalone PWA mode verified. Application unlocked.");
     
     // Automatically prompt for Notification Permission after opening installed PWA
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v25] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v26] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -359,7 +383,7 @@ function renderKitchenMenu() {
     });
   });
 
-  console.log("[Kitchen v25] Rendered menu with persistent live checkboxes & Out of Stock controls.");
+  console.log("[Kitchen v26] Rendered menu with persistent live checkboxes & Out of Stock controls.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -404,11 +428,11 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       if (isDuringBreakWindow()) {
-        alert(`Daily Live Menu published successfully (${selectedCount} items)!\n\nNote: It is currently between 6:00 PM and 9:00 PM. Customers will see the menu automatically at 9:00 PM.`);
+        alert(`Daily Live Menu published successfully (${selectedCount} items)!\n\nNote: It is currently between 6:00 PM and 9:00 PM. This menu will automatically go live for customers at 9:00 PM tonight for tomorrow's orders.`);
       } else {
         alert(`Daily Live Menu published successfully! (${selectedCount} items live for customers)`);
       }
-      console.log(`[v25] Published dailyMenu to Firebase.`);
+      console.log(`[v26] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -428,7 +452,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v25] Cleared dailyMenu from Firebase.`);
+        console.log(`[v26] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -438,7 +462,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (With 6 PM - 9 PM Break Check)
+// 10. CUSTOMER LIVE MENU LISTENER (With 6 PM - 9 PM Closed for Day Banner)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -447,15 +471,15 @@ function renderCustomerMenuFromSnapshot(activeIds) {
 
   container.innerHTML = '';
 
-  // 1. IF DURING THE 6 PM - 9 PM BREAK WINDOW: Hide menu & show break banner
+  // 1. IF DURING THE 6 PM - 9 PM CLOSURE WINDOW: Hide menu & show Closed for the Day banner
   if (isDuringBreakWindow()) {
     container.innerHTML = `
       <div style="text-align:center; padding: 40px 20px; color:#555;">
-        <div style="font-size: 2.5rem; margin-bottom: 12px;">⏸️</div>
-        <h3 style="color:#FF4B3A; font-size: 1.15rem; margin-bottom: 8px;">We're on a Quick Break!</h3>
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">🌙</div>
+        <h3 style="color:#FF4B3A; font-size: 1.15rem; margin-bottom: 8px;">We're Closed for the Day!</h3>
         <p style="font-size: 0.95rem; line-height: 1.5; color: #666;">
-          Orders are paused between <strong>6:00 PM and 9:00 PM</strong>.<br>
-          Today's live menu will automatically appear at <strong>9:00 PM</strong>.
+          Orders are closed for today.<br>
+          Tomorrow's live menu will be available starting at <strong>9:00 PM tonight</strong>!
         </p>
       </div>
     `;
@@ -516,7 +540,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     }
   });
 
-  console.log(`[Customer v25] Displaying ${renderedCount} live published menu items.`);
+  console.log(`[Customer v26] Displaying ${renderedCount} live published menu items.`);
 }
 
 function listenForCustomerLiveMenu() {
@@ -546,11 +570,11 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v25)
+// 11. ORDER SUBMISSION & CUSTOMER ORDER HISTORY ENGINE (v26)
 // ==========================================================================
 function placeOrder() {
   if (isDuringBreakWindow()) {
-    alert("Orders are currently paused between 6:00 PM and 9:00 PM. Please check back after 9:00 PM!");
+    alert("Orders are closed for today. Tomorrow's menu will be available starting at 9:00 PM tonight!");
     return;
   }
 
@@ -925,12 +949,14 @@ function completeOrder(firebaseKey) {
 // ==========================================================================
 function initFoodiesPoint() {
   enforceInstallGate();
+  checkDaily6PMReset();
   listenForCustomerLiveMenu();
   renderCustomerOrderHistory();
   listenForCustomerOrderUpdates();
 
-  // Periodic 30-second clock check: Re-renders the customer screen the moment 9:00 PM arrives
+  // Periodic 30-second clock check: Checks for 6 PM reset and re-renders when 9:00 PM arrives
   setInterval(() => {
+    checkDaily6PMReset();
     if (!isKitchenMode && latestFirebaseMenuSnapshot) {
       renderCustomerMenuFromSnapshot(latestFirebaseMenuSnapshot);
     }
