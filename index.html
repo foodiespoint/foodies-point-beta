@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v29 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v30 - LOCKED TO REPO PATH)       -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=29">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=30">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v29)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v30)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -56,7 +56,7 @@
     }
 
     /* ====================================================================== */
-    /* IRREMOVABLE INSTALL GATE OVERLAY (v29 - BRIEF & CENTERED)             */
+    /* IRREMOVABLE INSTALL GATE OVERLAY (v30 - BRIEF & CENTERED)             */
     /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
@@ -135,7 +135,7 @@
       transform: translateX(-50%);
     }
 
-    .btn-update, .btn-kitchen {
+    .btn-kitchen {
       border: 1px solid var(--border-color);
       background: var(--bg-light);
       padding: 6px 14px;
@@ -146,11 +146,6 @@
       z-index: 2;
     }
 
-    .btn-update {
-      color: var(--primary-color);
-      border-color: var(--primary-color);
-    }
-
     .section-title {
       font-size: 1.1rem;
       margin-bottom: 10px;
@@ -158,7 +153,7 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v29 - GUARANTEED FIXED BOUNDARIES)          */
+    /* 50/50 SPLIT CUSTOMER PAGE (v30 - GUARANTEED FIXED BOUNDARIES)          */
     /* ====================================================================== */
     #customer-view {
       display: flex; /* Controlled via app.js -> 'flex' */
@@ -282,7 +277,7 @@
       font-size: 0.95rem;
     }
 
-    /* OUT OF STOCK BUTTONS & BADGES (v29) */
+    /* OUT OF STOCK BUTTONS & BADGES (v30) */
     .btn-oos {
       border: 1px solid var(--primary-color);
       background: var(--white);
@@ -413,7 +408,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v29 - DOCKED BELOW 56PX HEADER)     */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v30 - DOCKED BELOW 56PX HEADER)     */
     /* ====================================================================== */
     #kitchen-view {
       display: none; /* Controlled via app.js -> 'flex' */
@@ -566,7 +561,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v29 - BRIEF & CENTER-ALIGNED)     -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v30 - BRIEF & CENTER-ALIGNED)     -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -581,18 +576,17 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v29 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v30 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
-    <!-- APP HEADER (Customer Mode: Update left, Kitchen right | Kitchen Mode: Back left, Exit right) -->
+    <!-- APP HEADER (Customer Mode: Kitchen button right | Kitchen Mode: Version in title, Back left, Exit right) -->
     <header class="app-header" id="app-header">
-      <!-- Left Side Buttons -->
-      <button class="btn-update" id="header-update-btn" onclick="manualAppUpdate()">↻ Update v29</button>
+      <!-- Left Side Button (Visible only in Kitchen Mode) -->
       <button class="btn-kitchen" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">← Back</button>
 
-      <!-- Center Title (Always Visible) -->
-      <div class="app-title">Foodies Point</div>
+      <!-- Center Title (Always Visible - Version v30 shown only in Kitchen Mode) -->
+      <div class="app-title" id="main-app-title">Foodies Point</div>
 
       <!-- Right Side Buttons -->
       <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
@@ -600,7 +594,7 @@
     </header>
 
     <!-- ==================================================================== -->
-    <!-- CUSTOMER LIVE MENU VIEW (v29 - 50% TOP MENU / 50% BOTTOM HISTORY)    -->
+    <!-- CUSTOMER LIVE MENU VIEW (v30 - 50% TOP MENU / 50% BOTTOM HISTORY)    -->
     <!-- ==================================================================== -->
     <main id="customer-view">
       
@@ -634,14 +628,13 @@
     </main>
 
     <!-- ==================================================================== -->
-    <!-- KITCHEN CONSOLE VIEW (v29 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
+    <!-- KITCHEN CONSOLE VIEW (v30 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
     <!-- ==================================================================== -->
     <section id="kitchen-view">
       
       <!-- UPPER HALF (50%): MENU CONTROLS & LIST -->
       <div class="kitchen-half kitchen-upper">
         <h2 class="section-title" style="margin: 4px 0 10px 0;">Kitchen Console</h2>
-        <h3 style="font-size: 0.9rem; color: #666; margin: 0 0 10px 0;">Select & Publish Daily Live Menu</h3>
         
         <!-- Side-by-Side Publish and Clear Action Buttons -->
         <div class="kitchen-menu-actions">
@@ -690,8 +683,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 7. MAIN APP SCRIPT (v29 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 7. MAIN APP SCRIPT (v30 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=29"></script>
+  <script src="/foodies-point-beta/app.js?v=30"></script>
 </body>
 </html>
