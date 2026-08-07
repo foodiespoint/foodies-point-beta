@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v39)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v40)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v39";
+const CURRENT_APP_VERSION = "v40";
 let db = null;
 
 try {
@@ -25,7 +25,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v39)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v40)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -57,22 +57,19 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v39)
+// 3. ONESIGNAL v16 PUSH NOTIFICATION SETUP & AUTO-PROMPT ENGINE (v40)
 // ==========================================================================
 try {
-  window.OneSignal = window.OneSignal || [];
-  OneSignal.push(function() {
-    OneSignal.init({
-      appId: "YOUR_ONESIGNAL_APP_ID_HERE",
-      allowLocalhostAsSecureOrigin: true,
-      notifyButton: { enable: false },
-      promptOptions: {
-        slidedown: {
-          enabled: true,
-          autoPrompt: true
-        }
-      }
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "d686653a-e6bc-40a4-b6e1-447a86a082cd",
+      safari_web_id: "web.onesignal.auto.0dd8fdab-49d8-437b-ac06-36c9d15991be",
+      notifyButton: {
+        enable: true,
+      },
     });
+    console.log(`[OneSignal ${CURRENT_APP_VERSION}] v16 SDK initialized successfully.`);
   });
 } catch (error) {
   console.error(`[OneSignal ${CURRENT_APP_VERSION}] Initialization error:`, error);
@@ -80,12 +77,12 @@ try {
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
   try {
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function() {
-      if (typeof OneSignal.showSlidedownPrompt === 'function') {
-        OneSignal.showSlidedownPrompt({ force: true });
-      }
-      if (typeof OneSignal.registerForPushNotifications === 'function') {
+    // Modern v16 SDK permission prompt trigger
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
+        await OneSignal.Notifications.requestPermission();
+      } else if (typeof OneSignal.registerForPushNotifications === 'function') {
         OneSignal.registerForPushNotifications();
       }
     });
@@ -101,7 +98,7 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v39)
+// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v40)
 // ==========================================================================
 let swRegistration = null;
 let isRefreshing = false;
@@ -115,7 +112,7 @@ if ('serviceWorker' in navigator) {
   });
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=39`, {
+    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=40`, {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
@@ -146,7 +143,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v39)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v40)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -333,7 +330,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v39)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v40)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -353,7 +350,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v39)
+// 8. RENDER KITCHEN MENU (v40)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -435,7 +432,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v39)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v40)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -491,7 +488,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v39)
+// 10. CUSTOMER LIVE MENU LISTENER (v40)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -592,7 +589,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v39)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v40)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -805,7 +802,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v39)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v40)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -932,7 +929,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ONE-SHOT ATOMIC WIPE ENGINE (v39)
+// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v40)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -969,7 +966,6 @@ function closeKitchenSubPage(triggerBack = true) {
   }
 }
 
-// v39: ATOMIC DATABASE WIPE (Clears ALL order entries & resets ledger to ₹0 instantly)
 function clearPaymentLedger() {
   if (!db) {
     alert("Database connection is not ready. Please refresh the page.");
@@ -1111,7 +1107,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v39)
+// 14. LIVE KITCHEN ORDER LISTENER (v40)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
