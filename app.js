@@ -1,6 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v34)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v35)
 // ==========================================================================
+const CURRENT_APP_VERSION = "v35";
 let db = null;
 
 try {
@@ -18,13 +19,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v34] Initialized successfully.");
+  console.log(`[Firebase ${CURRENT_APP_VERSION}] Initialized successfully.`);
 } catch (error) {
-  console.error("[Firebase v34] Initialization error:", error);
+  console.error(`[Firebase ${CURRENT_APP_VERSION}] Initialization error:`, error);
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v34)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v35)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -45,7 +46,7 @@ function checkDaily6PMReset() {
     if (db) {
       db.ref('dailyMenu').remove()
         .then(() => {
-          console.log("[v34] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
+          console.log(`[${CURRENT_APP_VERSION}] 6:00 PM reached: Kitchen list checks reset & live menu cleared.`);
           renderKitchenMenu();
         })
         .catch((err) => console.error("Error clearing menu at 6 PM:", err));
@@ -56,7 +57,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v34)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v35)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -74,10 +75,11 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v34] Initialization error:", error);
+  console.error(`[OneSignal ${CURRENT_APP_VERSION}] Initialization error:`, error);
 }
 
-function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
+function error code: 504
+() {
   try {
     window.OneSignal = window.OneSignal || [];
     OneSignal.push(function() {
@@ -91,16 +93,16 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
 
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v34] Notification permission status:', permission);
+        console.log(`[PWA ${CURRENT_APP_VERSION}] Notification permission status:`, permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v34] Error requesting permission:', err);
+    console.error(`[Notification ${CURRENT_APP_VERSION}] Error requesting permission:`, err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v34)
+// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v35)
 // ==========================================================================
 let swRegistration = null;
 let isRefreshing = false;
@@ -109,16 +111,16 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (isRefreshing) return;
     isRefreshing = true;
-    console.log('[PWA v34] New service worker activated! Reloading screen to apply updates...');
+    console.log(`[PWA ${CURRENT_APP_VERSION}] New service worker activated! Reloading screen to apply updates...`);
     window.location.reload();
   });
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=34', {
+    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=35`, {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v34] Registered successfully with scope:', reg.scope);
+      console.log(`[SW ${CURRENT_APP_VERSION}] Registered successfully with scope:`, reg.scope);
       swRegistration = reg;
       reg.update();
 
@@ -131,7 +133,7 @@ if ('serviceWorker' in navigator) {
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA v34] Update downloaded. Forcing immediate activation...');
+              console.log(`[PWA ${CURRENT_APP_VERSION}] Update downloaded. Forcing immediate activation...`);
               newWorker.postMessage({ type: 'SKIP_WAITING' });
             }
           });
@@ -139,13 +141,13 @@ if ('serviceWorker' in navigator) {
       });
     })
     .catch((err) => {
-      console.error('[SW v34] Registration failed:', err);
+      console.error(`[SW ${CURRENT_APP_VERSION}] Registration failed:`, err);
     });
   });
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & GATE ENGINE (v34)
+// 5. STANDALONE DETECTION & GATE ENGINE (v35)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -160,7 +162,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v34] User accepted installation prompt.');
+          console.log(`[PWA ${CURRENT_APP_VERSION}] User accepted installation prompt.`);
         }
         deferredInstallPrompt = null;
       });
@@ -185,10 +187,10 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v34] Standalone PWA mode verified. Application unlocked.");
+    console.log(`[PWA ${CURRENT_APP_VERSION}] Standalone PWA mode verified. Application unlocked.`);
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v34] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log(`[PWA ${CURRENT_APP_VERSION}] Running in web browser. Irremovable Install Gate remains locked.`);
   }
 }
 
@@ -330,7 +332,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v34)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v35)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -350,7 +352,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v34)
+// 8. RENDER KITCHEN MENU (v35)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -432,7 +434,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v34)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v35)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -488,7 +490,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v34)
+// 10. CUSTOMER LIVE MENU LISTENER (v35)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -589,8 +591,18 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE MODAL ENGINE (v34)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v35)
 // ==========================================================================
+function syncCustomerVersionToFirebase(profile) {
+  if (!db || !profile || !profile.mobile) return;
+  db.ref(`customers/${profile.mobile}`).update({
+    name: profile.name,
+    mobile: profile.mobile,
+    appVersion: CURRENT_APP_VERSION,
+    lastSeen: firebase.database.ServerValue.TIMESTAMP
+  }).catch((err) => console.error("Error syncing customer version:", err));
+}
+
 function placeOrder() {
   if (isDuringBreakWindow()) {
     alert("Orders are closed for today. Tomorrow's menu will be available starting at 9:00 PM tonight!");
@@ -631,6 +643,7 @@ function placeOrder() {
   }
 
   const customerProfile = JSON.parse(profileStr);
+  syncCustomerVersionToFirebase(customerProfile);
   executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile);
 }
 
@@ -661,6 +674,7 @@ function saveProfileAndPlaceOrder() {
   };
 
   localStorage.setItem('fp_customer_profile', JSON.stringify(customerProfile));
+  syncCustomerVersionToFirebase(customerProfile);
   closeProfileModal();
 
   const orderItems = [];
@@ -685,6 +699,7 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
     status: 'PENDING',
     customerName: customerProfile.name,
     customerMobile: customerProfile.mobile,
+    customerVersion: CURRENT_APP_VERSION,
     timestamp: firebase.database.ServerValue.TIMESTAMP
   };
 
@@ -789,7 +804,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, REAL-TIME MENU CHECKBOX SYNC & HEADER CONTROLS
+// 12. PERMANENT KITCHEN LOGIN & HEADER CONTROLS
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -847,21 +862,17 @@ function enterKitchenMode() {
   }
   isKitchenMode = true;
 
-  // 1. Completely hide the center "Foodies Point" title
   const titleEl = document.getElementById('main-app-title');
   if (titleEl) titleEl.style.display = 'none';
 
-  // 2. Hide customer view
   document.getElementById('customer-view').style.display = 'none';
 
-  // 3. Update Header Buttons: Show left Back (←) & Menu, hide right Kitchen button, reveal v34 badge + Exit
   document.getElementById('header-kitchen-btn').style.display = 'none';
   document.getElementById('header-back-btn').style.display = 'inline-flex';
   document.getElementById('header-drawer-btn').style.display = 'inline-block';
   document.getElementById('kitchen-version-badge').style.display = 'inline-block';
   document.getElementById('header-exit-btn').style.display = 'inline-block';
 
-  // 4. Activate Fixed 50/50 Split Screen Overlay ('flex')
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'flex';
 
@@ -882,12 +893,12 @@ function exitKitchenMode(triggerHistoryBack = true) {
   isKitchenMode = false;
 
   toggleKitchenDrawer(false);
+  closeKitchenSubPage(false);
 
-  if (triggerHistoryBack && window.location.hash === '#kitchen') {
+  if (triggerHistoryBack && window.location.hash.startsWith('#kitchen')) {
     history.back();
   }
 
-  // 1. Restore the center "Foodies Point" title
   const titleEl = document.getElementById('main-app-title');
   if (titleEl) titleEl.style.display = 'block';
 
@@ -896,7 +907,6 @@ function exitKitchenMode(triggerHistoryBack = true) {
 
   document.getElementById('customer-view').style.display = 'flex';
 
-  // 2. Restore Customer Mode Header Buttons (Kitchen button visible, Kitchen controls & badge hidden)
   document.getElementById('header-kitchen-btn').style.display = 'inline-block';
   document.getElementById('header-back-btn').style.display = 'none';
   document.getElementById('header-drawer-btn').style.display = 'none';
@@ -909,14 +919,155 @@ function exitKitchenMode(triggerHistoryBack = true) {
   }
 }
 
+// ==========================================================================
+// 13. DEDICATED KITCHEN SUB-PAGES (v35 - CUSTOMER DATA & PAYMENT LEDGER)
+// ==========================================================================
+function openCustomerDataPage() {
+  toggleKitchenDrawer(false);
+  history.pushState({ kitchenSubPage: 'customers' }, '', '#kitchen-customers');
+
+  document.getElementById('kitchen-view').style.display = 'none';
+  const subPage = document.getElementById('customer-data-view');
+  if (subPage) subPage.style.display = 'flex';
+
+  fetchAndRenderCustomerDirectory();
+}
+
+function openPaymentDetailsPage() {
+  toggleKitchenDrawer(false);
+  history.pushState({ kitchenSubPage: 'payments' }, '', '#kitchen-payments');
+
+  document.getElementById('kitchen-view').style.display = 'none';
+  const subPage = document.getElementById('payment-details-view');
+  if (subPage) subPage.style.display = 'flex';
+
+  fetchAndRenderPaymentLedger();
+}
+
+function closeKitchenSubPage(triggerBack = true) {
+  document.getElementById('customer-data-view').style.display = 'none';
+  document.getElementById('payment-details-view').style.display = 'none';
+
+  if (isKitchenMode) {
+    document.getElementById('kitchen-view').style.display = 'flex';
+  }
+
+  if (triggerBack && (window.location.hash === '#kitchen-customers' || window.location.hash === '#kitchen-payments')) {
+    history.back();
+  }
+}
+
+function fetchAndRenderCustomerDirectory() {
+  const container = document.getElementById('customer-directory-container');
+  if (!container || !db) return;
+
+  container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">Fetching live directory...</p>`;
+
+  db.ref('customers').once('value')
+    .then((snapshot) => {
+      const customers = snapshot.val();
+      if (!customers) {
+        container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">No customer version records synced yet. Data appears as orders are placed!</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      const list = Object.keys(customers).map(key => customers[key]);
+
+      list.forEach((cust) => {
+        const card = document.createElement('div');
+        card.className = 'customer-data-card';
+        const dateStr = cust.lastSeen
+          ? new Date(cust.lastSeen).toLocaleDateString()
+          : 'Recently';
+
+        card.innerHTML = `
+          <div>
+            <h4 style="font-size:1.05rem; color:#2D2D2D; margin-bottom:3px;">${cust.name || 'Guest'}</h4>
+            <div style="font-size:0.85rem; color:#666;">📞 <strong>${cust.mobile}</strong></div>
+            <div style="font-size:0.75rem; color:#888; margin-top:2px;">Last Active: ${dateStr}</div>
+          </div>
+          <span class="version-badge">${cust.appVersion || 'Unknown'}</span>
+        `;
+        container.appendChild(card);
+      });
+    })
+    .catch((err) => {
+      console.error("Error loading directory:", err);
+      container.innerHTML = `<p style="text-align:center; color:red;">Failed to load customer list.</p>`;
+    });
+}
+
+function fetchAndRenderPaymentLedger() {
+  const container = document.getElementById('payment-ledger-container');
+  if (!container || !db) return;
+
+  container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">Calculating payment ledger...</p>`;
+
+  db.ref('orders').once('value')
+    .then((snapshot) => {
+      const orders = snapshot.val();
+      if (!orders) {
+        container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">No active payment records found today.</p>`;
+        return;
+      }
+
+      let totalRevenue = 0;
+      let completedCount = 0;
+      const orderRows = [];
+
+      Object.keys(orders).forEach((key) => {
+        const o = orders[key];
+        orderRows.push(o);
+        if (o.status === 'COMPLETED' || o.status === 'ACCEPTED') {
+          totalRevenue += (o.total || 0);
+          completedCount++;
+        }
+      });
+
+      container.innerHTML = `
+        <div class="payment-summary-box">
+          <div style="font-size:0.85rem; color:#666; text-transform:uppercase; font-weight:700;">Active Orders Billing Total</div>
+          <div style="font-size:1.8rem; font-weight:800; color:#FF4B3A; margin:4px 0;">₹${totalRevenue}</div>
+          <div style="font-size:0.85rem; color:#2E7D32;">✔ ${completedCount} Orders Accepted/Completed</div>
+        </div>
+        <h3 style="font-size:1rem; margin: 12px 0 8px 0; color:#2D2D2D;">Recent Billing Entries</h3>
+      `;
+
+      orderRows.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+      orderRows.forEach((order) => {
+        const row = document.createElement('div');
+        row.className = 'customer-data-card';
+        row.innerHTML = `
+          <div>
+            <h4 style="font-size:0.98rem; color:#2D2D2D;">Order #${order.orderId} — ₹${order.total}</h4>
+            <div style="font-size:0.8rem; color:#666;">${order.customerName || 'Guest'} (${order.customerMobile || 'N/A'})</div>
+          </div>
+          <span style="font-weight:700; font-size:0.85rem; color:#FF4B3A;">${order.status}</span>
+        `;
+        container.appendChild(row);
+      });
+    })
+    .catch((err) => {
+      console.error("Error loading payments:", err);
+      container.innerHTML = `<p style="text-align:center; color:red;">Failed to calculate payment ledger.</p>`;
+    });
+}
+
+// Handle native Phone back button inside Sub-Pages
 window.addEventListener('popstate', () => {
-  if (isKitchenMode && window.location.hash !== '#kitchen') {
-    exitKitchenMode(false);
+  if (isKitchenMode) {
+    if (window.location.hash === '#kitchen') {
+      closeKitchenSubPage(false);
+    } else if (window.location.hash !== '#kitchen-customers' && window.location.hash !== '#kitchen-payments') {
+      exitKitchenMode(false);
+    }
   }
 });
 
 // ==========================================================================
-// 13. LIVE KITCHEN ORDER LISTENER (v34)
+// 14. LIVE KITCHEN ORDER LISTENER (v35)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -984,7 +1135,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 14. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
+// 15. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
 // ==========================================================================
 function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -1027,7 +1178,7 @@ function completeOrder(firebaseKey) {
 }
 
 // ==========================================================================
-// 15. INITIALIZE APP & ENFORCE INVERTED INSTALL GATE ON DOM READY
+// 16. INITIALIZE APP & ENFORCE INVERTED INSTALL GATE ON DOM READY
 // ==========================================================================
 function initFoodiesPoint() {
   enforceInstallGate();
