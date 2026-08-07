@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v37 - LOCKED TO REPO PATH)      -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v38 - LOCKED TO REPO PATH)      -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=37">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=38">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v37 - VERIFIED CSS SYNTAX)        -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v38 - VERIFIED CSS SYNTAX)        -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -55,7 +55,7 @@
     }
 
     /* ====================================================================== */
-    /* FIXED INSTALL GATE OVERLAY (v37 - BUTTON VISIBLE BY DEFAULT)           */
+    /* FIXED INSTALL GATE OVERLAY (v38 - BUTTON VISIBLE BY DEFAULT)           */
     /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
@@ -201,7 +201,7 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v37)                                        */
+    /* 50/50 SPLIT CUSTOMER PAGE (v38)                                        */
     /* ====================================================================== */
     #customer-view {
       display: flex;
@@ -449,7 +449,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v37)                                */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v38)                                */
     /* ====================================================================== */
     #kitchen-view {
       display: none;
@@ -767,7 +767,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v37)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v38)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -785,7 +785,7 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v37 - SMARTER HEADER BACK ROUTING)            -->
+  <!-- 5. MASTER APP CONTAINER (v38 - SMART BACK ROUTING)                     -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
@@ -800,7 +800,7 @@
 
       <div class="header-right-group">
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
-        <span id="kitchen-version-badge">v37</span>
+        <span id="kitchen-version-badge">v38</span>
         <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
       </div>
     </header>
@@ -848,7 +848,7 @@
     </section>
 
     <!-- ==================================================================== -->
-    <!-- PAGE 1: CUSTOMER DATA DIRECTORY PAGE (v37 - NO DUPLICATE BACK BTN)   -->
+    <!-- PAGE 1: CUSTOMER DATA DIRECTORY PAGE (v38)                           -->
     <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="customer-data-view">
       <div class="subpage-header">
@@ -860,12 +860,11 @@
     </section>
 
     <!-- ==================================================================== -->
-    <!-- PAGE 2: PAYMENT RECORDS PAGE (v37 - NO DUP BACK BTN & CLEAR BTN)     -->
+    <!-- PAGE 2: PAYMENT RECORDS PAGE (v38 - CLEAN HEADER)                    -->
     <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="payment-details-view">
       <div class="subpage-header">
         <h2>Payment Records & Ledger</h2>
-        <button type="button" class="btn-clear-menu" onclick="clearPaymentLedger()" style="padding: 6px 12px; font-size: 0.8rem; width: auto; flex: none;">🗑️ Clear Entries</button>
       </div>
       <div id="payment-ledger-container">
         <p style="text-align:center; padding: 30px; color:#666;">Loading payment records...</p>
@@ -882,7 +881,7 @@
     </div>
     
     <div class="drawer-content">
-      <!-- Renamed option: Customer Data -->
+      <!-- Customer Data Tab -->
       <button type="button" class="drawer-nav-item" onclick="openCustomerDataPage()">
         <span>👥</span>
         <span>Customer Data</span>
@@ -930,8 +929,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 9. MAIN APP SCRIPT (v37)                                               -->
+  <!-- 9. MAIN APP SCRIPT (v38)                                               -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=37"></script>
+  <script src="/foodies-point-beta/app.js?v=38"></script>
 </body>
 </html>
