@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v31)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v32)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v31] Initialized successfully.");
+  console.log("[Firebase v32] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v31] Initialization error:", error);
+  console.error("[Firebase v32] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v31)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v32)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -48,7 +48,7 @@ function checkDaily6PMReset() {
     if (db) {
       db.ref('dailyMenu').remove()
         .then(() => {
-          console.log("[v31] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
+          console.log("[v32] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
           renderKitchenMenu();
         })
         .catch((err) => console.error("Error clearing menu at 6 PM:", err));
@@ -59,7 +59,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v31)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v32)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -77,7 +77,7 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v31] Initialization error:", error);
+  console.error("[OneSignal v32] Initialization error:", error);
 }
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
@@ -96,16 +96,16 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
     // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v31] Notification permission status:', permission);
+        console.log('[PWA v32] Notification permission status:', permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v31] Error requesting permission:', err);
+    console.error('[Notification v32] Error requesting permission:', err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v31)
+// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v32)
 // ==========================================================================
 let swRegistration = null;
 let isRefreshing = false;
@@ -115,17 +115,17 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (isRefreshing) return;
     isRefreshing = true;
-    console.log('[PWA v31] New service worker activated! Reloading screen to apply updates...');
+    console.log('[PWA v32] New service worker activated! Reloading screen to apply updates...');
     window.location.reload();
   });
 
   // 2. Register Service Worker and check for waiting updates on launch
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=31', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=32', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v31] Registered successfully with scope:', reg.scope);
+      console.log('[SW v32] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
 
       // Check for updates every time the app comes to the foreground
@@ -142,7 +142,7 @@ if ('serviceWorker' in navigator) {
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA v31] Update downloaded. Forcing immediate activation...');
+              console.log('[PWA v32] Update downloaded. Forcing immediate activation...');
               newWorker.postMessage({ type: 'SKIP_WAITING' });
             }
           });
@@ -150,13 +150,13 @@ if ('serviceWorker' in navigator) {
       });
     })
     .catch((err) => {
-      console.error('[SW v31] Registration failed:', err);
+      console.error('[SW v32] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v31)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v32)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -171,7 +171,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v31] User accepted installation prompt.');
+          console.log('[PWA v32] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -197,12 +197,12 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v31] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v32] Standalone PWA mode verified. Application unlocked.");
     
     // Automatically prompt for Notification Permission after opening installed PWA
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v31] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v32] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -341,10 +341,30 @@ const MENU_ITEMS = [
 
 const cart = {};
 let kitchenCheckedState = {};
-let latestFirebaseMenuSnapshot = null; // Cache to re-render menu automatically when 9 PM arrives
+let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. RENDER KITCHEN MENU (v31: CLEAN TOP CHECKED LIST WITHOUT EXTRA HEADER BAR)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v32 - KITCHEN ONLY)
+// ==========================================================================
+function toggleKitchenDrawer(forceState) {
+  const drawer = document.getElementById('kitchen-left-drawer');
+  const backdrop = document.getElementById('kitchen-drawer-backdrop');
+  if (!drawer || !backdrop) return;
+
+  const isOpen = drawer.classList.contains('open');
+  const shouldOpen = (typeof forceState === 'boolean') ? forceState : !isOpen;
+
+  if (shouldOpen) {
+    drawer.classList.add('open');
+    backdrop.classList.add('active');
+  } else {
+    drawer.classList.remove('open');
+    backdrop.classList.remove('active');
+  }
+}
+
+// ==========================================================================
+// 8. RENDER KITCHEN MENU (v32)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -352,7 +372,7 @@ function renderKitchenMenu() {
 
   container.innerHTML = '';
 
-  // 1. RENDER ALL SELECTED/CHECKED ITEMS AT THE VERY TOP OF THE LIST (NO HEADING BAR)
+  // 1. RENDER ALL SELECTED/CHECKED ITEMS AT THE VERY TOP OF THE LIST
   const checkedDishes = MENU_ITEMS.filter(d => kitchenCheckedState[d.id]);
 
   checkedDishes.forEach((dish) => {
@@ -381,7 +401,6 @@ function renderKitchenMenu() {
   categories.forEach((cat) => {
     const uncheckedCatItems = MENU_ITEMS.filter(item => item.category === cat && !kitchenCheckedState[item.id]);
 
-    // Only render category heading if there is at least one unchecked item inside it
     if (uncheckedCatItems.length > 0) {
       const categoryHeader = document.createElement('h3');
       categoryHeader.style.cssText = "margin: 16px 0 6px 0; font-size: 0.95rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
@@ -407,7 +426,7 @@ function renderKitchenMenu() {
     }
   });
 
-  console.log("[Kitchen v31] Rendered menu with selected items cleanly at top & unchecked categories below.");
+  console.log("[Kitchen v32] Rendered menu with selected items cleanly at top & unchecked categories below.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -424,7 +443,6 @@ function toggleOutOfStock(dishId) {
   const newState = (current === 'OOS') ? true : 'OOS';
   kitchenCheckedState[dishId] = newState;
 
-  // Immediately sync Out of Stock state to Firebase so kitchen staff don't have to hit Publish!
   if (db) {
     db.ref(`dailyMenu/${dishId}`).set(newState);
   }
@@ -432,7 +450,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 8. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v31: WITH CONFIRMATION)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v32: WITH CONFIRMATION)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -449,7 +467,6 @@ function publishDailyMenu() {
     return;
   }
 
-  // Pre-Publish Confirmation Box
   const confirmMsg = isDuringBreakWindow()
     ? `It is currently between 6:00 PM and 9:00 PM.\n\nAre you sure you want to publish these ${selectedCount} selected items? (They will automatically go live for customers at 9:00 PM tonight for tomorrow's orders.)`
     : `Are you sure you want to publish ${selectedCount} selected items to the live customer menu?`;
@@ -461,7 +478,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully (${selectedCount} items)!`);
-      console.log(`[v31] Published dailyMenu to Firebase.`);
+      console.log(`[v32] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -481,7 +498,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v31] Cleared dailyMenu from Firebase.`);
+        console.log(`[v32] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -491,7 +508,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 9. CUSTOMER LIVE MENU LISTENER (With 6 PM - 9 PM Closed for Day Banner)
+// 10. CUSTOMER LIVE MENU LISTENER
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -500,7 +517,6 @@ function renderCustomerMenuFromSnapshot(activeIds) {
 
   container.innerHTML = '';
 
-  // 1. IF DURING THE 6 PM - 9 PM CLOSURE WINDOW: Hide menu & show Closed for the Day banner
   if (isDuringBreakWindow()) {
     container.innerHTML = `
       <div style="text-align:center; padding: 40px 20px; color:#555;">
@@ -516,7 +532,6 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     return;
   }
 
-  // 2. IF NORMAL OPERATING HOURS
   if (placeOrderBtn) placeOrderBtn.disabled = false;
 
   if (!activeIds || Object.keys(activeIds).length === 0) {
@@ -533,7 +548,6 @@ function renderCustomerMenuFromSnapshot(activeIds) {
       cart[dish.id] = cart[dish.id] || 0;
       const isOOS = (activeIds[dish.id] === 'OOS');
 
-      // Reset cart quantity if item becomes Out of Stock
       if (isOOS && cart[dish.id] > 0) {
         cart[dish.id] = 0;
       }
@@ -569,7 +583,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     }
   });
 
-  console.log(`[Customer v31] Displaying ${renderedCount} live published menu items.`);
+  console.log(`[Customer v32] Displaying ${renderedCount} live published menu items.`);
 }
 
 function listenForCustomerLiveMenu() {
@@ -599,7 +613,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 10. ORDER SUBMISSION & FIRST-TIME CUSTOMER CREDENTIALS ENGINE (v31)
+// 11. ORDER SUBMISSION & FIRST-TIME CUSTOMER CREDENTIALS ENGINE (v32)
 // ==========================================================================
 function placeOrder() {
   if (isDuringBreakWindow()) {
@@ -633,10 +647,8 @@ function placeOrder() {
     return;
   }
 
-  // 1. CHECK IF CUSTOMER CREDENTIALS ARE SAVED
   const profileStr = localStorage.getItem('fp_customer_profile');
   if (!profileStr) {
-    // Open modal to ask for Name and Mobile Number for the first time
     const profileModal = document.getElementById('profile-modal');
     if (profileModal) profileModal.style.display = 'flex';
     return;
@@ -672,11 +684,9 @@ function saveProfileAndPlaceOrder() {
     mobile: mobileVal
   };
 
-  // Save credentials locally so the user is never prompted again
   localStorage.setItem('fp_customer_profile', JSON.stringify(customerProfile));
   closeProfileModal();
 
-  // Re-collect active cart items & submit immediately
   const orderItems = [];
   let totalAmount = 0;
   MENU_ITEMS.forEach((dish) => {
@@ -706,7 +716,6 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
     .then(() => {
       alert(`Order placed successfully! Your Order ID is #${orderData.orderId}`);
       
-      // SAVE ORDER TO DEVICE LOCALSTORAGE FOR BOTTOM HALF HISTORY
       const myOrder = {
         firebaseKey: newOrderRef.key,
         orderId: orderData.orderId,
@@ -716,11 +725,10 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
         timestamp: Date.now()
       };
       const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
-      pastOrders.unshift(myOrder); // Put newest order at top of history
+      pastOrders.unshift(myOrder);
       localStorage.setItem('fp_customer_orders', JSON.stringify(pastOrders));
       renderCustomerOrderHistory();
 
-      // Clear quantity counters
       MENU_ITEMS.forEach((dish) => { cart[dish.id] = 0; });
       Object.keys(cart).forEach(id => {
         const span = document.getElementById(`qty-${id}`);
@@ -776,7 +784,6 @@ function clearCustomerHistory() {
   }
 }
 
-// LISTEN TO LIVE FIREBASE ORDERS TO KEEP CUSTOMER STATUS UPDATED IN REAL-TIME
 function listenForCustomerOrderUpdates() {
   if (!db) return;
 
@@ -789,11 +796,10 @@ function listenForCustomerOrderUpdates() {
       const liveOrder = activeOrders[myOrder.firebaseKey];
       if (liveOrder) {
         if (myOrder.status !== liveOrder.status) {
-          myOrder.status = liveOrder.status; // PENDING -> ACCEPTED / DENIED
+          myOrder.status = liveOrder.status;
           hasChanges = true;
         }
       } else if (myOrder.status === 'PENDING' || myOrder.status === 'ACCEPTED') {
-        // Was active in Firebase, but removed by kitchen after completion -> mark COMPLETED
         myOrder.status = 'COMPLETED';
         hasChanges = true;
       }
@@ -807,7 +813,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 11. PERMANENT KITCHEN LOGIN, REAL-TIME MENU CHECKBOX SYNC & BACK BUTTON
+// 12. PERMANENT KITCHEN LOGIN, REAL-TIME MENU CHECKBOX SYNC & BACK BUTTON
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -861,7 +867,6 @@ function verifyKitchenPIN() {
 
 function enterKitchenMode() {
   if (!isKitchenMode) {
-    // Push history state so hardware back button intercepts!
     history.pushState({ kitchenMode: true }, '', '#kitchen');
   }
   isKitchenMode = true;
@@ -869,22 +874,22 @@ function enterKitchenMode() {
   // Change Header Title: smaller, grey version displayed only in Kitchen Console
   const titleEl = document.getElementById('main-app-title');
   if (titleEl) {
-    titleEl.innerHTML = 'Foodies Point <span style="font-size: 0.75rem; color: #888; font-weight: normal;">v31</span>';
+    titleEl.innerHTML = 'Foodies Point <span style="font-size: 0.75rem; color: #888; font-weight: normal;">v32</span>';
   }
 
   // Hide customer view
   document.getElementById('customer-view').style.display = 'none';
 
-  // Update Header Buttons: Show Back on Left and Exit on Right
+  // Update Header Buttons: Show Back + Menu on Left, and Exit on Right
   document.getElementById('header-kitchen-btn').style.display = 'none';
   document.getElementById('header-back-btn').style.display = 'inline-block';
+  document.getElementById('header-drawer-btn').style.display = 'inline-block';
   document.getElementById('header-exit-btn').style.display = 'inline-block';
 
   // Activate Fixed 50/50 Split Screen Overlay ('flex') docked below the 56px header
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'flex';
 
-  // LISTEN IN REAL-TIME TO FIREBASE SO WHEN A 6 PM RESET HAPPENS, CHECKBOXES UNCHECK IMMEDIATELY
   if (db) {
     db.ref('dailyMenu').on('value', (snapshot) => {
       kitchenCheckedState = snapshot.val() || {};
@@ -901,7 +906,9 @@ function exitKitchenMode(triggerHistoryBack = true) {
   if (!isKitchenMode) return;
   isKitchenMode = false;
 
-  // If triggered by clicking the top buttons, clean up browser history stack
+  // Always close drawer when exiting kitchen
+  toggleKitchenDrawer(false);
+
   if (triggerHistoryBack && window.location.hash === '#kitchen') {
     history.back();
   }
@@ -915,27 +922,27 @@ function exitKitchenMode(triggerHistoryBack = true) {
 
   document.getElementById('customer-view').style.display = 'flex';
 
-  // Restore Customer Mode Header Buttons (Kitchen button pinned right)
+  // Restore Customer Mode Header Buttons (Kitchen button pinned right, Drawer hidden)
   document.getElementById('header-kitchen-btn').style.display = 'inline-block';
   document.getElementById('header-back-btn').style.display = 'none';
+  document.getElementById('header-drawer-btn').style.display = 'none';
   document.getElementById('header-exit-btn').style.display = 'none';
 
   if (db) {
     db.ref('orders').off();
-    db.ref('dailyMenu').off(); // Clean up kitchen menu listener
+    db.ref('dailyMenu').off();
   }
 }
 
 // INTERCEPT PHONE PHYSICAL/SWIPE BACK BUTTON
 window.addEventListener('popstate', () => {
   if (isKitchenMode && window.location.hash !== '#kitchen') {
-    // Phone's hardware/gesture Back button was pressed: return to Customer View
     exitKitchenMode(false);
   }
 });
 
 // ==========================================================================
-// 12. LIVE KITCHEN ORDER LISTENER (With Customer Name & Mobile No. Display)
+// 13. LIVE KITCHEN ORDER LISTENER
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -965,7 +972,6 @@ function listenForKitchenOrders() {
         .map(i => `<p style="margin: 4px 0;"><strong>${i.quantity}x</strong> ${i.name}</p>`)
         .join('');
 
-      // Status badge color formatting
       const statusColors = {
         PENDING: '#EF6C00',
         ACCEPTED: '#2E7D32',
@@ -974,7 +980,6 @@ function listenForKitchenOrders() {
       };
       const statusColor = statusColors[order.status] || '#FF4B3A';
 
-      // Dynamic action buttons depending on whether order is PENDING or ACCEPTED
       const actionButtonsHtml = (order.status === 'PENDING')
         ? `<button class="btn-action btn-accept" onclick="acceptOrder('${order.firebaseKey}')">Accept</button>
            <button class="btn-action btn-deny" onclick="denyOrder('${order.firebaseKey}')">Deny</button>`
@@ -1005,7 +1010,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 13. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
+// 14. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
 // ==========================================================================
 function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -1020,11 +1025,9 @@ function acceptOrder(firebaseKey) {
 function denyOrder(firebaseKey) {
   if (!db) return;
   if (confirm("Deny this order? The customer will see that their order was declined.")) {
-    // Set status to DENIED first so the customer's live history instantly updates
     db.ref(`orders/${firebaseKey}`).update({
       status: 'DENIED'
     }).then(() => {
-      // Automatically clean up the denied order after 2 seconds
       setTimeout(() => {
         db.ref(`orders/${firebaseKey}`).remove();
       }, 2000);
@@ -1050,7 +1053,7 @@ function completeOrder(firebaseKey) {
 }
 
 // ==========================================================================
-// 14. INITIALIZE APP & ENFORCE INVERTED INSTALL GATE ON DOM READY
+// 15. INITIALIZE APP & ENFORCE INVERTED INSTALL GATE ON DOM READY
 // ==========================================================================
 function initFoodiesPoint() {
   enforceInstallGate();
@@ -1059,7 +1062,6 @@ function initFoodiesPoint() {
   renderCustomerOrderHistory();
   listenForCustomerOrderUpdates();
 
-  // Periodic 30-second clock check: Checks for 6 PM reset and re-renders when 9:00 PM arrives
   setInterval(() => {
     checkDaily6PMReset();
     if (!isKitchenMode && latestFirebaseMenuSnapshot) {
