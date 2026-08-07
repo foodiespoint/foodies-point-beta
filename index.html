@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v33 - LOCKED TO REPO PATH)      -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v34 - LOCKED TO REPO PATH)      -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=33">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=34">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v33 - VERIFIED CSS SYNTAX)        -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v34 - VERIFIED CSS SYNTAX)        -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -47,7 +47,7 @@
     html, body {
       overscroll-behavior-y: none;
       overscroll-behavior: none;
-      overflow: hidden; /* Both Customer & Kitchen views use internal 50/50 scroll */
+      overflow: hidden;
     }
 
     body {
@@ -56,7 +56,7 @@
     }
 
     /* ====================================================================== */
-    /* IRREMOVABLE INSTALL GATE OVERLAY (v33 - BRIEF & CENTERED)              */
+    /* IRREMOVABLE INSTALL GATE OVERLAY (v34 - BRIEF & CENTERED)              */
     /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
@@ -102,7 +102,7 @@
       margin: 18px auto 0 auto;
       width: 100%;
       max-width: 220px;
-      display: none; /* Revealed by JS */
+      display: none;
     }
 
     /* ====================================================================== */
@@ -121,9 +121,26 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 18px;
+      padding: 0 16px;
       height: 56px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Left Header Controls Group (Back arrow + Menu button) */
+    .header-left-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 2;
+    }
+
+    /* Right Header Controls Group (Version tag + Exit / Kitchen button) */
+    .header-right-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      z-index: 2;
     }
 
     .app-title {
@@ -135,6 +152,23 @@
       transform: translateX(-50%);
     }
 
+    /* Back Arrow Button (Icon-only, circular/pill feel) */
+    .btn-back-arrow {
+      border: 1px solid var(--border-color);
+      background: var(--bg-light);
+      width: 36px;
+      height: 34px;
+      border-radius: 17px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding-bottom: 2px;
+    }
+
     .btn-kitchen {
       border: 1px solid var(--border-color);
       background: var(--bg-light);
@@ -143,12 +177,27 @@
       font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
-      z-index: 2;
     }
 
-    /* PINS RIGHT-SIDE HEADER BUTTONS FIRMLY TO THE RIGHT EDGE */
-    #header-kitchen-btn, #header-exit-btn {
-      margin-left: auto;
+    .btn-kitchen-menu {
+      border: 1px solid var(--border-color);
+      background: var(--bg-light);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Subtle version number displayed near Exit button */
+    #kitchen-version-badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #888;
+      background: #F0F0F0;
+      padding: 4px 8px;
+      border-radius: 12px;
+      display: none;
     }
 
     .section-title {
@@ -158,10 +207,10 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v33 - GUARANTEED FIXED BOUNDARIES)          */
+    /* 50/50 SPLIT CUSTOMER PAGE (v34)                                        */
     /* ====================================================================== */
     #customer-view {
-      display: flex; /* Controlled via app.js -> 'flex' */
+      display: flex;
       position: fixed;
       top: 56px;
       bottom: 0;
@@ -176,14 +225,13 @@
 
     .customer-half {
       flex: 1 1 50%;
-      min-height: 0; /* Prevents overflow growth */
+      min-height: 0;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       padding: 12px 16px 8px 16px;
     }
 
-    /* Customer Upper Half: Menu & Sticky Checkout Bar */
     .customer-upper {
       border-bottom: 3px solid var(--primary-color);
       background: var(--bg-light);
@@ -197,7 +245,6 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Integrated Sticky Checkout Bar at bottom of top half */
     .customer-checkout-bar {
       flex-shrink: 0;
       padding-top: 10px;
@@ -225,7 +272,6 @@
       box-shadow: none;
     }
 
-    /* Customer Lower Half: My Order History & Status */
     .customer-lower {
       background: var(--white);
     }
@@ -238,7 +284,6 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Menu Card & Quantity Stepper (− | Qty | +) */
     .menu-list {
       display: flex;
       flex-direction: column;
@@ -282,7 +327,6 @@
       font-size: 0.95rem;
     }
 
-    /* OUT OF STOCK BUTTONS & BADGES (v33) */
     .btn-oos {
       border: 1px solid var(--primary-color);
       background: var(--white);
@@ -339,7 +383,6 @@
       font-size: 0.9rem;
     }
 
-    /* CUSTOMER ORDER HISTORY CARDS & BADGES */
     .customer-order-card {
       background: var(--bg-light);
       border: 1px solid var(--border-color);
@@ -383,7 +426,6 @@
       color: #C62828;
     }
 
-    /* Publish & Clear Menu Side-by-Side Container */
     .kitchen-menu-actions {
       display: flex;
       gap: 10px;
@@ -413,12 +455,12 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v33 - DOCKED BELOW 56PX HEADER)     */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v34)                                */
     /* ====================================================================== */
     #kitchen-view {
-      display: none; /* Controlled via app.js -> 'flex' */
+      display: none;
       position: fixed;
-      top: 56px; /* Docks cleanly below the Foodies Point header */
+      top: 56px;
       bottom: 0;
       left: 0;
       right: 0;
@@ -431,19 +473,17 @@
 
     .kitchen-half {
       flex: 1 1 50%;
-      min-height: 0; /* CRITICAL: Prevents flex child from growing past 50%! */
+      min-height: 0;
       overflow-y: auto;
       padding: 14px 16px;
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Upper Half: Menu & Controls (Top 50%) */
     .kitchen-upper {
       border-bottom: 3px solid var(--primary-color);
       background: var(--bg-light);
     }
 
-    /* Lower Half: Live Orders (Bottom 50%) */
     .kitchen-lower {
       background: var(--white);
     }
@@ -585,20 +625,8 @@
     }
 
     /* ====================================================================== */
-    /* KITCHEN LEFT SLIDER DRAWER (v33 - KITCHEN ONLY)                        */
+    /* KITCHEN LEFT SLIDER DRAWER (v34)                                       */
     /* ====================================================================== */
-    .btn-kitchen-menu {
-      border: 1px solid var(--border-color);
-      background: var(--bg-light);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      z-index: 2;
-      margin-left: 6px;
-    }
-
     .kitchen-drawer-backdrop {
       display: none;
       position: fixed;
@@ -668,14 +696,12 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v33 - BRIEF & CENTER-ALIGNED)     -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v34)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
       <h2>Install Foodies Point</h2>
       <p>Install the app to view today's live menu and order food.</p>
-      
-      <!-- Center Aligned Install Button -->
       <button id="btn-native-install" class="btn-publish">
         📲 Install App Now
       </button>
@@ -683,97 +709,88 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v33 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v34 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
-    <!-- APP HEADER -->
+    <!-- APP HEADER (v34 - REDESIGNED KITCHEN CONTROLS & VERSION BADGE) -->
     <header class="app-header" id="app-header">
-      <!-- Left Side Buttons (Visible only in Kitchen Mode) -->
-      <div style="display: flex; align-items: center; z-index: 2;">
-        <button class="btn-kitchen" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">← Back</button>
+      
+      <!-- Left Side Buttons Group (Visible only in Kitchen Mode) -->
+      <div class="header-left-group">
+        <!-- Arrow-only Back Button -->
+        <button class="btn-back-arrow" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">←</button>
+        <!-- Distinct Menu Drawer Button -->
         <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenDrawer()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
 
-      <!-- Center Title (Always Visible - Grey/smaller version shown only in Kitchen Mode) -->
+      <!-- Center Title (Visible in Customer Mode, Hidden in Kitchen Mode) -->
       <div class="app-title" id="main-app-title">Foodies Point</div>
 
-      <!-- Right Side Buttons (Pinned right) -->
-      <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
-      <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
+      <!-- Right Side Buttons Group -->
+      <div class="header-right-group">
+        <!-- Kitchen Enter Button (Customer Mode) -->
+        <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
+        <!-- Version Badge near Exit Button (Kitchen Mode Only) -->
+        <span id="kitchen-version-badge">v34</span>
+        <!-- Exit Button (Kitchen Mode Only) -->
+        <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
+      </div>
+
     </header>
 
     <!-- ==================================================================== -->
-    <!-- CUSTOMER LIVE MENU VIEW (v33 - 50% TOP MENU / 50% BOTTOM HISTORY)    -->
+    <!-- CUSTOMER LIVE MENU VIEW (v34 - 50% TOP MENU / 50% BOTTOM HISTORY)    -->
     <!-- ==================================================================== -->
     <main id="customer-view">
-      
-      <!-- UPPER HALF (50%): TODAY'S LIVE MENU & STICKY CHECKOUT BAR -->
       <div class="customer-half customer-upper">
         <h2 class="section-title" style="flex-shrink: 0;">Today's Live Menu</h2>
-        
         <div class="menu-scroll-area">
           <div class="menu-list" id="customer-menu-container">
             <p style="text-align:center; padding: 30px; color:#666;">Loading live menu...</p>
           </div>
         </div>
-
         <div class="customer-checkout-bar">
           <button class="btn-place-order" id="btn-place-order" onclick="placeOrder()">Place Order</button>
         </div>
       </div>
 
-      <!-- LOWER HALF (50%): MY ORDER HISTORY & STATUS -->
       <div class="customer-half customer-lower">
         <div class="sticky-section-title" style="flex-shrink: 0;">
           <span>My Order History & Status</span>
           <button type="button" onclick="clearCustomerHistory()" style="border:none; background:transparent; font-size:0.75rem; color:#888; cursor:pointer;">Clear</button>
         </div>
-
         <div class="history-scroll-area" id="customer-orders-container">
           <p style="text-align:center; padding: 20px; color:#666;">No past orders yet. Orders placed from this device will appear here!</p>
         </div>
       </div>
-
     </main>
 
     <!-- ==================================================================== -->
-    <!-- KITCHEN CONSOLE VIEW (v33 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
+    <!-- KITCHEN CONSOLE VIEW (v34 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
     <!-- ==================================================================== -->
     <section id="kitchen-view">
-      
-      <!-- UPPER HALF (50%): MENU CONTROLS & LIST -->
       <div class="kitchen-half kitchen-upper">
         <h2 class="section-title" style="margin: 4px 0 10px 0;">Kitchen Console</h2>
-        
-        <!-- Side-by-Side Publish and Clear Action Buttons -->
         <div class="kitchen-menu-actions">
           <button class="btn-publish" onclick="publishDailyMenu()">Publish</button>
           <button class="btn-clear-menu" onclick="clearDailyMenu()">🗑️ Clear Customer Menu</button>
         </div>
-        
-        <div class="menu-list" id="kitchen-menu-container">
-          <!-- Selected items top list & remaining category items render here dynamically -->
-        </div>
+        <div class="menu-list" id="kitchen-menu-container"></div>
       </div>
 
-      <!-- LOWER HALF (50%): LIVE INCOMING ORDERS -->
       <div class="kitchen-half kitchen-lower">
         <div class="sticky-section-title">
           <span>Live Incoming Orders</span>
         </div>
-        
-        <div id="kitchen-orders-container">
-          <!-- Live Firebase orders appear here -->
-        </div>
+        <div id="kitchen-orders-container"></div>
       </div>
-
     </section>
 
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 6. KITCHEN LEFT SLIDER DRAWER & BACKDROP (v33 - KITCHEN ONLY)          -->
+  <!-- 6. KITCHEN LEFT SLIDER DRAWER & BACKDROP (v34)                         -->
   <!-- ====================================================================== -->
   <div class="kitchen-drawer-backdrop" id="kitchen-drawer-backdrop" onclick="toggleKitchenDrawer(false)"></div>
   <aside class="kitchen-left-drawer" id="kitchen-left-drawer">
@@ -787,7 +804,7 @@
   </aside>
 
   <!-- ====================================================================== -->
-  <!-- 7. KITCHEN PASSCODE MODAL (With Eye Toggle & Alphanumeric Labels)       -->
+  <!-- 7. KITCHEN PASSCODE MODAL                                              -->
   <!-- ====================================================================== -->
   <div class="modal-overlay" id="pin-modal">
     <div class="modal-card">
@@ -807,7 +824,7 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 8. FIRST-TIME CUSTOMER CREDENTIALS MODAL (Name & Mobile Number)        -->
+  <!-- 8. FIRST-TIME CUSTOMER CREDENTIALS MODAL                               -->
   <!-- ====================================================================== -->
   <div class="modal-overlay" id="profile-modal">
     <div class="modal-card">
@@ -827,8 +844,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 9. MAIN APP SCRIPT (v33 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 9. MAIN APP SCRIPT (v34)                                               -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=33"></script>
+  <script src="/foodies-point-beta/app.js?v=34"></script>
 </body>
 </html>
