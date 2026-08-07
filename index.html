@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v35 - LOCKED TO REPO PATH)      -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v36 - LOCKED TO REPO PATH)      -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=35">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=36">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v35 - VERIFIED CSS SYNTAX)        -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v36 - VERIFIED CSS SYNTAX)        -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -55,7 +55,7 @@
     }
 
     /* ====================================================================== */
-    /* IRREMOVABLE INSTALL GATE OVERLAY (v35)                                 */
+    /* FIXED INSTALL GATE OVERLAY (v36 - BUTTON VISIBLE BY DEFAULT)           */
     /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
@@ -72,7 +72,7 @@
 
     .install-modal-card {
       background: var(--white);
-      padding: 32px 26px;
+      padding: 32px 24px;
       border-radius: 18px;
       width: 92%;
       max-width: 360px;
@@ -97,11 +97,12 @@
       margin-bottom: 4px;
     }
 
+    /* BUTTON IS NOW VISIBLE BY DEFAULT IN v36 */
     #btn-native-install {
       margin: 18px auto 0 auto;
       width: 100%;
-      max-width: 220px;
-      display: none;
+      max-width: 240px;
+      display: block;
     }
 
     /* ====================================================================== */
@@ -111,7 +112,6 @@
       display: none !important;
     }
 
-    /* Top App Header - Explicit 56px height */
     .app-header {
       position: sticky;
       top: 0;
@@ -202,7 +202,7 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v35)                                        */
+    /* 50/50 SPLIT CUSTOMER PAGE (v36)                                        */
     /* ====================================================================== */
     #customer-view {
       display: flex;
@@ -450,7 +450,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v35)                                */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v36)                                */
     /* ====================================================================== */
     #kitchen-view {
       display: none;
@@ -545,11 +545,9 @@
       color: var(--white);
     }
 
-    /* ====================================================================== */
-    /* DEDICATED FULL-SCREEN KITCHEN SUB-PAGES (v35 - CUSTOMERS & PAYMENTS)   */
-    /* ====================================================================== */
+    /* SUB-PAGES & DRAWER */
     .kitchen-subpage {
-      display: none; /* Controlled via app.js -> 'flex' */
+      display: none;
       position: fixed;
       top: 56px;
       bottom: 0;
@@ -584,7 +582,6 @@
       font-weight: 800;
     }
 
-    /* Customer Data Row Card */
     .customer-data-card {
       background: var(--white);
       border: 1px solid var(--border-color);
@@ -606,7 +603,6 @@
       font-weight: 700;
     }
 
-    /* Payment Summary Cards */
     .payment-summary-box {
       background: var(--white);
       border: 1px solid var(--border-color);
@@ -616,9 +612,6 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
-    /* ====================================================================== */
-    /* KITCHEN LEFT SLIDER DRAWER (v35 - CUSTOMER DATA & PAYMENT OPTIONS)     */
-    /* ====================================================================== */
     .kitchen-drawer-backdrop {
       display: none;
       position: fixed;
@@ -699,7 +692,6 @@
       background: #EAEAEA;
     }
 
-    /* PASSCODE & PROFILE MODALS */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -776,24 +768,30 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v35)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v36 - FIXED BUTTON & MANUAL GUIDE)-->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
       <h2>Install Foodies Point</h2>
-      <p>Install the app to view today's live menu and order food.</p>
-      <button id="btn-native-install" class="btn-publish">
+      <p id="install-instruction-text">Install the app on your home screen to view today's live menu and order food.</p>
+      
+      <!-- Button is ALWAYS visible now -->
+      <button id="btn-native-install" class="btn-publish" onclick="triggerAppInstall()">
         📲 Install App Now
       </button>
+
+      <!-- Manual fallback guide revealed if native prompt isn't supported -->
+      <div id="install-manual-guide" style="display:none; margin-top:14px; font-size:0.85rem; color:#555; line-height:1.4; background:#F8F9FA; padding:10px 12px; border-radius:8px; border:1px solid #EAEAEA;">
+        Tap your browser menu <strong>(⋮ or Share ⎋)</strong> and select <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>.
+      </div>
     </div>
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v35 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v36)                                          -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
-    <!-- APP HEADER (v35) -->
     <header class="app-header" id="app-header">
       <div class="header-left-group">
         <button class="btn-back-arrow" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">←</button>
@@ -804,14 +802,11 @@
 
       <div class="header-right-group">
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
-        <span id="kitchen-version-badge">v35</span>
+        <span id="kitchen-version-badge">v36</span>
         <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
       </div>
     </header>
 
-    <!-- ==================================================================== -->
-    <!-- CUSTOMER LIVE MENU VIEW (v35)                                        -->
-    <!-- ==================================================================== -->
     <main id="customer-view">
       <div class="customer-half customer-upper">
         <h2 class="section-title" style="flex-shrink: 0;">Today's Live Menu</h2>
@@ -836,9 +831,6 @@
       </div>
     </main>
 
-    <!-- ==================================================================== -->
-    <!-- KITCHEN CONSOLE VIEW (v35)                                           -->
-    <!-- ==================================================================== -->
     <section id="kitchen-view">
       <div class="kitchen-half kitchen-upper">
         <h2 class="section-title" style="margin: 4px 0 10px 0;">Kitchen Console</h2>
@@ -857,9 +849,6 @@
       </div>
     </section>
 
-    <!-- ==================================================================== -->
-    <!-- PAGE 1: CUSTOMER DATA & APP VERSION DIRECTORY PAGE (v35)             -->
-    <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="customer-data-view">
       <div class="subpage-header">
         <button class="btn-back-arrow" onclick="closeKitchenSubPage()" aria-label="Back to Kitchen Console">←</button>
@@ -870,9 +859,6 @@
       </div>
     </section>
 
-    <!-- ==================================================================== -->
-    <!-- PAGE 2: CUSTOMER PAYMENT DETAILS & LEDGER PAGE (v35)                 -->
-    <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="payment-details-view">
       <div class="subpage-header">
         <button class="btn-back-arrow" onclick="closeKitchenSubPage()" aria-label="Back to Kitchen Console">←</button>
@@ -885,9 +871,6 @@
 
   </div>
 
-  <!-- ====================================================================== -->
-  <!-- 6. KITCHEN LEFT SLIDER DRAWER (v35 - TWO INTERACTIVE NAVIGATION CARDS) -->
-  <!-- ====================================================================== -->
   <div class="kitchen-drawer-backdrop" id="kitchen-drawer-backdrop" onclick="toggleKitchenDrawer(false)"></div>
   <aside class="kitchen-left-drawer" id="kitchen-left-drawer">
     <div class="drawer-header">
@@ -896,13 +879,11 @@
     </div>
     
     <div class="drawer-content">
-      <!-- Option 1: Customer Data & App Versions -->
       <button type="button" class="drawer-nav-item" onclick="openCustomerDataPage()">
         <span>👥</span>
         <span>Customer Data & Versions</span>
       </button>
 
-      <!-- Option 2: Customer Payment Details -->
       <button type="button" class="drawer-nav-item" onclick="openPaymentDetailsPage()">
         <span>💳</span>
         <span>Customer Payment Details</span>
@@ -910,9 +891,6 @@
     </div>
   </aside>
 
-  <!-- ====================================================================== -->
-  <!-- 7. KITCHEN PASSCODE MODAL                                              -->
-  <!-- ====================================================================== -->
   <div class="modal-overlay" id="pin-modal">
     <div class="modal-card">
       <h3>Kitchen Console</h3>
@@ -930,9 +908,6 @@
     </div>
   </div>
 
-  <!-- ====================================================================== -->
-  <!-- 8. FIRST-TIME CUSTOMER CREDENTIALS MODAL                               -->
-  <!-- ====================================================================== -->
   <div class="modal-overlay" id="profile-modal">
     <div class="modal-card">
       <h3>Customer Details</h3>
@@ -951,8 +926,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 9. MAIN APP SCRIPT (v35)                                               -->
+  <!-- 9. MAIN APP SCRIPT (v36)                                               -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=35"></script>
+  <script src="/foodies-point-beta/app.js?v=36"></script>
 </body>
 </html>
