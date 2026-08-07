@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v35)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v36)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v35";
+const CURRENT_APP_VERSION = "v36";
 let db = null;
 
 try {
@@ -25,7 +25,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v35)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v36)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -57,7 +57,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v35)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v36)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -78,8 +78,7 @@ try {
   console.error(`[OneSignal ${CURRENT_APP_VERSION}] Initialization error:`, error);
 }
 
-function error code: 504
-() {
+function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
   try {
     window.OneSignal = window.OneSignal || [];
     OneSignal.push(function() {
@@ -102,7 +101,7 @@ function error code: 504
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v35)
+// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v36)
 // ==========================================================================
 let swRegistration = null;
 let isRefreshing = false;
@@ -116,7 +115,7 @@ if ('serviceWorker' in navigator) {
   });
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=35`, {
+    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=36`, {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
@@ -147,28 +146,31 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & GATE ENGINE (v35)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v36)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  
-  const installBtn = document.getElementById('btn-native-install');
-  if (installBtn) {
-    installBtn.style.display = 'block';
-    installBtn.onclick = () => {
-      deferredInstallPrompt.prompt();
-      deferredInstallPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log(`[PWA ${CURRENT_APP_VERSION}] User accepted installation prompt.`);
-        }
-        deferredInstallPrompt = null;
-      });
-    };
-  }
+  console.log(`[PWA ${CURRENT_APP_VERSION}] Native install prompt intercepted & ready.`);
 });
+
+function triggerAppInstall() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log(`[PWA ${CURRENT_APP_VERSION}] User accepted installation prompt.`);
+      }
+      deferredInstallPrompt = null;
+    });
+  } else {
+    // Reveal manual browser instructions if prompt isn't directly supported / triggered
+    const guide = document.getElementById('install-manual-guide');
+    if (guide) guide.style.display = 'block';
+  }
+}
 
 function isStandalonePWA() {
   return (
@@ -190,7 +192,7 @@ function enforceInstallGate() {
     console.log(`[PWA ${CURRENT_APP_VERSION}] Standalone PWA mode verified. Application unlocked.`);
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log(`[PWA ${CURRENT_APP_VERSION}] Running in web browser. Irremovable Install Gate remains locked.`);
+    console.log(`[PWA ${CURRENT_APP_VERSION}] Running in web browser. Install Gate active.`);
   }
 }
 
@@ -332,7 +334,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v35)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v36)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -352,7 +354,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v35)
+// 8. RENDER KITCHEN MENU (v36)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -434,7 +436,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v35)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v36)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -490,7 +492,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v35)
+// 10. CUSTOMER LIVE MENU LISTENER (v36)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -591,7 +593,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v35)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v36)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -804,7 +806,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN & HEADER CONTROLS
+// 12. PERMANENT KITCHEN LOGIN & HEADER CONTROLS (v36)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -920,7 +922,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES (v35 - CUSTOMER DATA & PAYMENT LEDGER)
+// 13. DEDICATED KITCHEN SUB-PAGES (v36)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -1055,7 +1057,6 @@ function fetchAndRenderPaymentLedger() {
     });
 }
 
-// Handle native Phone back button inside Sub-Pages
 window.addEventListener('popstate', () => {
   if (isKitchenMode) {
     if (window.location.hash === '#kitchen') {
@@ -1067,7 +1068,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v35)
+// 14. LIVE KITCHEN ORDER LISTENER (v36)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -1178,7 +1179,7 @@ function completeOrder(firebaseKey) {
 }
 
 // ==========================================================================
-// 16. INITIALIZE APP & ENFORCE INVERTED INSTALL GATE ON DOM READY
+// 16. INITIALIZE APP & ENFORCE STANDALONE GATE ON DOM READY
 // ==========================================================================
 function initFoodiesPoint() {
   enforceInstallGate();
