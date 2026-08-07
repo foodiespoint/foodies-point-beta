@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v38 - LOCKED TO REPO PATH)      -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v39 - LOCKED TO REPO PATH)      -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=38">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=39">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v38 - VERIFIED CSS SYNTAX)        -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v39 - VERIFIED CSS SYNTAX)        -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -55,7 +55,7 @@
     }
 
     /* ====================================================================== */
-    /* FIXED INSTALL GATE OVERLAY (v38 - BUTTON VISIBLE BY DEFAULT)           */
+    /* FIXED INSTALL GATE OVERLAY (v39 - BUTTON VISIBLE BY DEFAULT)           */
     /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
@@ -201,7 +201,7 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v38)                                        */
+    /* 50/50 SPLIT CUSTOMER PAGE (v39)                                        */
     /* ====================================================================== */
     #customer-view {
       display: flex;
@@ -449,7 +449,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v38)                                */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v39)                                */
     /* ====================================================================== */
     #kitchen-view {
       display: none;
@@ -767,7 +767,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v38)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v39)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -785,13 +785,12 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v38 - SMART BACK ROUTING)                     -->
+  <!-- 5. MASTER APP CONTAINER (v39 - SMART BACK ROUTING)                     -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
     <header class="app-header" id="app-header">
       <div class="header-left-group">
-        <!-- Smart back button handles both Kitchen Mode exit and Sub-page closing -->
         <button class="btn-back-arrow" id="header-back-btn" onclick="handleHeaderBack()" style="display: none;" aria-label="Back">←</button>
         <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenDrawer()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
@@ -800,7 +799,7 @@
 
       <div class="header-right-group">
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
-        <span id="kitchen-version-badge">v38</span>
+        <span id="kitchen-version-badge">v39</span>
         <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
       </div>
     </header>
@@ -848,7 +847,7 @@
     </section>
 
     <!-- ==================================================================== -->
-    <!-- PAGE 1: CUSTOMER DATA DIRECTORY PAGE (v38)                           -->
+    <!-- PAGE 1: CUSTOMER DATA DIRECTORY PAGE (v39)                           -->
     <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="customer-data-view">
       <div class="subpage-header">
@@ -860,7 +859,7 @@
     </section>
 
     <!-- ==================================================================== -->
-    <!-- PAGE 2: PAYMENT RECORDS PAGE (v38 - CLEAN HEADER)                    -->
+    <!-- PAGE 2: PAYMENT RECORDS PAGE (v39 - CLEAN HEADER)                    -->
     <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="payment-details-view">
       <div class="subpage-header">
@@ -881,7 +880,6 @@
     </div>
     
     <div class="drawer-content">
-      <!-- Customer Data Tab -->
       <button type="button" class="drawer-nav-item" onclick="openCustomerDataPage()">
         <span>👥</span>
         <span>Customer Data</span>
@@ -929,8 +927,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 9. MAIN APP SCRIPT (v38)                                               -->
+  <!-- 9. MAIN APP SCRIPT (v39)                                               -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=38"></script>
+  <script src="/foodies-point-beta/app.js?v=39"></script>
 </body>
 </html>
