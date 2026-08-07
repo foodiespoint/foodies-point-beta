@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v36)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v37)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v36";
+const CURRENT_APP_VERSION = "v37";
 let db = null;
 
 try {
@@ -25,7 +25,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v36)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v37)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -57,7 +57,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v36)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v37)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -101,7 +101,7 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v36)
+// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v37)
 // ==========================================================================
 let swRegistration = null;
 let isRefreshing = false;
@@ -115,7 +115,7 @@ if ('serviceWorker' in navigator) {
   });
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=36`, {
+    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=37`, {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
@@ -146,7 +146,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v36)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v37)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -166,7 +166,6 @@ function triggerAppInstall() {
       deferredInstallPrompt = null;
     });
   } else {
-    // Reveal manual browser instructions if prompt isn't directly supported / triggered
     const guide = document.getElementById('install-manual-guide');
     if (guide) guide.style.display = 'block';
   }
@@ -334,7 +333,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v36)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v37)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -354,7 +353,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v36)
+// 8. RENDER KITCHEN MENU (v37)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -436,7 +435,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v36)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v37)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -492,7 +491,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v36)
+// 10. CUSTOMER LIVE MENU LISTENER (v37)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -593,7 +592,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v36)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v37)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -806,7 +805,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN & HEADER CONTROLS (v36)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v37)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -890,6 +889,17 @@ function enterKitchenMode() {
   listenForKitchenOrders();
 }
 
+function handleHeaderBack() {
+  const custPage = document.getElementById('customer-data-view');
+  const payPage = document.getElementById('payment-details-view');
+  
+  if ((custPage && custPage.style.display === 'flex') || (payPage && payPage.style.display === 'flex')) {
+    closeKitchenSubPage(true);
+  } else {
+    exitKitchenMode(true);
+  }
+}
+
 function exitKitchenMode(triggerHistoryBack = true) {
   if (!isKitchenMode) return;
   isKitchenMode = false;
@@ -922,7 +932,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES (v36)
+// 13. DEDICATED KITCHEN SUB-PAGES & CLEAR LEDGER ENGINE (v37)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -956,6 +966,30 @@ function closeKitchenSubPage(triggerBack = true) {
 
   if (triggerBack && (window.location.hash === '#kitchen-customers' || window.location.hash === '#kitchen-payments')) {
     history.back();
+  }
+}
+
+function clearPaymentLedger() {
+  if (!db) return;
+  if (confirm("Are you sure you want to clear all completed/accepted payment entries from the database?")) {
+    db.ref('orders').once('value').then((snapshot) => {
+      const orders = snapshot.val();
+      if (!orders) return;
+      const updates = {};
+      Object.keys(orders).forEach((key) => {
+        const o = orders[key];
+        if (o.status === 'COMPLETED' || o.status === 'ACCEPTED') {
+          updates[key] = null;
+        }
+      });
+      return db.ref('orders').update(updates);
+    }).then(() => {
+      alert("Payment ledger entries cleared!");
+      fetchAndRenderPaymentLedger();
+    }).catch((err) => {
+      console.error("Error clearing payment ledger:", err);
+      alert("Could not clear payment entries.");
+    });
   }
 }
 
@@ -1068,7 +1102,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v36)
+// 14. LIVE KITCHEN ORDER LISTENER (v37)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
