@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v36 - LOCKED TO REPO PATH)      -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v37 - LOCKED TO REPO PATH)      -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=36">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=37">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v36 - VERIFIED CSS SYNTAX)        -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v37 - VERIFIED CSS SYNTAX)        -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -55,7 +55,7 @@
     }
 
     /* ====================================================================== */
-    /* FIXED INSTALL GATE OVERLAY (v36 - BUTTON VISIBLE BY DEFAULT)           */
+    /* FIXED INSTALL GATE OVERLAY (v37 - BUTTON VISIBLE BY DEFAULT)           */
     /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
@@ -97,7 +97,6 @@
       margin-bottom: 4px;
     }
 
-    /* BUTTON IS NOW VISIBLE BY DEFAULT IN v36 */
     #btn-native-install {
       margin: 18px auto 0 auto;
       width: 100%;
@@ -202,7 +201,7 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v36)                                        */
+    /* 50/50 SPLIT CUSTOMER PAGE (v37)                                        */
     /* ====================================================================== */
     #customer-view {
       display: flex;
@@ -450,7 +449,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v36)                                */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v37)                                */
     /* ====================================================================== */
     #kitchen-view {
       display: none;
@@ -565,8 +564,8 @@
 
     .subpage-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 14px;
       margin-bottom: 18px;
       padding-bottom: 12px;
       border-bottom: 2px solid var(--border-color);
@@ -768,19 +767,17 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v36 - FIXED BUTTON & MANUAL GUIDE)-->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v37)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
       <h2>Install Foodies Point</h2>
       <p id="install-instruction-text">Install the app on your home screen to view today's live menu and order food.</p>
       
-      <!-- Button is ALWAYS visible now -->
       <button id="btn-native-install" class="btn-publish" onclick="triggerAppInstall()">
         📲 Install App Now
       </button>
 
-      <!-- Manual fallback guide revealed if native prompt isn't supported -->
       <div id="install-manual-guide" style="display:none; margin-top:14px; font-size:0.85rem; color:#555; line-height:1.4; background:#F8F9FA; padding:10px 12px; border-radius:8px; border:1px solid #EAEAEA;">
         Tap your browser menu <strong>(⋮ or Share ⎋)</strong> and select <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>.
       </div>
@@ -788,13 +785,14 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v36)                                          -->
+  <!-- 5. MASTER APP CONTAINER (v37 - SMARTER HEADER BACK ROUTING)            -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
     <header class="app-header" id="app-header">
       <div class="header-left-group">
-        <button class="btn-back-arrow" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">←</button>
+        <!-- Smart back button handles both Kitchen Mode exit and Sub-page closing -->
+        <button class="btn-back-arrow" id="header-back-btn" onclick="handleHeaderBack()" style="display: none;" aria-label="Back">←</button>
         <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenDrawer()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
 
@@ -802,7 +800,7 @@
 
       <div class="header-right-group">
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
-        <span id="kitchen-version-badge">v36</span>
+        <span id="kitchen-version-badge">v37</span>
         <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
       </div>
     </header>
@@ -849,20 +847,25 @@
       </div>
     </section>
 
+    <!-- ==================================================================== -->
+    <!-- PAGE 1: CUSTOMER DATA DIRECTORY PAGE (v37 - NO DUPLICATE BACK BTN)   -->
+    <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="customer-data-view">
       <div class="subpage-header">
-        <button class="btn-back-arrow" onclick="closeKitchenSubPage()" aria-label="Back to Kitchen Console">←</button>
-        <h2>Customer App Versions</h2>
+        <h2>Customer Data</h2>
       </div>
       <div id="customer-directory-container">
         <p style="text-align:center; padding: 30px; color:#666;">Loading customer directory...</p>
       </div>
     </section>
 
+    <!-- ==================================================================== -->
+    <!-- PAGE 2: PAYMENT RECORDS PAGE (v37 - NO DUP BACK BTN & CLEAR BTN)     -->
+    <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="payment-details-view">
       <div class="subpage-header">
-        <button class="btn-back-arrow" onclick="closeKitchenSubPage()" aria-label="Back to Kitchen Console">←</button>
         <h2>Payment Records & Ledger</h2>
+        <button type="button" class="btn-clear-menu" onclick="clearPaymentLedger()" style="padding: 6px 12px; font-size: 0.8rem; width: auto; flex: none;">🗑️ Clear Entries</button>
       </div>
       <div id="payment-ledger-container">
         <p style="text-align:center; padding: 30px; color:#666;">Loading payment records...</p>
@@ -879,9 +882,10 @@
     </div>
     
     <div class="drawer-content">
+      <!-- Renamed option: Customer Data -->
       <button type="button" class="drawer-nav-item" onclick="openCustomerDataPage()">
         <span>👥</span>
-        <span>Customer Data & Versions</span>
+        <span>Customer Data</span>
       </button>
 
       <button type="button" class="drawer-nav-item" onclick="openPaymentDetailsPage()">
@@ -926,8 +930,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 9. MAIN APP SCRIPT (v36)                                               -->
+  <!-- 9. MAIN APP SCRIPT (v37)                                               -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=36"></script>
+  <script src="/foodies-point-beta/app.js?v=37"></script>
 </body>
 </html>
