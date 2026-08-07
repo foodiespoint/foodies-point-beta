@@ -1,19 +1,19 @@
 // ==========================================================================
-// FOODIES POINT SERVICE WORKER (v32 - AUTO-UPDATING & CACHE PURGING)
+// FOODIES POINT SERVICE WORKER (v33 - AUTO-UPDATING & CACHE PURGING)
 // ==========================================================================
-const CACHE_NAME = 'fp-cache-v32';
+const CACHE_NAME = 'fp-cache-v33';
 
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
-  '/foodies-point-beta/index.html?v=32',
-  '/foodies-point-beta/app.js?v=32',
-  '/foodies-point-beta/manifest.json?v=32',
+  '/foodies-point-beta/index.html?v=33',
+  '/foodies-point-beta/app.js?v=33',
+  '/foodies-point-beta/manifest.json?v=33',
   '/foodies-point-beta/icon.png'
 ];
 
 // 1. INSTALL EVENT: Force the new Service Worker to activate immediately
 self.addEventListener('install', (event) => {
-  console.log('[SW v32] Installing new service worker...');
+  console.log('[SW v33] Installing new service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -26,14 +26,14 @@ self.addEventListener('install', (event) => {
 
 // 2. ACTIVATE EVENT: Wipe every old cache version & claim all open PWA windows
 self.addEventListener('activate', (event) => {
-  console.log('[SW v32] Activating & wiping old caches...');
+  console.log('[SW v33] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           // If a cache bucket does not match current version, delete it permanently
           if (cacheName !== CACHE_NAME) {
-            console.log('[SW v32] Purging stale cache:', cacheName);
+            console.log('[SW v33] Purging stale cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
