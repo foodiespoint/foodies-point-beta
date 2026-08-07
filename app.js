@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v43)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v44)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v43";
+const CURRENT_APP_VERSION = "v44";
 let db = null;
 
 try {
@@ -25,7 +25,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v43)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v44)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -57,7 +57,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL v16 AUTO-PROMPT ENGINE (v43 - NO BELL ICON)
+// 3. ONESIGNAL v16 NOTIFICATION ENGINE & IN-APP PERMISSION MODAL (v44)
 // ==========================================================================
 try {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -65,7 +65,6 @@ try {
     await OneSignal.init({
       appId: "d686653a-e6bc-40a4-b6e1-447a86a082cd",
       safari_web_id: "web.onesignal.auto.0dd8fdab-49d8-437b-ac06-36c9d15991be",
-      // Bell icon completely disabled as requested
       notifyButton: {
         enable: false,
       },
@@ -78,27 +77,38 @@ try {
   console.error(`[OneSignal ${CURRENT_APP_VERSION}] Initialization error:`, error);
 }
 
-// AUTOMATIC PERMISSION CHECKER: Re-prompts whenever user is NOT subscribed
-function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
+function checkNotificationStatusAndShowModal() {
+  if ('Notification' in window) {
+    if (Notification.permission === 'default') {
+      const modal = document.getElementById('notification-permission-modal');
+      if (modal) modal.style.display = 'flex';
+    } else {
+      console.log(`[Notification ${CURRENT_APP_VERSION}] Current browser permission status:`, Notification.permission);
+    }
+  }
+}
+
+function closeNotificationModal() {
+  const modal = document.getElementById('notification-permission-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function requestNotificationPermissionOnGesture() {
+  closeNotificationModal();
+
   try {
+    // 1. OneSignal v16 User Gesture Push Trigger
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
-      const isSubscribed = OneSignal.Notifications && OneSignal.Notifications.permission;
-      if (!isSubscribed) {
-        console.log(`[Notification ${CURRENT_APP_VERSION}] User not subscribed. Triggering automatic access prompt...`);
-        if (OneSignal.Slidedown && typeof OneSignal.Slidedown.promptPush === 'function') {
-          await OneSignal.Slidedown.promptPush({ force: true });
-        } else if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
-          await OneSignal.Notifications.requestPermission();
-        }
-      } else {
-        console.log(`[Notification ${CURRENT_APP_VERSION}] User is already subscribed to push notifications.`);
+      if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
+        await OneSignal.Notifications.requestPermission();
       }
     });
 
+    // 2. Native OS Permission Fallback
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log(`[PWA ${CURRENT_APP_VERSION}] Native notification permission status:`, permission);
+        console.log(`[PWA ${CURRENT_APP_VERSION}] Native permission result:`, permission);
       });
     }
   } catch (err) {
@@ -107,21 +117,11 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION & SAFE AUTO-RELOAD ENGINE (v43)
+// 4. SERVICE WORKER REGISTRATION (v44 - ABSOLUTELY NO FORCED REFRESH LOOPS)
 // ==========================================================================
 let swRegistration = null;
-let isRefreshing = false;
 
 if ('serviceWorker' in navigator) {
-  const hadController = Boolean(navigator.serviceWorker.controller);
-
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadController || isRefreshing) return;
-    isRefreshing = true;
-    console.log(`[PWA ${CURRENT_APP_VERSION}] New service worker activated! Reloading screen to apply updates...`);
-    window.location.reload();
-  });
-
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/foodies-point-beta/sw.js', {
       scope: '/foodies-point-beta/'
@@ -140,7 +140,7 @@ if ('serviceWorker' in navigator) {
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log(`[PWA ${CURRENT_APP_VERSION}] Update downloaded. Forcing immediate activation...`);
+              console.log(`[PWA ${CURRENT_APP_VERSION}] Update downloaded in background.`);
               newWorker.postMessage({ type: 'SKIP_WAITING' });
             }
           });
@@ -154,7 +154,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v43)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v44)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -197,8 +197,9 @@ function enforceInstallGate() {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
     console.log(`[PWA ${CURRENT_APP_VERSION}] Standalone PWA mode verified. Application unlocked.`);
-    // Automatically trigger permission check whenever the app launches
-    setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
+    
+    // Check permission status 1 second after app opens
+    setTimeout(checkNotificationStatusAndShowModal, 1000);
   } else {
     console.log(`[PWA ${CURRENT_APP_VERSION}] Running in web browser. Install Gate active.`);
   }
@@ -342,7 +343,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v43)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v44)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -362,7 +363,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v43)
+// 8. RENDER KITCHEN MENU (v44)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -444,7 +445,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v43)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v44)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -500,7 +501,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v43)
+// 10. CUSTOMER LIVE MENU LISTENER (v44)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -601,7 +602,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v43)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v44)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -618,9 +619,6 @@ function placeOrder() {
     alert("Orders are closed for today. Tomorrow's menu will be available starting at 9:00 PM tonight!");
     return;
   }
-
-  // Backup check: always verify push access when customer attempts to place an order
-  r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
 
   if (!db) {
     alert("Database connection is not ready. Please refresh the page.");
@@ -817,7 +815,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v43)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v44)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -944,7 +942,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v43)
+// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v44)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -1122,7 +1120,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v43)
+// 14. LIVE KITCHEN ORDER LISTENER (v44)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
