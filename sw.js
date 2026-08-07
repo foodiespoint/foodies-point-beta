@@ -1,20 +1,20 @@
 // ==========================================================================
-// FOODIES POINT SERVICE WORKER (v45 - AUTO-UPDATING & MERGED ONESIGNAL SDK)
+// FOODIES POINT SERVICE WORKER (v46 - AUTO-UPDATING & MERGED ONESIGNAL SDK)
 // ==========================================================================
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 
-const CACHE_NAME = 'fp-cache-v45';
+const CACHE_NAME = 'fp-cache-v46';
 
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
-  '/foodies-point-beta/index.html?v=45',
-  '/foodies-point-beta/app.js?v=45',
-  '/foodies-point-beta/manifest.json?v=45',
+  '/foodies-point-beta/index.html?v=46',
+  '/foodies-point-beta/app.js?v=46',
+  '/foodies-point-beta/manifest.json?v=46',
   '/foodies-point-beta/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW v45] Installing new service worker...');
+  console.log('[SW v46] Installing new service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -25,13 +25,13 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW v45] Activating & wiping old caches...');
+  console.log('[SW v46] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[SW v45] Purging stale cache:', cacheName);
+            console.log('[SW v46] Purging stale cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
