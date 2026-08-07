@@ -1,18 +1,18 @@
 // ==========================================================================
-// FOODIES POINT SERVICE WORKER (v39 - AUTO-UPDATING & CACHE PURGING)
+// FOODIES POINT SERVICE WORKER (v40 - AUTO-UPDATING & CACHE PURGING)
 // ==========================================================================
-const CACHE_NAME = 'fp-cache-v39';
+const CACHE_NAME = 'fp-cache-v40';
 
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
-  '/foodies-point-beta/index.html?v=39',
-  '/foodies-point-beta/app.js?v=39',
-  '/foodies-point-beta/manifest.json?v=39',
+  '/foodies-point-beta/index.html?v=40',
+  '/foodies-point-beta/app.js?v=40',
+  '/foodies-point-beta/manifest.json?v=40',
   '/foodies-point-beta/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW v39] Installing new service worker...');
+  console.log('[SW v40] Installing new service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -23,13 +23,13 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW v39] Activating & wiping old caches...');
+  console.log('[SW v40] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[SW v39] Purging stale cache:', cacheName);
+            console.log('[SW v40] Purging stale cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
