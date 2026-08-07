@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v33)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v34)
 // ==========================================================================
 let db = null;
 
@@ -18,18 +18,17 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v33] Initialized successfully.");
+  console.log("[Firebase v34] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v33] Initialization error:", error);
+  console.error("[Firebase v34] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v33)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v34)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
   const hour = now.getHours();
-  // Returns true between 18:00 (6:00 PM) and 20:59:59 (before 9:00 PM)
   return (hour >= 18 && hour < 21);
 }
 
@@ -39,8 +38,6 @@ function checkDaily6PMReset() {
   const todayStr = now.toDateString();
   const lastResetDate = localStorage.getItem('fp_last_reset_date');
 
-  // STRICT WINDOW: Only trigger between 18:00 (6 PM) and 20:59:59 (before 9 PM).
-  // This guarantees any menu published by kitchen for tomorrow will NOT be wiped at 9 PM!
   if (hour >= 18 && hour < 21 && lastResetDate !== todayStr) {
     localStorage.setItem('fp_last_reset_date', todayStr);
     kitchenCheckedState = {};
@@ -48,7 +45,7 @@ function checkDaily6PMReset() {
     if (db) {
       db.ref('dailyMenu').remove()
         .then(() => {
-          console.log("[v33] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
+          console.log("[v34] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
           renderKitchenMenu();
         })
         .catch((err) => console.error("Error clearing menu at 6 PM:", err));
@@ -59,7 +56,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v33)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v34)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -77,12 +74,11 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v33] Initialization error:", error);
+  console.error("[OneSignal v34] Initialization error:", error);
 }
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
   try {
-    // 1. Trigger OneSignal push registration & slidedown prompt
     window.OneSignal = window.OneSignal || [];
     OneSignal.push(function() {
       if (typeof OneSignal.showSlidedownPrompt === 'function') {
@@ -93,56 +89,49 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
       }
     });
 
-    // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v33] Notification permission status:', permission);
+        console.log('[PWA v34] Notification permission status:', permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v33] Error requesting permission:', err);
+    console.error('[Notification v34] Error requesting permission:', err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v33)
+// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v34)
 // ==========================================================================
 let swRegistration = null;
 let isRefreshing = false;
 
 if ('serviceWorker' in navigator) {
-  // 1. Listen for when a new Service Worker takes control, then reload automatically
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (isRefreshing) return;
     isRefreshing = true;
-    console.log('[PWA v33] New service worker activated! Reloading screen to apply updates...');
+    console.log('[PWA v34] New service worker activated! Reloading screen to apply updates...');
     window.location.reload();
   });
 
-  // 2. Register Service Worker and check for waiting updates on launch
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=33', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=34', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v33] Registered successfully with scope:', reg.scope);
+      console.log('[SW v34] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
-
-      // Check for updates every time the app comes to the foreground
       reg.update();
 
-      // If a new worker is already waiting in the background, force it to activate
       if (reg.waiting) {
         reg.waiting.postMessage({ type: 'SKIP_WAITING' });
       }
 
-      // Detect when a new worker finishes installing while the app is open
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA v33] Update downloaded. Forcing immediate activation...');
+              console.log('[PWA v34] Update downloaded. Forcing immediate activation...');
               newWorker.postMessage({ type: 'SKIP_WAITING' });
             }
           });
@@ -150,13 +139,13 @@ if ('serviceWorker' in navigator) {
       });
     })
     .catch((err) => {
-      console.error('[SW v33] Registration failed:', err);
+      console.error('[SW v34] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v33)
+// 5. STANDALONE DETECTION & GATE ENGINE (v34)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -171,7 +160,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v33] User accepted installation prompt.');
+          console.log('[PWA v34] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -193,16 +182,13 @@ function enforceInstallGate() {
   const installGate = document.getElementById('install-gate-overlay');
   const appContent = document.getElementById('main-app-content');
 
-  // ONLY unlock if running from an installed home-screen app icon
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v33] Standalone PWA mode verified. Application unlocked.");
-    
-    // Automatically prompt for Notification Permission after opening installed PWA
+    console.log("[PWA v34] Standalone PWA mode verified. Application unlocked.");
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v33] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v34] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -344,7 +330,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v33 - KITCHEN ONLY)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v34)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -364,7 +350,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v33)
+// 8. RENDER KITCHEN MENU (v34)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -372,7 +358,6 @@ function renderKitchenMenu() {
 
   container.innerHTML = '';
 
-  // 1. RENDER ALL SELECTED/CHECKED ITEMS AT THE VERY TOP OF THE LIST
   const checkedDishes = MENU_ITEMS.filter(d => kitchenCheckedState[d.id]);
 
   checkedDishes.forEach((dish) => {
@@ -396,7 +381,6 @@ function renderKitchenMenu() {
     container.appendChild(card);
   });
 
-  // 2. RENDER UNCHECKED ITEMS GROUPED UNDER THEIR RESPECTIVE CATEGORIES BELOW
   const categories = [...new Set(MENU_ITEMS.map(item => item.category))];
   categories.forEach((cat) => {
     const uncheckedCatItems = MENU_ITEMS.filter(item => item.category === cat && !kitchenCheckedState[item.id]);
@@ -425,8 +409,6 @@ function renderKitchenMenu() {
       });
     }
   });
-
-  console.log("[Kitchen v33] Rendered menu with selected items cleanly at top & unchecked categories below.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -450,7 +432,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v33: WITH CONFIRMATION)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v34)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -478,7 +460,6 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully (${selectedCount} items)!`);
-      console.log(`[v33] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -498,7 +479,6 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v33] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -508,7 +488,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER
+// 10. CUSTOMER LIVE MENU LISTENER (v34)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -540,11 +520,9 @@ function renderCustomerMenuFromSnapshot(activeIds) {
   }
 
   let currentCategory = '';
-  let renderedCount = 0;
 
   MENU_ITEMS.forEach((dish) => {
     if (activeIds[dish.id]) {
-      renderedCount++;
       cart[dish.id] = cart[dish.id] || 0;
       const isOOS = (activeIds[dish.id] === 'OOS');
 
@@ -582,8 +560,6 @@ function renderCustomerMenuFromSnapshot(activeIds) {
       container.appendChild(card);
     }
   });
-
-  console.log(`[Customer v33] Displaying ${renderedCount} live published menu items.`);
 }
 
 function listenForCustomerLiveMenu() {
@@ -613,7 +589,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & FIRST-TIME CUSTOMER CREDENTIALS ENGINE (v33)
+// 11. ORDER SUBMISSION & PROFILE MODAL ENGINE (v34)
 // ==========================================================================
 function placeOrder() {
   if (isDuringBreakWindow()) {
@@ -813,7 +789,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, REAL-TIME MENU CHECKBOX SYNC & BACK BUTTON
+// 12. PERMANENT KITCHEN LOGIN, REAL-TIME MENU CHECKBOX SYNC & HEADER CONTROLS
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -871,22 +847,21 @@ function enterKitchenMode() {
   }
   isKitchenMode = true;
 
-  // Change Header Title: smaller, grey version displayed only in Kitchen Console
+  // 1. Completely hide the center "Foodies Point" title
   const titleEl = document.getElementById('main-app-title');
-  if (titleEl) {
-    titleEl.innerHTML = 'Foodies Point <span style="font-size: 0.75rem; color: #888; font-weight: normal;">v33</span>';
-  }
+  if (titleEl) titleEl.style.display = 'none';
 
-  // Hide customer view
+  // 2. Hide customer view
   document.getElementById('customer-view').style.display = 'none';
 
-  // Update Header Buttons: Show Back + Menu on Left, and Exit on Right
+  // 3. Update Header Buttons: Show left Back (←) & Menu, hide right Kitchen button, reveal v34 badge + Exit
   document.getElementById('header-kitchen-btn').style.display = 'none';
-  document.getElementById('header-back-btn').style.display = 'inline-block';
+  document.getElementById('header-back-btn').style.display = 'inline-flex';
   document.getElementById('header-drawer-btn').style.display = 'inline-block';
+  document.getElementById('kitchen-version-badge').style.display = 'inline-block';
   document.getElementById('header-exit-btn').style.display = 'inline-block';
 
-  // Activate Fixed 50/50 Split Screen Overlay ('flex') docked below the 56px header
+  // 4. Activate Fixed 50/50 Split Screen Overlay ('flex')
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'flex';
 
@@ -906,26 +881,26 @@ function exitKitchenMode(triggerHistoryBack = true) {
   if (!isKitchenMode) return;
   isKitchenMode = false;
 
-  // Always close drawer when exiting kitchen
   toggleKitchenDrawer(false);
 
   if (triggerHistoryBack && window.location.hash === '#kitchen') {
     history.back();
   }
 
-  // Restore Customer Mode Header Title (without grey version number)
+  // 1. Restore the center "Foodies Point" title
   const titleEl = document.getElementById('main-app-title');
-  if (titleEl) titleEl.textContent = 'Foodies Point';
+  if (titleEl) titleEl.style.display = 'block';
 
   const kitchenView = document.getElementById('kitchen-view');
   if (kitchenView) kitchenView.style.display = 'none';
 
   document.getElementById('customer-view').style.display = 'flex';
 
-  // Restore Customer Mode Header Buttons (Kitchen button pinned right, Drawer hidden)
+  // 2. Restore Customer Mode Header Buttons (Kitchen button visible, Kitchen controls & badge hidden)
   document.getElementById('header-kitchen-btn').style.display = 'inline-block';
   document.getElementById('header-back-btn').style.display = 'none';
   document.getElementById('header-drawer-btn').style.display = 'none';
+  document.getElementById('kitchen-version-badge').style.display = 'none';
   document.getElementById('header-exit-btn').style.display = 'none';
 
   if (db) {
@@ -934,7 +909,6 @@ function exitKitchenMode(triggerHistoryBack = true) {
   }
 }
 
-// INTERCEPT PHONE PHYSICAL/SWIPE BACK BUTTON
 window.addEventListener('popstate', () => {
   if (isKitchenMode && window.location.hash !== '#kitchen') {
     exitKitchenMode(false);
@@ -942,7 +916,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 13. LIVE KITCHEN ORDER LISTENER
+// 13. LIVE KITCHEN ORDER LISTENER (v34)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
