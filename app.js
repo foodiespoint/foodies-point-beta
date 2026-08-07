@@ -1,5 +1,5 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v32)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v33)
 // ==========================================================================
 let db = null;
 
@@ -18,13 +18,13 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log("[Firebase v32] Initialized successfully.");
+  console.log("[Firebase v33] Initialized successfully.");
 } catch (error) {
-  console.error("[Firebase v32] Initialization error:", error);
+  console.error("[Firebase v33] Initialization error:", error);
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v32)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v33)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -48,7 +48,7 @@ function checkDaily6PMReset() {
     if (db) {
       db.ref('dailyMenu').remove()
         .then(() => {
-          console.log("[v32] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
+          console.log("[v33] 6:00 PM reached: Kitchen list checks reset & live menu cleared.");
           renderKitchenMenu();
         })
         .catch((err) => console.error("Error clearing menu at 6 PM:", err));
@@ -59,7 +59,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v32)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP & AUTOMATIC FIRST-LAUNCH PROMPT (v33)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -77,7 +77,7 @@ try {
     });
   });
 } catch (error) {
-  console.error("[OneSignal v32] Initialization error:", error);
+  console.error("[OneSignal v33] Initialization error:", error);
 }
 
 function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
@@ -96,16 +96,16 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
     // 2. Fallback: Prompt OS Notification Dialog directly on standalone mobile PWAs
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
-        console.log('[PWA v32] Notification permission status:', permission);
+        console.log('[PWA v33] Notification permission status:', permission);
       });
     }
   } catch (err) {
-    console.error('[Notification v32] Error requesting permission:', err);
+    console.error('[Notification v33] Error requesting permission:', err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v32)
+// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v33)
 // ==========================================================================
 let swRegistration = null;
 let isRefreshing = false;
@@ -115,17 +115,17 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (isRefreshing) return;
     isRefreshing = true;
-    console.log('[PWA v32] New service worker activated! Reloading screen to apply updates...');
+    console.log('[PWA v33] New service worker activated! Reloading screen to apply updates...');
     window.location.reload();
   });
 
   // 2. Register Service Worker and check for waiting updates on launch
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=32', {
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js?v=33', {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log('[SW v32] Registered successfully with scope:', reg.scope);
+      console.log('[SW v33] Registered successfully with scope:', reg.scope);
       swRegistration = reg;
 
       // Check for updates every time the app comes to the foreground
@@ -142,7 +142,7 @@ if ('serviceWorker' in navigator) {
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA v32] Update downloaded. Forcing immediate activation...');
+              console.log('[PWA v33] Update downloaded. Forcing immediate activation...');
               newWorker.postMessage({ type: 'SKIP_WAITING' });
             }
           });
@@ -150,13 +150,13 @@ if ('serviceWorker' in navigator) {
       });
     })
     .catch((err) => {
-      console.error('[SW v32] Registration failed:', err);
+      console.error('[SW v33] Registration failed:', err);
     });
   });
 }
 
 // ==========================================================================
-// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v32)
+// 5. INVERTED STANDALONE DETECTION & GATE ENGINE (v33)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -171,7 +171,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredInstallPrompt.prompt();
       deferredInstallPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-          console.log('[PWA v32] User accepted installation prompt.');
+          console.log('[PWA v33] User accepted installation prompt.');
         }
         deferredInstallPrompt = null;
       });
@@ -197,12 +197,12 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log("[PWA v32] Standalone PWA mode verified. Application unlocked.");
+    console.log("[PWA v33] Standalone PWA mode verified. Application unlocked.");
     
     // Automatically prompt for Notification Permission after opening installed PWA
     setTimeout(r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, 1500);
   } else {
-    console.log("[PWA v32] Running in web browser. Irremovable Install Gate remains locked.");
+    console.log("[PWA v33] Running in web browser. Irremovable Install Gate remains locked.");
   }
 }
 
@@ -344,7 +344,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v32 - KITCHEN ONLY)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v33 - KITCHEN ONLY)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -364,7 +364,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v32)
+// 8. RENDER KITCHEN MENU (v33)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -426,7 +426,7 @@ function renderKitchenMenu() {
     }
   });
 
-  console.log("[Kitchen v32] Rendered menu with selected items cleanly at top & unchecked categories below.");
+  console.log("[Kitchen v33] Rendered menu with selected items cleanly at top & unchecked categories below.");
 }
 
 function toggleKitchenItem(dishId, isChecked) {
@@ -450,7 +450,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v32: WITH CONFIRMATION)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v33: WITH CONFIRMATION)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -478,7 +478,7 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully (${selectedCount} items)!`);
-      console.log(`[v32] Published dailyMenu to Firebase.`);
+      console.log(`[v33] Published dailyMenu to Firebase.`);
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -498,7 +498,7 @@ function clearDailyMenu() {
         kitchenCheckedState = {};
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
-        console.log(`[v32] Cleared dailyMenu from Firebase.`);
+        console.log(`[v33] Cleared dailyMenu from Firebase.`);
       })
       .catch((error) => {
         console.error("Error clearing daily menu:", error);
@@ -583,7 +583,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     }
   });
 
-  console.log(`[Customer v32] Displaying ${renderedCount} live published menu items.`);
+  console.log(`[Customer v33] Displaying ${renderedCount} live published menu items.`);
 }
 
 function listenForCustomerLiveMenu() {
@@ -613,7 +613,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & FIRST-TIME CUSTOMER CREDENTIALS ENGINE (v32)
+// 11. ORDER SUBMISSION & FIRST-TIME CUSTOMER CREDENTIALS ENGINE (v33)
 // ==========================================================================
 function placeOrder() {
   if (isDuringBreakWindow()) {
@@ -874,7 +874,7 @@ function enterKitchenMode() {
   // Change Header Title: smaller, grey version displayed only in Kitchen Console
   const titleEl = document.getElementById('main-app-title');
   if (titleEl) {
-    titleEl.innerHTML = 'Foodies Point <span style="font-size: 0.75rem; color: #888; font-weight: normal;">v32</span>';
+    titleEl.innerHTML = 'Foodies Point <span style="font-size: 0.75rem; color: #888; font-weight: normal;">v33</span>';
   }
 
   // Hide customer view
