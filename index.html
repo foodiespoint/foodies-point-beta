@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v32 - LOCKED TO REPO PATH)       -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v33 - LOCKED TO REPO PATH)      -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=32">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=33">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v32)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v33 - VERIFIED CSS SYNTAX)        -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -56,8 +56,8 @@
     }
 
     /* ====================================================================== */
-    /* IRREMOVABLE INSTALL GATE OVERLAY (v32 - BRIEF & CENTERED)             */
-    /* ====================================================================== -->
+    /* IRREMOVABLE INSTALL GATE OVERLAY (v33 - BRIEF & CENTERED)              */
+    /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
       position: fixed;
@@ -107,7 +107,7 @@
 
     /* ====================================================================== */
     /* MASTER APP CONTAINER (HIDDEN BY DEFAULT - UNLOCKED ONLY BY STANDALONE) */
-    /* ====================================================================== -->
+    /* ====================================================================== */
     #main-app-content {
       display: none !important;
     }
@@ -158,8 +158,8 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v32 - GUARANTEED FIXED BOUNDARIES)          */
-    /* ====================================================================== -->
+    /* 50/50 SPLIT CUSTOMER PAGE (v33 - GUARANTEED FIXED BOUNDARIES)          */
+    /* ====================================================================== */
     #customer-view {
       display: flex; /* Controlled via app.js -> 'flex' */
       position: fixed;
@@ -282,7 +282,7 @@
       font-size: 0.95rem;
     }
 
-    /* OUT OF STOCK BUTTONS & BADGES (v32) */
+    /* OUT OF STOCK BUTTONS & BADGES (v33) */
     .btn-oos {
       border: 1px solid var(--primary-color);
       background: var(--white);
@@ -413,7 +413,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v32 - DOCKED BELOW 56PX HEADER)     */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v33 - DOCKED BELOW 56PX HEADER)     */
     /* ====================================================================== */
     #kitchen-view {
       display: none; /* Controlled via app.js -> 'flex' */
@@ -585,7 +585,7 @@
     }
 
     /* ====================================================================== */
-    /* KITCHEN LEFT SLIDER DRAWER (v32)                                       */
+    /* KITCHEN LEFT SLIDER DRAWER (v33 - KITCHEN ONLY)                        */
     /* ====================================================================== */
     .btn-kitchen-menu {
       border: 1px solid var(--border-color);
@@ -596,16 +596,17 @@
       font-weight: 600;
       cursor: pointer;
       z-index: 2;
+      margin-left: 6px;
     }
 
     .kitchen-drawer-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.45);
       z-index: 2500;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.25s ease;
     }
 
     .kitchen-drawer-backdrop.active {
@@ -621,8 +622,8 @@
       width: 280px;
       background: var(--white);
       z-index: 2600;
-      box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
-      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 4px 0 18px rgba(0, 0, 0, 0.18);
+      transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
       padding: 20px;
@@ -644,6 +645,7 @@
     .drawer-header h3 {
       color: var(--primary-color);
       font-size: 1.15rem;
+      font-weight: 700;
     }
 
     .drawer-close-btn {
@@ -652,6 +654,7 @@
       font-size: 1.3rem;
       cursor: pointer;
       color: #666;
+      padding: 4px;
     }
 
     .drawer-content {
@@ -665,7 +668,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v32 - BRIEF & CENTER-ALIGNED)     -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v33 - BRIEF & CENTER-ALIGNED)     -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -680,15 +683,17 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v32 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v33 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
     <!-- APP HEADER -->
     <header class="app-header" id="app-header">
-      <!-- Left Side Buttons -->
-      <button class="btn-kitchen" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">← Back</button>
-      <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenDrawer()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
+      <!-- Left Side Buttons (Visible only in Kitchen Mode) -->
+      <div style="display: flex; align-items: center; z-index: 2;">
+        <button class="btn-kitchen" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">← Back</button>
+        <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenDrawer()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
+      </div>
 
       <!-- Center Title (Always Visible - Grey/smaller version shown only in Kitchen Mode) -->
       <div class="app-title" id="main-app-title">Foodies Point</div>
@@ -699,7 +704,7 @@
     </header>
 
     <!-- ==================================================================== -->
-    <!-- CUSTOMER LIVE MENU VIEW (v32 - 50% TOP MENU / 50% BOTTOM HISTORY)    -->
+    <!-- CUSTOMER LIVE MENU VIEW (v33 - 50% TOP MENU / 50% BOTTOM HISTORY)    -->
     <!-- ==================================================================== -->
     <main id="customer-view">
       
@@ -733,7 +738,7 @@
     </main>
 
     <!-- ==================================================================== -->
-    <!-- KITCHEN CONSOLE VIEW (v32 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
+    <!-- KITCHEN CONSOLE VIEW (v33 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
     <!-- ==================================================================== -->
     <section id="kitchen-view">
       
@@ -768,15 +773,15 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 6. KITCHEN LEFT SLIDER DRAWER & BACKDROP (v32)                         -->
+  <!-- 6. KITCHEN LEFT SLIDER DRAWER & BACKDROP (v33 - KITCHEN ONLY)          -->
   <!-- ====================================================================== -->
-  <div class="kitchen-drawer-backdrop" id="kitchen-drawer-backdrop" onclick="toggleKitchenDrawer()"></div>
+  <div class="kitchen-drawer-backdrop" id="kitchen-drawer-backdrop" onclick="toggleKitchenDrawer(false)"></div>
   <aside class="kitchen-left-drawer" id="kitchen-left-drawer">
     <div class="drawer-header">
       <h3>Kitchen Menu</h3>
-      <button class="drawer-close-btn" onclick="toggleKitchenDrawer()" aria-label="Close Drawer">✕</button>
+      <button class="drawer-close-btn" onclick="toggleKitchenDrawer(false)" aria-label="Close Drawer">✕</button>
     </div>
-    <div class="drawer-content">
+    <div class="drawer-content" id="kitchen-drawer-content">
       <p style="font-style: italic; color: #888;">Coming soon...</p>
     </div>
   </aside>
@@ -822,8 +827,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 9. MAIN APP SCRIPT (v32 - LOCKED TO /foodies-point-beta/)             -->
+  <!-- 9. MAIN APP SCRIPT (v33 - LOCKED TO /foodies-point-beta/)             -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=32"></script>
+  <script src="/foodies-point-beta/app.js?v=33"></script>
 </body>
 </html>
