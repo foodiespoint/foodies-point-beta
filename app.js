@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v37)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v38)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v37";
+const CURRENT_APP_VERSION = "v38";
 let db = null;
 
 try {
@@ -25,7 +25,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v37)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v38)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -57,7 +57,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v37)
+// 3. ONESIGNAL PUSH NOTIFICATION SETUP (v38)
 // ==========================================================================
 try {
   window.OneSignal = window.OneSignal || [];
@@ -101,7 +101,7 @@ function r9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8() {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v37)
+// 4. SERVICE WORKER REGISTRATION & AUTO-RELOAD ENGINE (v38)
 // ==========================================================================
 let swRegistration = null;
 let isRefreshing = false;
@@ -115,7 +115,7 @@ if ('serviceWorker' in navigator) {
   });
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=37`, {
+    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=38`, {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
@@ -146,7 +146,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v37)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v38)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -333,7 +333,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v37)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v38)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -353,7 +353,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v37)
+// 8. RENDER KITCHEN MENU (v38)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -435,7 +435,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v37)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v38)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -491,7 +491,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v37)
+// 10. CUSTOMER LIVE MENU LISTENER (v38)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -592,7 +592,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v37)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v38)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -805,7 +805,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v37)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v38)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -932,7 +932,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & CLEAR LEDGER ENGINE (v37)
+// 13. DEDICATED KITCHEN SUB-PAGES & RELIABLE CLEAR LEDGER ENGINE (v38)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -969,26 +969,40 @@ function closeKitchenSubPage(triggerBack = true) {
   }
 }
 
+// 1. BULLETPROOF BULK-DELETE ENGINE FOR PAYMENT RECORDS
 function clearPaymentLedger() {
-  if (!db) return;
+  if (!db) {
+    alert("Database connection is not ready. Please refresh the page.");
+    return;
+  }
   if (confirm("Are you sure you want to clear all completed/accepted payment entries from the database?")) {
     db.ref('orders').once('value').then((snapshot) => {
       const orders = snapshot.val();
-      if (!orders) return;
-      const updates = {};
+      if (!orders) {
+        alert("No payment entries found to clear.");
+        return;
+      }
+      
+      const deletePromises = [];
       Object.keys(orders).forEach((key) => {
         const o = orders[key];
         if (o.status === 'COMPLETED' || o.status === 'ACCEPTED') {
-          updates[key] = null;
+          deletePromises.push(db.ref(`orders/${key}`).remove());
         }
       });
-      return db.ref('orders').update(updates);
-    }).then(() => {
-      alert("Payment ledger entries cleared!");
-      fetchAndRenderPaymentLedger();
+
+      if (deletePromises.length === 0) {
+        alert("No completed or accepted orders to clear!");
+        return;
+      }
+
+      return Promise.all(deletePromises).then(() => {
+        alert(`Successfully cleared ${deletePromises.length} payment ledger entries!`);
+        fetchAndRenderPaymentLedger();
+      });
     }).catch((err) => {
       console.error("Error clearing payment ledger:", err);
-      alert("Could not clear payment entries.");
+      alert("Could not clear payment entries. Check your network connection.");
     });
   }
 }
@@ -1034,6 +1048,7 @@ function fetchAndRenderCustomerDirectory() {
     });
 }
 
+// 2. RENDER CLEAR BUTTON ON THE OTHER SIDE OF "RECENT BILLING ENTRIES"
 function fetchAndRenderPaymentLedger() {
   const container = document.getElementById('payment-ledger-container');
   if (!container || !db) return;
@@ -1061,13 +1076,17 @@ function fetchAndRenderPaymentLedger() {
         }
       });
 
+      // Clear button is now aligned on the opposite side of the "Recent Billing Entries" heading
       container.innerHTML = `
         <div class="payment-summary-box">
           <div style="font-size:0.85rem; color:#666; text-transform:uppercase; font-weight:700;">Active Orders Billing Total</div>
           <div style="font-size:1.8rem; font-weight:800; color:#FF4B3A; margin:4px 0;">₹${totalRevenue}</div>
           <div style="font-size:0.85rem; color:#2E7D32;">✔ ${completedCount} Orders Accepted/Completed</div>
         </div>
-        <h3 style="font-size:1rem; margin: 12px 0 8px 0; color:#2D2D2D;">Recent Billing Entries</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px 0;">
+          <h3 style="font-size:1rem; color:#2D2D2D; margin: 0;">Recent Billing Entries</h3>
+          <button type="button" class="btn-clear-menu" onclick="clearPaymentLedger()" style="padding: 6px 12px; font-size: 0.8rem; width: auto; flex: none;">🗑️ Clear Entries</button>
+        </div>
       `;
 
       orderRows.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -1102,7 +1121,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v37)
+// 14. LIVE KITCHEN ORDER LISTENER (v38)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
