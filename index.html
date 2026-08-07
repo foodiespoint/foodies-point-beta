@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v43 - LOCKED TO REPO PATH)      -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v44 - LOCKED TO REPO PATH)      -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=43">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=44">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v43 - VERIFIED CSS SYNTAX)        -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v44 - VERIFIED CSS SYNTAX)        -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -55,7 +55,7 @@
     }
 
     /* ====================================================================== */
-    /* FIXED INSTALL GATE OVERLAY (v43 - BUTTON VISIBLE BY DEFAULT)           */
+    /* FIXED INSTALL GATE OVERLAY (v44)                                       */
     /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
@@ -201,7 +201,7 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v43)                                        */
+    /* 50/50 SPLIT CUSTOMER PAGE (v44)                                        */
     /* ====================================================================== */
     #customer-view {
       display: flex;
@@ -449,7 +449,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v43)                                */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v44)                                */
     /* ====================================================================== */
     #kitchen-view {
       display: none;
@@ -767,7 +767,7 @@
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v43)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v44)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -785,7 +785,7 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v43)                                          -->
+  <!-- 5. MASTER APP CONTAINER (v44)                                          -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
@@ -799,7 +799,7 @@
 
       <div class="header-right-group">
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
-        <span id="kitchen-version-badge">v43</span>
+        <span id="kitchen-version-badge">v44</span>
         <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
       </div>
     </header>
@@ -847,7 +847,7 @@
     </section>
 
     <!-- ==================================================================== -->
-    <!-- PAGE 1: CUSTOMER DATA DIRECTORY PAGE (v43)                           -->
+    <!-- PAGE 1: CUSTOMER DATA DIRECTORY PAGE (v44)                           -->
     <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="customer-data-view">
       <div class="subpage-header">
@@ -859,7 +859,7 @@
     </section>
 
     <!-- ==================================================================== -->
-    <!-- PAGE 2: PAYMENT RECORDS PAGE (v43)                                   -->
+    <!-- PAGE 2: PAYMENT RECORDS PAGE (v44)                                   -->
     <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="payment-details-view">
       <div class="subpage-header">
@@ -892,6 +892,25 @@
     </div>
   </aside>
 
+  <!-- ====================================================================== -->
+  <!-- 6. NOTIFICATION PERMISSION CARD MODAL (v44)                            -->
+  <!-- ====================================================================== -->
+  <div class="modal-overlay" id="notification-permission-modal">
+    <div class="modal-card">
+      <div style="font-size: 2.8rem; margin-bottom: 8px;">🔔</div>
+      <h3 style="color: var(--primary-color); font-size: 1.2rem; font-weight: 800;">Enable Notifications</h3>
+      <p style="font-size: 0.9rem; color: #555; margin: 8px 0 18px 0; line-height: 1.4;">
+        Get real-time updates when your order is accepted, ready for pickup, or when today's live menu goes live!
+      </p>
+      
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-action" style="background: #EAEAEA;" onclick="closeNotificationModal()">Not Now</button>
+        <button class="btn-action btn-complete" onclick="requestNotificationPermissionOnGesture()">🔔 Allow Notifications</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASSCODE MODAL -->
   <div class="modal-overlay" id="pin-modal">
     <div class="modal-card">
       <h3>Kitchen Console</h3>
@@ -909,6 +928,7 @@
     </div>
   </div>
 
+  <!-- PROFILE MODAL -->
   <div class="modal-overlay" id="profile-modal">
     <div class="modal-card">
       <h3>Customer Details</h3>
@@ -927,8 +947,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 9. MAIN APP SCRIPT (v43)                                               -->
+  <!-- 7. MAIN APP SCRIPT (v44)                                               -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=43"></script>
+  <script src="/foodies-point-beta/app.js?v=44"></script>
 </body>
 </html>
