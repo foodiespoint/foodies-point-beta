@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v34 - LOCKED TO REPO PATH)      -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v35 - LOCKED TO REPO PATH)      -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=34">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=35">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -24,7 +24,7 @@
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v34 - VERIFIED CSS SYNTAX)        -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v35 - VERIFIED CSS SYNTAX)        -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -43,7 +43,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* DISABLE DRAG-DOWN RELOAD (PULL-TO-REFRESH) */
     html, body {
       overscroll-behavior-y: none;
       overscroll-behavior: none;
@@ -56,7 +55,7 @@
     }
 
     /* ====================================================================== */
-    /* IRREMOVABLE INSTALL GATE OVERLAY (v34 - BRIEF & CENTERED)              */
+    /* IRREMOVABLE INSTALL GATE OVERLAY (v35)                                 */
     /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
@@ -106,7 +105,7 @@
     }
 
     /* ====================================================================== */
-    /* MASTER APP CONTAINER (HIDDEN BY DEFAULT - UNLOCKED ONLY BY STANDALONE) */
+    /* MASTER APP CONTAINER                                                   */
     /* ====================================================================== */
     #main-app-content {
       display: none !important;
@@ -126,7 +125,6 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
-    /* Left Header Controls Group (Back arrow + Menu button) */
     .header-left-group {
       display: flex;
       align-items: center;
@@ -134,7 +132,6 @@
       z-index: 2;
     }
 
-    /* Right Header Controls Group (Version tag + Exit / Kitchen button) */
     .header-right-group {
       display: flex;
       align-items: center;
@@ -152,7 +149,6 @@
       transform: translateX(-50%);
     }
 
-    /* Back Arrow Button (Icon-only, circular/pill feel) */
     .btn-back-arrow {
       border: 1px solid var(--border-color);
       background: var(--bg-light);
@@ -189,7 +185,6 @@
       cursor: pointer;
     }
 
-    /* Subtle version number displayed near Exit button */
     #kitchen-version-badge {
       font-size: 0.78rem;
       font-weight: 600;
@@ -207,7 +202,7 @@
     }
 
     /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE (v34)                                        */
+    /* 50/50 SPLIT CUSTOMER PAGE (v35)                                        */
     /* ====================================================================== */
     #customer-view {
       display: flex;
@@ -455,7 +450,7 @@
     }
 
     /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v34)                                */
+    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW (v35)                                */
     /* ====================================================================== */
     #kitchen-view {
       display: none;
@@ -550,7 +545,161 @@
       color: var(--white);
     }
 
-    /* PASSCODE MODAL & EYE TOGGLE */
+    /* ====================================================================== */
+    /* DEDICATED FULL-SCREEN KITCHEN SUB-PAGES (v35 - CUSTOMERS & PAYMENTS)   */
+    /* ====================================================================== */
+    .kitchen-subpage {
+      display: none; /* Controlled via app.js -> 'flex' */
+      position: fixed;
+      top: 56px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1700;
+      background: var(--bg-light);
+      flex-direction: column;
+      max-width: 600px;
+      margin: 0 auto;
+      overflow-y: auto;
+      padding: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .subpage-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      background: var(--bg-light);
+      z-index: 10;
+    }
+
+    .subpage-header h2 {
+      color: var(--primary-color);
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    /* Customer Data Row Card */
+    .customer-data-card {
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .version-badge {
+      background: #E3F2FD;
+      color: #1565C0;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    /* Payment Summary Cards */
+    .payment-summary-box {
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    /* ====================================================================== */
+    /* KITCHEN LEFT SLIDER DRAWER (v35 - CUSTOMER DATA & PAYMENT OPTIONS)     */
+    /* ====================================================================== */
+    .kitchen-drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 2500;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .kitchen-drawer-backdrop.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .kitchen-left-drawer {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: -280px;
+      width: 280px;
+      background: var(--white);
+      z-index: 2600;
+      box-shadow: 4px 0 18px rgba(0, 0, 0, 0.18);
+      transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .kitchen-left-drawer.open {
+      left: 0;
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .drawer-header h3 {
+      color: var(--primary-color);
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .drawer-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: #666;
+      padding: 4px;
+    }
+
+    .drawer-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-light);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.2s ease;
+    }
+
+    .drawer-nav-item:active {
+      background: #EAEAEA;
+    }
+
+    /* PASSCODE & PROFILE MODALS */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -602,7 +751,6 @@
       padding: 0;
     }
 
-    /* CUSTOMER CREDENTIALS INPUT MODAL */
     .form-field-group {
       display: flex;
       flex-direction: column;
@@ -623,80 +771,12 @@
     .form-field-group input:focus {
       border-color: var(--primary-color);
     }
-
-    /* ====================================================================== */
-    /* KITCHEN LEFT SLIDER DRAWER (v34)                                       */
-    /* ====================================================================== */
-    .kitchen-drawer-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      z-index: 2500;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-    }
-
-    .kitchen-drawer-backdrop.active {
-      display: block;
-      opacity: 1;
-    }
-
-    .kitchen-left-drawer {
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: -280px;
-      width: 280px;
-      background: var(--white);
-      z-index: 2600;
-      box-shadow: 4px 0 18px rgba(0, 0, 0, 0.18);
-      transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-    }
-
-    .kitchen-left-drawer.open {
-      left: 0;
-    }
-
-    .drawer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .drawer-header h3 {
-      color: var(--primary-color);
-      font-size: 1.15rem;
-      font-weight: 700;
-    }
-
-    .drawer-close-btn {
-      background: transparent;
-      border: none;
-      font-size: 1.3rem;
-      cursor: pointer;
-      color: #666;
-      padding: 4px;
-    }
-
-    .drawer-content {
-      flex: 1;
-      overflow-y: auto;
-      color: #666;
-      font-size: 0.95rem;
-    }
   </style>
 </head>
 <body>
 
   <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v34)                              -->
+  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY (v35)                              -->
   <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
@@ -709,38 +789,28 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v34 - UNLOCKED ONLY IN STANDALONE MODE)       -->
+  <!-- 5. MASTER APP CONTAINER (v35 - UNLOCKED ONLY IN STANDALONE MODE)       -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
-    <!-- APP HEADER (v34 - REDESIGNED KITCHEN CONTROLS & VERSION BADGE) -->
+    <!-- APP HEADER (v35) -->
     <header class="app-header" id="app-header">
-      
-      <!-- Left Side Buttons Group (Visible only in Kitchen Mode) -->
       <div class="header-left-group">
-        <!-- Arrow-only Back Button -->
         <button class="btn-back-arrow" id="header-back-btn" onclick="exitKitchenMode(true)" style="display: none;" aria-label="Back to Customer View">←</button>
-        <!-- Distinct Menu Drawer Button -->
         <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenDrawer()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
 
-      <!-- Center Title (Visible in Customer Mode, Hidden in Kitchen Mode) -->
       <div class="app-title" id="main-app-title">Foodies Point</div>
 
-      <!-- Right Side Buttons Group -->
       <div class="header-right-group">
-        <!-- Kitchen Enter Button (Customer Mode) -->
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
-        <!-- Version Badge near Exit Button (Kitchen Mode Only) -->
-        <span id="kitchen-version-badge">v34</span>
-        <!-- Exit Button (Kitchen Mode Only) -->
+        <span id="kitchen-version-badge">v35</span>
         <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
       </div>
-
     </header>
 
     <!-- ==================================================================== -->
-    <!-- CUSTOMER LIVE MENU VIEW (v34 - 50% TOP MENU / 50% BOTTOM HISTORY)    -->
+    <!-- CUSTOMER LIVE MENU VIEW (v35)                                        -->
     <!-- ==================================================================== -->
     <main id="customer-view">
       <div class="customer-half customer-upper">
@@ -767,7 +837,7 @@
     </main>
 
     <!-- ==================================================================== -->
-    <!-- KITCHEN CONSOLE VIEW (v34 - 50% TOP MENU / 50% BOTTOM ORDERS)        -->
+    <!-- KITCHEN CONSOLE VIEW (v35)                                           -->
     <!-- ==================================================================== -->
     <section id="kitchen-view">
       <div class="kitchen-half kitchen-upper">
@@ -787,10 +857,36 @@
       </div>
     </section>
 
+    <!-- ==================================================================== -->
+    <!-- PAGE 1: CUSTOMER DATA & APP VERSION DIRECTORY PAGE (v35)             -->
+    <!-- ==================================================================== -->
+    <section class="kitchen-subpage" id="customer-data-view">
+      <div class="subpage-header">
+        <button class="btn-back-arrow" onclick="closeKitchenSubPage()" aria-label="Back to Kitchen Console">←</button>
+        <h2>Customer App Versions</h2>
+      </div>
+      <div id="customer-directory-container">
+        <p style="text-align:center; padding: 30px; color:#666;">Loading customer directory...</p>
+      </div>
+    </section>
+
+    <!-- ==================================================================== -->
+    <!-- PAGE 2: CUSTOMER PAYMENT DETAILS & LEDGER PAGE (v35)                 -->
+    <!-- ==================================================================== -->
+    <section class="kitchen-subpage" id="payment-details-view">
+      <div class="subpage-header">
+        <button class="btn-back-arrow" onclick="closeKitchenSubPage()" aria-label="Back to Kitchen Console">←</button>
+        <h2>Payment Records & Ledger</h2>
+      </div>
+      <div id="payment-ledger-container">
+        <p style="text-align:center; padding: 30px; color:#666;">Loading payment records...</p>
+      </div>
+    </section>
+
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 6. KITCHEN LEFT SLIDER DRAWER & BACKDROP (v34)                         -->
+  <!-- 6. KITCHEN LEFT SLIDER DRAWER (v35 - TWO INTERACTIVE NAVIGATION CARDS) -->
   <!-- ====================================================================== -->
   <div class="kitchen-drawer-backdrop" id="kitchen-drawer-backdrop" onclick="toggleKitchenDrawer(false)"></div>
   <aside class="kitchen-left-drawer" id="kitchen-left-drawer">
@@ -798,8 +894,19 @@
       <h3>Kitchen Menu</h3>
       <button class="drawer-close-btn" onclick="toggleKitchenDrawer(false)" aria-label="Close Drawer">✕</button>
     </div>
-    <div class="drawer-content" id="kitchen-drawer-content">
-      <p style="font-style: italic; color: #888;">Coming soon...</p>
+    
+    <div class="drawer-content">
+      <!-- Option 1: Customer Data & App Versions -->
+      <button type="button" class="drawer-nav-item" onclick="openCustomerDataPage()">
+        <span>👥</span>
+        <span>Customer Data & Versions</span>
+      </button>
+
+      <!-- Option 2: Customer Payment Details -->
+      <button type="button" class="drawer-nav-item" onclick="openPaymentDetailsPage()">
+        <span>💳</span>
+        <span>Customer Payment Details</span>
+      </button>
     </div>
   </aside>
 
@@ -844,8 +951,8 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 9. MAIN APP SCRIPT (v34)                                               -->
+  <!-- 9. MAIN APP SCRIPT (v35)                                               -->
   <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=34"></script>
+  <script src="/foodies-point-beta/app.js?v=35"></script>
 </body>
 </html>
