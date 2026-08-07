@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v45)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v46)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v45";
+const CURRENT_APP_VERSION = "v46";
 let db = null;
 
 try {
@@ -25,7 +25,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v45)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v46)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -57,7 +57,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL v16 NOTIFICATION ENGINE & MULTI-TRIGGER PROMPTS (v45)
+// 3. ONESIGNAL v16 NOTIFICATION ENGINE & PROMPT CONFIG (v46)
 // ==========================================================================
 try {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -68,17 +68,29 @@ try {
       notifyButton: {
         enable: false,
       },
-      // ENABLING ONESIGNAL'S NATIVE AUTO-SLIDEDOWN PROMPT
+      // Official OneSignal v16 Array Schema for Slidedown Prompts
       promptOptions: {
         slidedown: {
-          enabled: true,
-          autoPrompt: true,
-          timeDelay: 1,
-          pageViews: 1
+          prompts: [
+            {
+              type: "push",
+              autoPrompt: true,
+              text: {
+                actionMessage: "Receive real-time order status and live menu updates!",
+                acceptButton: "Allow",
+                cancelButton: "Not Now"
+              },
+              delay: {
+                pageViews: 1,
+                timeDelay: 1
+              }
+            }
+          ]
         }
       },
       serviceWorkerParam: { scope: "/foodies-point-beta/" },
-      serviceWorkerPath: "foodies-point-beta/sw.js"
+      // Leading slash prevents subfolder duplication (no more 404 errors!)
+      serviceWorkerPath: "/foodies-point-beta/sw.js"
     });
     console.log(`[OneSignal ${CURRENT_APP_VERSION}] v16 SDK initialized successfully.`);
   });
@@ -90,10 +102,7 @@ function checkNotificationStatusAndShowModal() {
   try {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
-      const hasOSPermission = ('Notification' in window && Notification.permission !== 'default');
       const isOneSignalSubscribed = OneSignal.Notifications && OneSignal.Notifications.permission;
-
-      // Only show the custom modal if the user isn't subscribed and hasn't blocked notifications yet
       if (!isOneSignalSubscribed && ('Notification' in window && Notification.permission === 'default')) {
         const modal = document.getElementById('notification-permission-modal');
         if (modal) modal.style.display = 'flex';
@@ -109,34 +118,26 @@ function closeNotificationModal() {
   if (modal) modal.style.display = 'none';
 }
 
-function requestNotificationPermissionOnGesture() {
+// MANUAL USER GESTURE TRIGGER (Tapped from modal or "🔔 Alerts" header button)
+function triggerManualPushPrompt() {
   closeNotificationModal();
 
   try {
-    // 1. Trigger OneSignal v16 Native Permission and Slidedown Banner
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
-      if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
-        await OneSignal.Notifications.requestPermission();
-      }
       if (OneSignal.Slidedown && typeof OneSignal.Slidedown.promptPush === 'function') {
         await OneSignal.Slidedown.promptPush({ force: true });
+      } else if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
+        await OneSignal.Notifications.requestPermission();
       }
     });
-
-    // 2. Direct Native OS Permission Fallback
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission().then((permission) => {
-        console.log(`[PWA ${CURRENT_APP_VERSION}] Native permission result:`, permission);
-      });
-    }
   } catch (err) {
-    console.error(`[Notification ${CURRENT_APP_VERSION}] Error requesting permission:`, err);
+    console.error(`[Notification ${CURRENT_APP_VERSION}] Error triggering manual prompt:`, err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v45 - STRICT NO REFRESH LOOPS)
+// 4. SERVICE WORKER REGISTRATION (v46 - STRICT NO REFRESH LOOPS)
 // ==========================================================================
 let swRegistration = null;
 
@@ -173,7 +174,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v45)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v46)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -362,7 +363,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v45)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v46)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -382,7 +383,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v45)
+// 8. RENDER KITCHEN MENU (v46)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -464,7 +465,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v45)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v46)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -520,7 +521,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v45)
+// 10. CUSTOMER LIVE MENU LISTENER (v46)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -621,7 +622,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v45)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v46)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -834,7 +835,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v45)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v46)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -897,6 +898,7 @@ function enterKitchenMode() {
 
   document.getElementById('customer-view').style.display = 'none';
 
+  document.getElementById('header-notify-btn').style.display = 'none';
   document.getElementById('header-kitchen-btn').style.display = 'none';
   document.getElementById('header-back-btn').style.display = 'inline-flex';
   document.getElementById('header-drawer-btn').style.display = 'inline-block';
@@ -948,6 +950,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 
   document.getElementById('customer-view').style.display = 'flex';
 
+  document.getElementById('header-notify-btn').style.display = 'inline-block';
   document.getElementById('header-kitchen-btn').style.display = 'inline-block';
   document.getElementById('header-back-btn').style.display = 'none';
   document.getElementById('header-drawer-btn').style.display = 'none';
@@ -961,7 +964,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v45)
+// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v46)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -1139,7 +1142,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v45)
+// 14. LIVE KITCHEN ORDER LISTENER (v46)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
