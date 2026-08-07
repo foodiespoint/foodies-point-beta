@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v46)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v47)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v46";
+const CURRENT_APP_VERSION = "v47";
 let db = null;
 
 try {
@@ -25,7 +25,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v46)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v47)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -57,7 +57,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL v16 NOTIFICATION ENGINE & PROMPT CONFIG (v46)
+// 3. ONESIGNAL v16 & FOOLPROOF NATIVE NOTIFICATION ENGINE (v47)
 // ==========================================================================
 try {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -68,28 +68,7 @@ try {
       notifyButton: {
         enable: false,
       },
-      // Official OneSignal v16 Array Schema for Slidedown Prompts
-      promptOptions: {
-        slidedown: {
-          prompts: [
-            {
-              type: "push",
-              autoPrompt: true,
-              text: {
-                actionMessage: "Receive real-time order status and live menu updates!",
-                acceptButton: "Allow",
-                cancelButton: "Not Now"
-              },
-              delay: {
-                pageViews: 1,
-                timeDelay: 1
-              }
-            }
-          ]
-        }
-      },
       serviceWorkerParam: { scope: "/foodies-point-beta/" },
-      // Leading slash prevents subfolder duplication (no more 404 errors!)
       serviceWorkerPath: "/foodies-point-beta/sw.js"
     });
     console.log(`[OneSignal ${CURRENT_APP_VERSION}] v16 SDK initialized successfully.`);
@@ -98,18 +77,20 @@ try {
   console.error(`[OneSignal ${CURRENT_APP_VERSION}] Initialization error:`, error);
 }
 
-function checkNotificationStatusAndShowModal() {
-  try {
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      const isOneSignalSubscribed = OneSignal.Notifications && OneSignal.Notifications.permission;
-      if (!isOneSignalSubscribed && ('Notification' in window && Notification.permission === 'default')) {
-        const modal = document.getElementById('notification-permission-modal');
-        if (modal) modal.style.display = 'flex';
-      }
-    });
-  } catch (err) {
-    console.error(`[Notification ${CURRENT_APP_VERSION}] Error checking subscription status:`, err);
+// 1. TAPPING "🔔 Alerts" IN HEADER: Checks permission and gives instant feedback
+function openAlertsModal() {
+  if (!('Notification' in window)) {
+    alert("Push notifications are not supported on this browser/device.");
+    return;
+  }
+
+  if (Notification.permission === 'granted') {
+    alert("✅ Notifications are already enabled! You will receive live menu and order alerts.");
+  } else if (Notification.permission === 'denied') {
+    alert("🚫 Notifications are blocked in your browser/phone settings. Please tap the Lock icon 🔒 in your address bar -> Permissions -> Allow.");
+  } else {
+    const modal = document.getElementById('notification-permission-modal');
+    if (modal) modal.style.display = 'flex';
   }
 }
 
@@ -118,26 +99,34 @@ function closeNotificationModal() {
   if (modal) modal.style.display = 'none';
 }
 
-// MANUAL USER GESTURE TRIGGER (Tapped from modal or "🔔 Alerts" header button)
-function triggerManualPushPrompt() {
+// 2. TAPPING "🔔 Allow Notifications" INSIDE MODAL: Directly invokes OS permission popup
+function requestPushAccess() {
   closeNotificationModal();
 
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then((permission) => {
+      console.log(`[PWA ${CURRENT_APP_VERSION}] Native permission result:`, permission);
+      if (permission === 'granted') {
+        alert("✅ Notifications enabled successfully!");
+      }
+    });
+  }
+
+  // Simultaneously register with OneSignal v16 in background
   try {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
-      if (OneSignal.Slidedown && typeof OneSignal.Slidedown.promptPush === 'function') {
-        await OneSignal.Slidedown.promptPush({ force: true });
-      } else if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
+      if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
         await OneSignal.Notifications.requestPermission();
       }
     });
   } catch (err) {
-    console.error(`[Notification ${CURRENT_APP_VERSION}] Error triggering manual prompt:`, err);
+    console.error(`[Notification ${CURRENT_APP_VERSION}] OneSignal sync error:`, err);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v46 - STRICT NO REFRESH LOOPS)
+// 4. SERVICE WORKER REGISTRATION (v47 - STRICT NO REFRESH LOOPS)
 // ==========================================================================
 let swRegistration = null;
 
@@ -174,7 +163,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v46)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v47)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -218,8 +207,13 @@ function enforceInstallGate() {
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
     console.log(`[PWA ${CURRENT_APP_VERSION}] Standalone PWA mode verified. Application unlocked.`);
     
-    // Check permission status 1.5 seconds after app opens in standalone mode
-    setTimeout(checkNotificationStatusAndShowModal, 1500);
+    // Auto-prompt check 3 seconds after opening app
+    setTimeout(() => {
+      if ('Notification' in window && Notification.permission === 'default') {
+        const modal = document.getElementById('notification-permission-modal');
+        if (modal) modal.style.display = 'flex';
+      }
+    }, 3000);
   } else {
     console.log(`[PWA ${CURRENT_APP_VERSION}] Running in web browser. Install Gate active.`);
   }
@@ -363,7 +357,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v46)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v47)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -383,7 +377,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v46)
+// 8. RENDER KITCHEN MENU (v47)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -465,7 +459,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v46)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v47)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -521,7 +515,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v46)
+// 10. CUSTOMER LIVE MENU LISTENER (v47)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -622,7 +616,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v46)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v47)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -835,7 +829,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v46)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v47)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -964,7 +958,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v46)
+// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v47)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -1142,7 +1136,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v46)
+// 14. LIVE KITCHEN ORDER LISTENER (v47)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
