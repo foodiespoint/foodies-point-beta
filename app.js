@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v44)
+// 1. FIREBASE CONFIGURATION & INITIALIZATION (v45)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v44";
+const CURRENT_APP_VERSION = "v45";
 let db = null;
 
 try {
@@ -25,7 +25,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v44)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v45)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -57,7 +57,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL v16 NOTIFICATION ENGINE & IN-APP PERMISSION MODAL (v44)
+// 3. ONESIGNAL v16 NOTIFICATION ENGINE & MULTI-TRIGGER PROMPTS (v45)
 // ==========================================================================
 try {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -67,6 +67,15 @@ try {
       safari_web_id: "web.onesignal.auto.0dd8fdab-49d8-437b-ac06-36c9d15991be",
       notifyButton: {
         enable: false,
+      },
+      // ENABLING ONESIGNAL'S NATIVE AUTO-SLIDEDOWN PROMPT
+      promptOptions: {
+        slidedown: {
+          enabled: true,
+          autoPrompt: true,
+          timeDelay: 1,
+          pageViews: 1
+        }
       },
       serviceWorkerParam: { scope: "/foodies-point-beta/" },
       serviceWorkerPath: "foodies-point-beta/sw.js"
@@ -78,13 +87,20 @@ try {
 }
 
 function checkNotificationStatusAndShowModal() {
-  if ('Notification' in window) {
-    if (Notification.permission === 'default') {
-      const modal = document.getElementById('notification-permission-modal');
-      if (modal) modal.style.display = 'flex';
-    } else {
-      console.log(`[Notification ${CURRENT_APP_VERSION}] Current browser permission status:`, Notification.permission);
-    }
+  try {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      const hasOSPermission = ('Notification' in window && Notification.permission !== 'default');
+      const isOneSignalSubscribed = OneSignal.Notifications && OneSignal.Notifications.permission;
+
+      // Only show the custom modal if the user isn't subscribed and hasn't blocked notifications yet
+      if (!isOneSignalSubscribed && ('Notification' in window && Notification.permission === 'default')) {
+        const modal = document.getElementById('notification-permission-modal');
+        if (modal) modal.style.display = 'flex';
+      }
+    });
+  } catch (err) {
+    console.error(`[Notification ${CURRENT_APP_VERSION}] Error checking subscription status:`, err);
   }
 }
 
@@ -97,15 +113,18 @@ function requestNotificationPermissionOnGesture() {
   closeNotificationModal();
 
   try {
-    // 1. OneSignal v16 User Gesture Push Trigger
+    // 1. Trigger OneSignal v16 Native Permission and Slidedown Banner
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
         await OneSignal.Notifications.requestPermission();
       }
+      if (OneSignal.Slidedown && typeof OneSignal.Slidedown.promptPush === 'function') {
+        await OneSignal.Slidedown.promptPush({ force: true });
+      }
     });
 
-    // 2. Native OS Permission Fallback
+    // 2. Direct Native OS Permission Fallback
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then((permission) => {
         console.log(`[PWA ${CURRENT_APP_VERSION}] Native permission result:`, permission);
@@ -117,7 +136,7 @@ function requestNotificationPermissionOnGesture() {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v44 - ABSOLUTELY NO FORCED REFRESH LOOPS)
+// 4. SERVICE WORKER REGISTRATION (v45 - STRICT NO REFRESH LOOPS)
 // ==========================================================================
 let swRegistration = null;
 
@@ -154,7 +173,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v44)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v45)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -198,8 +217,8 @@ function enforceInstallGate() {
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
     console.log(`[PWA ${CURRENT_APP_VERSION}] Standalone PWA mode verified. Application unlocked.`);
     
-    // Check permission status 1 second after app opens
-    setTimeout(checkNotificationStatusAndShowModal, 1000);
+    // Check permission status 1.5 seconds after app opens in standalone mode
+    setTimeout(checkNotificationStatusAndShowModal, 1500);
   } else {
     console.log(`[PWA ${CURRENT_APP_VERSION}] Running in web browser. Install Gate active.`);
   }
@@ -343,7 +362,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v44)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v45)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -363,7 +382,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v44)
+// 8. RENDER KITCHEN MENU (v45)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -445,7 +464,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v44)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v45)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -501,7 +520,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v44)
+// 10. CUSTOMER LIVE MENU LISTENER (v45)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -602,7 +621,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v44)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v45)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -815,7 +834,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v44)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v45)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -942,7 +961,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v44)
+// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v45)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -1120,7 +1139,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v44)
+// 14. LIVE KITCHEN ORDER LISTENER (v45)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
