@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v52)                            -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v53)                            -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=52">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=53">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -23,7 +23,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v52)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v53)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -404,25 +404,9 @@
       text-transform: uppercase;
     }
 
-    .status-PENDING {
-      background: #FFF3E0;
-      color: #EF6C00;
-    }
-
-    .status-ACCEPTED {
-      background: #E8F5E9;
-      color: #2E7D32;
-    }
-
-    .status-COMPLETED {
-      background: #E3F2FD;
-      color: #1565C0;
-    }
-
-    .status-DENIED {
-      background: #FFEBEE;
-      color: #C62828;
-    }
+    .status-PENDING { background: #FFF3E0; color: #EF6C00; }
+    .status-ACCEPTED { background: #E8F5E9; color: #2E7D32; }
+    .status-REJECTED { background: #FFEBEE; color: #C62828; }
 
     .kitchen-menu-actions {
       display: flex;
@@ -539,11 +523,6 @@
     .btn-deny {
       background: #FFEBEE;
       color: #C62828;
-    }
-
-    .btn-complete {
-      background: var(--primary-color);
-      color: var(--white);
     }
 
     .kitchen-subpage {
@@ -786,7 +765,7 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v52 - UPDATED HEADER LAYOUT)                  -->
+  <!-- 5. MASTER APP CONTAINER (v53)                                          -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
@@ -803,7 +782,7 @@
       <!-- Right side: Notifications & Exit -->
       <div class="header-right-group">
         <button class="btn-icon" id="header-notify-btn" onclick="openAlertsModal()" aria-label="Notifications">🔔</button>
-        <span id="kitchen-version-badge">v52</span>
+        <span id="kitchen-version-badge">v53</span>
         <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
       </div>
     </header>
@@ -940,6 +919,6 @@
     </div>
   </div>
 
-  <script src="/foodies-point-beta/app.js?v=52"></script>
+  <script src="/foodies-point-beta/app.js?v=53"></script>
 </body>
 </html>
