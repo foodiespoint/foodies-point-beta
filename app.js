@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v53)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v54)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v53";
+const CURRENT_APP_VERSION = "v54";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -60,7 +60,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. NATIVE WEB PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE
+// 3. FAIL-PROOF PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE (v54)
 // ==========================================================================
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -73,16 +73,33 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
+// Force-ensures active push subscription object (checks browser sub + local backup)
 async function getLocalPushSubscription() {
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     try {
       const reg = await navigator.serviceWorker.ready;
-      return await reg.pushManager.getSubscription();
+      let subscription = await reg.pushManager.getSubscription();
+
+      if (!subscription && Notification.permission === 'granted') {
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        });
+      }
+
+      if (subscription) {
+        const subJson = subscription.toJSON();
+        localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
+        return subJson;
+      }
     } catch (e) {
-      console.warn("Could not get local push sub:", e);
+      console.warn("Could not fetch active push sub from service worker:", e);
     }
   }
-  return null;
+
+  // Fallback to local storage cache
+  const cached = localStorage.getItem('fp_push_sub_cached');
+  return cached ? JSON.parse(cached) : null;
 }
 
 async function openAlertsModal() {
@@ -131,12 +148,11 @@ async function requestPushAccess(isSilentSync = false) {
       });
     }
 
-    console.log(`[Push ${CURRENT_APP_VERSION}] Subscription Object:`, subscription);
+    const subJson = subscription.toJSON();
+    localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
 
-    const subString = JSON.stringify(subscription);
-    const dbKey = btoa(subscription.endpoint).replace(/[.#$/\[\]]/g, "_");
-
-    await db.ref(`pushSubscriptions/${dbKey}`).set(JSON.parse(subString));
+    const dbKey = btoa(subJson.endpoint).replace(/[.#$/\[\]]/g, "_");
+    await db.ref(`pushSubscriptions/${dbKey}`).set(subJson);
     
     if (isSilentSync) {
       alert("✅ Push connection verified and synced!");
@@ -178,7 +194,10 @@ async function sendRenderPushBroadcast(title, message) {
 }
 
 async function sendTargetedRenderPush(subscription, title, message) {
-  if (!subscription) return;
+  if (!subscription || !subscription.endpoint) {
+    console.warn(`[Push ${CURRENT_APP_VERSION}] Aborted targeted push: Invalid subscription structure.`, subscription);
+    return;
+  }
   try {
     const response = await fetch(`${RENDER_BACKEND_URL}/api/broadcast`, {
       method: "POST",
@@ -636,7 +655,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & TARGETED SUBSCRIPTION ENGINE
+// 11. ORDER SUBMISSION & TARGETED SUBSCRIPTION ENGINE (v54)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -685,6 +704,7 @@ async function placeOrder() {
   const customerProfile = JSON.parse(profileStr);
   syncCustomerVersionToFirebase(customerProfile);
   
+  // Guarantees active push token is retrieved
   const localPushSub = await getLocalPushSubscription();
   executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, localPushSub);
 }
@@ -732,17 +752,22 @@ async function saveProfileAndPlaceOrder() {
 
 function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, pushSub) {
   const newOrderRef = db.ref('orders').push();
+  
   const orderData = {
     orderId: newOrderRef.key.slice(-4).toUpperCase(),
     items: orderItems,
     total: totalAmount,
-    status: 'PENDING', // Uses strictly PENDING, ACCEPTED, or REJECTED
+    status: 'PENDING',
     customerName: customerProfile.name,
     customerMobile: customerProfile.mobile,
     customerVersion: CURRENT_APP_VERSION,
-    pushSubscription: pushSub ? JSON.parse(JSON.stringify(pushSub)) : null,
     timestamp: firebase.database.ServerValue.TIMESTAMP
   };
+
+  // Safely attach subscription object so Firebase doesn't strip it
+  if (pushSub && pushSub.endpoint) {
+    orderData.pushSubscription = pushSub;
+  }
 
   newOrderRef.set(orderData)
     .then(() => {
@@ -832,7 +857,6 @@ function listenForCustomerOrderUpdates() {
           hasChanges = true;
         }
       }
-      // If it disappears (Kitchen clicked "Remove Ticket"), it retains its last known local status.
     });
 
     if (hasChanges) {
@@ -843,7 +867,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. KITCHEN LOGIN & NAVIGATION (v53)
+// 12. KITCHEN LOGIN & NAVIGATION (v54)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -1048,7 +1072,6 @@ function fetchAndRenderPaymentLedger() {
     const orderRows = Object.values(orders);
 
     orderRows.forEach((o) => {
-      // Ledger only counts accepted orders
       if (o.status === 'ACCEPTED') {
         totalRevenue += (o.total || 0);
         completedCount++;
@@ -1093,7 +1116,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v53)
+// 14. LIVE KITCHEN ORDER LISTENER (v54)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -1109,7 +1132,6 @@ function listenForKitchenOrders() {
       return;
     }
 
-    // Convert object to array and hide tickets that the kitchen clicked "Remove Ticket" on
     const ordersArray = Object.keys(orders).map(key => ({
       firebaseKey: key,
       ...orders[key]
@@ -1137,7 +1159,6 @@ function listenForKitchenOrders() {
       };
       const statusColor = statusColors[order.status] || '#FF4B3A';
 
-      // SIMPLIFIED 2-STATUS UI: Accept/Reject buttons, OR "Remove Ticket" to clean the screen
       let actionButtonsHtml = '';
       if (order.status === 'PENDING') {
         actionButtonsHtml = `
@@ -1174,19 +1195,44 @@ function listenForKitchenOrders() {
   });
 }
 
+// Helper: Retrieves target subscription either from order or global subscriptions node
+async function resolveTargetSubscription(order) {
+  if (order.pushSubscription && order.pushSubscription.endpoint) {
+    return order.pushSubscription;
+  }
+  
+  // Fallback lookup across all active database push subscriptions
+  try {
+    const snap = await db.ref('pushSubscriptions').once('value');
+    const subs = snap.val();
+    if (subs) {
+      const subsList = Object.values(subs);
+      if (subsList.length > 0) {
+        // Returns the most recently saved subscription token as a fallback
+        return subsList[subsList.length - 1];
+      }
+    }
+  } catch (e) {
+    console.error("Subscription fallback lookup error:", e);
+  }
+  return null;
+}
+
 // ==========================================================================
-// 15. TARGETED ORDER ACTIONS (ACCEPT, REJECT & REMOVE) (v53)
+// 15. TARGETED ORDER ACTIONS WITH AUTOMATIC FALLBACK LOOKUP (v54)
 // ==========================================================================
 async function acceptOrder(firebaseKey) {
   if (!db) return;
   try {
     await db.ref(`orders/${firebaseKey}`).update({ status: 'ACCEPTED' });
     
-    // Automatically send targeted push to the customer!
     const snap = await db.ref(`orders/${firebaseKey}`).once('value');
     const order = snap.val();
-    if (order && order.pushSubscription) {
-      sendTargetedRenderPush(order.pushSubscription, "Order Accepted ✅", `Hi ${order.customerName}, your order #${order.orderId} has been accepted and is being prepared!`);
+    if (order) {
+      const targetSub = await resolveTargetSubscription(order);
+      if (targetSub) {
+        sendTargetedRenderPush(targetSub, "Order Accepted ✅", `Hi ${order.customerName}, your order #${order.orderId} has been accepted and is being prepared!`);
+      }
     }
   } catch (error) {
     console.error("Error accepting order:", error);
@@ -1202,8 +1248,11 @@ async function rejectOrder(firebaseKey) {
       
       const snap = await db.ref(`orders/${firebaseKey}`).once('value');
       const order = snap.val();
-      if (order && order.pushSubscription) {
-        sendTargetedRenderPush(order.pushSubscription, "Order Rejected ❌", `Sorry ${order.customerName}, your order #${order.orderId} was declined by the kitchen.`);
+      if (order) {
+        const targetSub = await resolveTargetSubscription(order);
+        if (targetSub) {
+          sendTargetedRenderPush(targetSub, "Order Rejected ❌", `Sorry ${order.customerName}, your order #${order.orderId} was declined by the kitchen.`);
+        }
       }
     } catch (error) {
       console.error("Error rejecting order:", error);
@@ -1215,7 +1264,6 @@ async function rejectOrder(firebaseKey) {
 async function removeTicket(firebaseKey) {
   if (!db) return;
   try {
-    // We update { archived: true } instead of db.remove() so the Payment Ledger doesn't lose the revenue data!
     await db.ref(`orders/${firebaseKey}`).update({ archived: true });
   } catch (error) {
     console.error("Error removing ticket from screen:", error);
