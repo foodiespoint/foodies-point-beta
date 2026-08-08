@@ -4,7 +4,7 @@
   "scope": "/foodies-point-beta/",
   "name": "Foodies Point",
   "short_name": "Foodies Point",
-  "version": "0.0.4",
+  "version": "0.0.1",
   "description": "Seamless food ordering with real-time tracking and live kitchen menu sync.",
   "display": "standalone",
   "orientation": "portrait-primary",
