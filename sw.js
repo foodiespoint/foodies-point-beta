@@ -1,44 +1,71 @@
 // ==========================================================================
-// FOODIES POINT SERVICE WORKER (v47 - AUTO-UPDATING & MERGED ONESIGNAL SDK)
+// FOODIES POINT SERVICE WORKER (v49 - NATIVE WEB PUSH LISTENER)
 // ==========================================================================
-importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
-
-const CACHE_NAME = 'fp-cache-v47';
+const CACHE_NAME = 'fp-cache-v49';
 
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
-  '/foodies-point-beta/index.html?v=47',
-  '/foodies-point-beta/app.js?v=47',
-  '/foodies-point-beta/manifest.json?v=47',
+  '/foodies-point-beta/index.html?v=49',
+  '/foodies-point-beta/app.js?v=49',
+  '/foodies-point-beta/manifest.json?v=49',
   '/foodies-point-beta/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW v47] Installing new service worker...');
+  console.log('[SW v49] Installing new service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => {
-      return self.skipWaiting();
-    })
+    }).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW v47] Activating & wiping old caches...');
+  console.log('[SW v49] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[SW v47] Purging stale cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => {
-      return self.clients.claim();
-    })
+    }).then(() => self.clients.claim())
+  );
+});
+
+// LISTEN FOR NATIVE PUSH MESSAGES FROM YOUR RENDER BACKEND
+self.addEventListener('push', (event) => {
+  console.log('[SW v49] Native Push Event Received:', event);
+
+  let data = { title: "Foodies Point 🍛", body: "Today's live menu is updated!" };
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: '/foodies-point-beta/icon.png',
+    badge: '/foodies-point-beta/icon.png',
+    vibrate: [100, 50, 100],
+    data: { url: '/foodies-point-beta/' }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Handle clicking on the notification banner
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow(event.notification.data.url || '/foodies-point-beta/')
   );
 });
 
@@ -55,9 +82,7 @@ self.addEventListener('fetch', (event) => {
           });
           return networkResponse;
         })
-        .catch(() => {
-          return caches.match(event.request);
-        })
+        .catch(() => caches.match(event.request))
     );
   } else {
     event.respondWith(
