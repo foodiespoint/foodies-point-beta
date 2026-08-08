@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v52)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v53)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v52";
+const CURRENT_APP_VERSION = "v53";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -28,7 +28,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v52)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -60,7 +60,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. NATIVE WEB PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE (v52)
+// 3. NATIVE WEB PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE
 // ==========================================================================
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -73,7 +73,6 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-// Helper to pull the current device's push token (Used when placing orders)
 async function getLocalPushSubscription() {
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     try {
@@ -150,16 +149,12 @@ async function requestPushAccess(isSilentSync = false) {
   }
 }
 
-// Global broadcast to ALL subscribers (Used for Menu Publishing)
 async function sendRenderPushBroadcast(title, message) {
   try {
     const snap = await db.ref('pushSubscriptions').once('value');
     const subsObj = snap.val();
 
-    if (!subsObj) {
-      console.log(`[Push ${CURRENT_APP_VERSION}] No stored subscribers found in database.`);
-      return;
-    }
+    if (!subsObj) return;
 
     const subscriptions = Object.values(subsObj);
 
@@ -170,7 +165,6 @@ async function sendRenderPushBroadcast(title, message) {
     });
 
     const data = await response.json();
-    console.log(`[Push ${CURRENT_APP_VERSION}] Global Broadcast Result:`, data);
 
     if (data.expiredEndpoints && data.expiredEndpoints.length > 0) {
       data.expiredEndpoints.forEach((expiredUrl) => {
@@ -183,14 +177,13 @@ async function sendRenderPushBroadcast(title, message) {
   }
 }
 
-// Personal Targeted Push to a SINGLE subscriber (Used for Orders)
 async function sendTargetedRenderPush(subscription, title, message) {
   if (!subscription) return;
   try {
     const response = await fetch(`${RENDER_BACKEND_URL}/api/broadcast`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, message, subscriptions: [subscription] }) // Passes exactly 1 token
+      body: JSON.stringify({ title, message, subscriptions: [subscription] })
     });
     const data = await response.json();
     console.log(`[Push ${CURRENT_APP_VERSION}] Targeted Push Result:`, data);
@@ -200,7 +193,7 @@ async function sendTargetedRenderPush(subscription, title, message) {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v52)
+// 4. SERVICE WORKER REGISTRATION
 // ==========================================================================
 let swRegistration = null;
 
@@ -210,7 +203,6 @@ if ('serviceWorker' in navigator) {
       scope: '/foodies-point-beta/'
     })
     .then((reg) => {
-      console.log(`[SW ${CURRENT_APP_VERSION}] Registered successfully with scope:`, reg.scope);
       swRegistration = reg;
       reg.update();
 
@@ -223,7 +215,6 @@ if ('serviceWorker' in navigator) {
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log(`[PWA ${CURRENT_APP_VERSION}] Update downloaded in background.`);
               newWorker.postMessage({ type: 'SKIP_WAITING' });
             }
           });
@@ -237,23 +228,19 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v52)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE
 // ==========================================================================
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  console.log(`[PWA ${CURRENT_APP_VERSION}] Native install prompt intercepted & ready.`);
 });
 
 function triggerAppInstall() {
   if (deferredInstallPrompt) {
     deferredInstallPrompt.prompt();
     deferredInstallPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log(`[PWA ${CURRENT_APP_VERSION}] User accepted installation prompt.`);
-      }
       deferredInstallPrompt = null;
     });
   } else {
@@ -279,7 +266,6 @@ function enforceInstallGate() {
   if (isStandalonePWA()) {
     if (installGate) installGate.style.setProperty('display', 'none', 'important');
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
-    console.log(`[PWA ${CURRENT_APP_VERSION}] Standalone PWA mode verified. Application unlocked.`);
     
     setTimeout(() => {
       if ('Notification' in window && Notification.permission === 'default') {
@@ -287,8 +273,6 @@ function enforceInstallGate() {
         if (modal) modal.style.display = 'flex';
       }
     }, 3000);
-  } else {
-    console.log(`[PWA ${CURRENT_APP_VERSION}] Running in web browser. Install Gate active.`);
   }
 }
 
@@ -296,7 +280,6 @@ function enforceInstallGate() {
 // 6. COMPLETE FOODIES POINT MENU (102 ITEMS - MASTER DATA)
 // ==========================================================================
 const MENU_ITEMS = [
-  // --- ROLLS ---
   { id: 'dish-001', category: 'Rolls', name: 'Dahi Bread Roll (1 pc)', price: 15 },
   { id: 'dish-002', category: 'Rolls', name: 'Bread Roll (8 pc plate)', price: 80 },
   { id: 'dish-003', category: 'Rolls', name: 'Spring Roll', price: 25 },
@@ -309,8 +292,6 @@ const MENU_ITEMS = [
   { id: 'dish-010', category: 'Rolls', name: 'Chicken Mayonnaise Roll', price: 60 },
   { id: 'dish-011', category: 'Rolls', name: 'Chicken Egg Roll', price: 70 },
   { id: 'dish-012', category: 'Rolls', name: 'Chicken Egg Mayonnaise Roll', price: 75 },
-
-  // --- PAKODI ---
   { id: 'dish-013', category: 'Pakodi', name: 'Pyaaz ki Pakodi (250gm)', price: 60 },
   { id: 'dish-014', category: 'Pakodi', name: 'Paalak ki Pakodi (250gm)', price: 60 },
   { id: 'dish-015', category: 'Pakodi', name: 'Gobhi ki Pakodi (250gm)', price: 60 },
@@ -318,13 +299,9 @@ const MENU_ITEMS = [
   { id: 'dish-017', category: 'Pakodi', name: 'Bread Pakoda', price: 20 },
   { id: 'dish-018', category: 'Pakodi', name: 'Egg Pakodi', price: 10 },
   { id: 'dish-019', category: 'Pakodi', name: 'Moong Daal ke Mongode (250gm)', price: 75 },
-
-  // --- SANDWICH ---
   { id: 'dish-020', category: 'Sandwich', name: 'Veg Grilled Mayonnaise Sandwich (2 pc)', price: 55 },
   { id: 'dish-021', category: 'Sandwich', name: 'Veg Cheese Sandwich (2 pc)', price: 60 },
   { id: 'dish-022', category: 'Sandwich', name: 'Veg Sandwich', price: 18 },
-
-  // --- SNACKS ---
   { id: 'dish-023', category: 'Snacks', name: 'Chocolate Croissant', price: 48 },
   { id: 'dish-024', category: 'Snacks', name: 'Zingy Parcel (Paneer)', price: 60 },
   { id: 'dish-025', category: 'Snacks', name: 'Pizza Puff', price: 18 },
@@ -350,8 +327,6 @@ const MENU_ITEMS = [
   { id: 'dish-045', category: 'Snacks', name: 'Samosa', price: 12 },
   { id: 'dish-046', category: 'Snacks', name: 'Paneer Tikka (per plate)', price: 240 },
   { id: 'dish-047', category: 'Snacks', name: 'Paneer Malai Tikka (per plate)', price: 260 },
-
-  // --- CHINESE ---
   { id: 'dish-048', category: 'Chinese', name: 'Honey Chilli Potato', price: 90 },
   { id: 'dish-049', category: 'Chinese', name: 'Chowmein', price: 80 },
   { id: 'dish-050', category: 'Chinese', name: 'Macaroni', price: 80 },
@@ -363,24 +338,16 @@ const MENU_ITEMS = [
   { id: 'dish-056', category: 'Chinese', name: 'Paneer Momos (10 pc)', price: 75 },
   { id: 'dish-057', category: 'Chinese', name: 'Chicken Momos (10 pc)', price: 100 },
   { id: 'dish-058', category: 'Chinese', name: 'White Pasta', price: 100 },
-
-  // --- KEBABS ---
   { id: 'dish-059', category: 'Kebabs', name: 'Veg. Seekh Kebab', price: 15 },
   { id: 'dish-060', category: 'Kebabs', name: 'Veg Kebab', price: 17 },
   { id: 'dish-061', category: 'Kebabs', name: 'Dahi ke Kebab', price: 25 },
   { id: 'dish-062', category: 'Kebabs', name: 'Hariyali Kebab', price: 25 },
-
-  // --- CAKE (EGG-LESS) ---
   { id: 'dish-063', category: 'Cake (Egg-Less)', name: 'Tutti Frutti Cup Cake', price: 18 },
   { id: 'dish-064', category: 'Cake (Egg-Less)', name: 'Chocolate Cup Cake', price: 20 },
   { id: 'dish-065', category: 'Cake (Egg-Less)', name: 'Chocolava Cup Cake', price: 38 },
-
-  // --- SHAKES & BEVERAGES ---
   { id: 'dish-066', category: 'Shakes', name: 'Mango Shake', price: 30 },
   { id: 'dish-067', category: 'Shakes', name: 'Lassi', price: 45 },
   { id: 'dish-068', category: 'Shakes', name: 'Panna', price: 12 },
-
-  // --- INDIAN MEALS & COMBOS ---
   { id: 'dish-069', category: 'Meals & Combos', name: 'Chokha Baati (2 pc plate)', price: 50 },
   { id: 'dish-070', category: 'Meals & Combos', name: 'Chole Aloo Kulche (per plate)', price: 70 },
   { id: 'dish-071', category: 'Meals & Combos', name: 'Chole Bhature (per plate)', price: 60 },
@@ -388,22 +355,16 @@ const MENU_ITEMS = [
   { id: 'dish-073', category: 'Meals & Combos', name: 'Sambhar Vada (4 pc plate)', price: 55 },
   { id: 'dish-074', category: 'Meals & Combos', name: 'Idli Sambhar (4 pc plate)', price: 55 },
   { id: 'dish-075', category: 'Meals & Combos', name: 'Pav Bhaaji (per plate)', price: 60 },
-
-  // --- SWEETS ---
   { id: 'dish-076', category: 'Sweets', name: 'Gulab Jamun', price: 20 },
   { id: 'dish-077', category: 'Sweets', name: 'Kheer', price: 80 },
   { id: 'dish-078', category: 'Sweets', name: 'Sweet Rice', price: 90 },
   { id: 'dish-079', category: 'Sweets', name: 'Shrikhand (250 gm)', price: 85 },
-
-  // --- SABZI ---
   { id: 'dish-080', category: 'Sabzi', name: 'Shaahi Paneer', price: 300 },
   { id: 'dish-081', category: 'Sabzi', name: 'Paneer Masala', price: 220 },
   { id: 'dish-082', category: 'Sabzi', name: 'Paneer Angara', price: 280 },
   { id: 'dish-083', category: 'Sabzi', name: 'Paneer Korma', price: 260 },
   { id: 'dish-084', category: 'Sabzi', name: 'Palak Paneer', price: 200 },
   { id: 'dish-085', category: 'Sabzi', name: 'Matar Paneer', price: 200 },
-
-  // --- NON-VEG ---
   { id: 'dish-086', category: 'Non-Veg', name: 'Chicken Afghani', price: 500 },
   { id: 'dish-087', category: 'Non-Veg', name: 'Roasted Chicken', price: 340 },
   { id: 'dish-088', category: 'Non-Veg', name: 'Chilli Chicken', price: 440 },
@@ -417,8 +378,6 @@ const MENU_ITEMS = [
   { id: 'dish-096', category: 'Non-Veg', name: 'Chicken Curry', price: 360 },
   { id: 'dish-097', category: 'Non-Veg', name: 'Chicken Masala', price: 400 },
   { id: 'dish-098', category: 'Non-Veg', name: 'Butter Chicken', price: 500 },
-
-  // --- RICE ---
   { id: 'dish-099', category: 'Rice', name: 'Plain Rice', price: 90 },
   { id: 'dish-100', category: 'Rice', name: 'Jeera Rice', price: 120 },
   { id: 'dish-101', category: 'Rice', name: 'Matar Pulao', price: 140 },
@@ -430,7 +389,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v52)
+// 7. KITCHEN DRAWER
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -450,7 +409,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v52)
+// 8. RENDER KITCHEN MENU
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -532,7 +491,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v52)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -553,11 +512,8 @@ function publishDailyMenu() {
     ? `It is currently between 6:00 PM and 9:00 PM.\n\nAre you sure you want to publish these ${selectedCount} selected items? (They will automatically go live for customers at 9:00 PM tonight for tomorrow's orders.)`
     : `Are you sure you want to publish ${selectedCount} selected items to the live customer menu?`;
 
-  if (!confirm(confirmMsg)) {
-    return;
-  }
+  if (!confirm(confirmMsg)) return;
 
-  // AUTOMATIC MENU PUBLISH BROADCAST: Sent to ALL subscribers
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully (${selectedCount} items)! Notification broadcasted.`);
@@ -573,11 +529,7 @@ function publishDailyMenu() {
 }
 
 function clearDailyMenu() {
-  if (!db) {
-    alert("Database connection is not ready. Please refresh the page.");
-    return;
-  }
-
+  if (!db) return;
   if (confirm("Remove all items from the customer's live menu page?")) {
     db.ref('dailyMenu').remove()
       .then(() => {
@@ -585,15 +537,12 @@ function clearDailyMenu() {
         renderKitchenMenu();
         alert("All items have been removed from the customer page!");
       })
-      .catch((error) => {
-        console.error("Error clearing daily menu:", error);
-        alert("Could not remove items from customer page. Check network connection.");
-      });
+      .catch((error) => console.error("Error clearing daily menu:", error));
   }
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v52)
+// 10. CUSTOMER LIVE MENU LISTENER
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -631,9 +580,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
       cart[dish.id] = cart[dish.id] || 0;
       const isOOS = (activeIds[dish.id] === 'OOS');
 
-      if (isOOS && cart[dish.id] > 0) {
-        cart[dish.id] = 0;
-      }
+      if (isOOS && cart[dish.id] > 0) cart[dish.id] = 0;
 
       if (dish.category !== currentCategory) {
         currentCategory = dish.category;
@@ -669,7 +616,6 @@ function renderCustomerMenuFromSnapshot(activeIds) {
 
 function listenForCustomerLiveMenu() {
   if (!db) return;
-
   db.ref('dailyMenu').on('value', (snapshot) => {
     latestFirebaseMenuSnapshot = snapshot.val();
     renderCustomerMenuFromSnapshot(latestFirebaseMenuSnapshot);
@@ -679,22 +625,18 @@ function listenForCustomerLiveMenu() {
 function updateQuantity(dishId, change) {
   const currentQty = cart[dishId] || 0;
   let newQty = currentQty + change;
-
   if (newQty < 0) newQty = 0;
   if (newQty > 10) {
     alert("Quantity cap reached: Maximum 10 items per dish.");
     newQty = 10;
   }
-
   cart[dishId] = newQty;
   const qtySpan = document.getElementById(`qty-${dishId}`);
-  if (qtySpan) {
-    qtySpan.textContent = newQty;
-  }
+  if (qtySpan) qtySpan.textContent = newQty;
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & TARGETED SUBSCRIPTION ENGINE (v52)
+// 11. ORDER SUBMISSION & TARGETED SUBSCRIPTION ENGINE
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -706,7 +648,6 @@ function syncCustomerVersionToFirebase(profile) {
   }).catch((err) => console.error("Error syncing customer version:", err));
 }
 
-// MAKE ASYNC: Grabs local push token before sending order
 async function placeOrder() {
   if (isDuringBreakWindow()) {
     alert("Orders are closed for today. Tomorrow's menu will be available starting at 9:00 PM tonight!");
@@ -724,12 +665,7 @@ async function placeOrder() {
   MENU_ITEMS.forEach((dish) => {
     const qty = cart[dish.id] || 0;
     if (qty > 0) {
-      orderItems.push({
-        id: dish.id,
-        name: dish.name,
-        price: dish.price,
-        quantity: qty
-      });
+      orderItems.push({ id: dish.id, name: dish.name, price: dish.price, quantity: qty });
       totalAmount += dish.price * qty;
     }
   });
@@ -749,7 +685,6 @@ async function placeOrder() {
   const customerProfile = JSON.parse(profileStr);
   syncCustomerVersionToFirebase(customerProfile);
   
-  // Attach user's push token directly to their order!
   const localPushSub = await getLocalPushSubscription();
   executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, localPushSub);
 }
@@ -759,7 +694,6 @@ function closeProfileModal() {
   if (profileModal) profileModal.style.display = 'none';
 }
 
-// MAKE ASYNC: Grabs local push token before sending order
 async function saveProfileAndPlaceOrder() {
   const nameInput = document.getElementById('cust-name-input');
   const mobileInput = document.getElementById('cust-mobile-input');
@@ -776,10 +710,7 @@ async function saveProfileAndPlaceOrder() {
     return;
   }
 
-  const customerProfile = {
-    name: nameVal,
-    mobile: mobileVal
-  };
+  const customerProfile = { name: nameVal, mobile: mobileVal };
 
   localStorage.setItem('fp_customer_profile', JSON.stringify(customerProfile));
   syncCustomerVersionToFirebase(customerProfile);
@@ -795,23 +726,21 @@ async function saveProfileAndPlaceOrder() {
     }
   });
 
-  // Attach user's push token directly to their order!
   const localPushSub = await getLocalPushSubscription();
   executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, localPushSub);
 }
 
-// Saves pushSubscription alongside the order ticket
 function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, pushSub) {
   const newOrderRef = db.ref('orders').push();
   const orderData = {
     orderId: newOrderRef.key.slice(-4).toUpperCase(),
     items: orderItems,
     total: totalAmount,
-    status: 'PENDING',
+    status: 'PENDING', // Uses strictly PENDING, ACCEPTED, or REJECTED
     customerName: customerProfile.name,
     customerMobile: customerProfile.mobile,
     customerVersion: CURRENT_APP_VERSION,
-    pushSubscription: pushSub ? JSON.parse(JSON.stringify(pushSub)) : null, // Safely copy token
+    pushSubscription: pushSub ? JSON.parse(JSON.stringify(pushSub)) : null,
     timestamp: firebase.database.ServerValue.TIMESTAMP
   };
 
@@ -902,10 +831,8 @@ function listenForCustomerOrderUpdates() {
           myOrder.status = liveOrder.status;
           hasChanges = true;
         }
-      } else if (myOrder.status === 'PENDING' || myOrder.status === 'ACCEPTED') {
-        myOrder.status = 'COMPLETED';
-        hasChanges = true;
       }
+      // If it disappears (Kitchen clicked "Remove Ticket"), it retains its last known local status.
     });
 
     if (hasChanges) {
@@ -916,7 +843,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v52)
+// 12. KITCHEN LOGIN & NAVIGATION (v53)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -927,16 +854,8 @@ function openKitchenPINModal() {
     return;
   }
   document.getElementById('pin-modal').style.display = 'flex';
-  
   const input = document.getElementById('kitchen-pin-input');
-  const eyeBtn = document.getElementById('toggle-passcode-eye');
-  if (input) {
-    input.value = '';
-    input.type = 'password';
-  }
-  if (eyeBtn) {
-    eyeBtn.textContent = '👁️';
-  }
+  if (input) { input.value = ''; input.type = 'password'; }
 }
 
 function closePINModal() {
@@ -947,7 +866,6 @@ function togglePasscodeVisibility() {
   const input = document.getElementById('kitchen-pin-input');
   const eyeBtn = document.getElementById('toggle-passcode-eye');
   if (!input) return;
-
   if (input.type === 'password') {
     input.type = 'text';
     if (eyeBtn) eyeBtn.textContent = '🔒';
@@ -969,17 +887,12 @@ function verifyKitchenPIN() {
 }
 
 function enterKitchenMode() {
-  if (!isKitchenMode) {
-    history.pushState({ kitchenMode: true }, '', '#kitchen');
-  }
+  if (!isKitchenMode) history.pushState({ kitchenMode: true }, '', '#kitchen');
   isKitchenMode = true;
 
-  const titleEl = document.getElementById('main-app-title');
-  if (titleEl) titleEl.style.display = 'none';
-
+  document.getElementById('main-app-title').style.display = 'none';
   document.getElementById('customer-view').style.display = 'none';
 
-  // Swap header buttons for kitchen layout
   document.getElementById('header-notify-btn').style.display = 'none';
   document.getElementById('header-kitchen-btn').style.display = 'none';
   document.getElementById('header-back-btn').style.display = 'inline-flex';
@@ -987,8 +900,7 @@ function enterKitchenMode() {
   document.getElementById('kitchen-version-badge').style.display = 'inline-block';
   document.getElementById('header-exit-btn').style.display = 'inline-block';
 
-  const kitchenView = document.getElementById('kitchen-view');
-  if (kitchenView) kitchenView.style.display = 'flex';
+  document.getElementById('kitchen-view').style.display = 'flex';
 
   if (db) {
     db.ref('dailyMenu').on('value', (snapshot) => {
@@ -1005,7 +917,6 @@ function enterKitchenMode() {
 function handleHeaderBack() {
   const custPage = document.getElementById('customer-data-view');
   const payPage = document.getElementById('payment-details-view');
-  
   if ((custPage && custPage.style.display === 'flex') || (payPage && payPage.style.display === 'flex')) {
     closeKitchenSubPage(true);
   } else {
@@ -1019,20 +930,12 @@ function exitKitchenMode(triggerHistoryBack = true) {
 
   toggleKitchenDrawer(false);
   closeKitchenSubPage(false);
+  if (triggerHistoryBack && window.location.hash.startsWith('#kitchen')) history.back();
 
-  if (triggerHistoryBack && window.location.hash.startsWith('#kitchen')) {
-    history.back();
-  }
-
-  const titleEl = document.getElementById('main-app-title');
-  if (titleEl) titleEl.style.display = 'block';
-
-  const kitchenView = document.getElementById('kitchen-view');
-  if (kitchenView) kitchenView.style.display = 'none';
-
+  document.getElementById('main-app-title').style.display = 'block';
+  document.getElementById('kitchen-view').style.display = 'none';
   document.getElementById('customer-view').style.display = 'flex';
 
-  // Restore customer layout
   document.getElementById('header-notify-btn').style.display = 'inline-flex';
   document.getElementById('header-kitchen-btn').style.display = 'inline-block';
   document.getElementById('header-back-btn').style.display = 'none';
@@ -1047,58 +950,42 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v52)
+// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
   history.pushState({ kitchenSubPage: 'customers' }, '', '#kitchen-customers');
-
   document.getElementById('kitchen-view').style.display = 'none';
-  const subPage = document.getElementById('customer-data-view');
-  if (subPage) subPage.style.display = 'flex';
-
+  document.getElementById('customer-data-view').style.display = 'flex';
   fetchAndRenderCustomerDirectory();
 }
 
 function openPaymentDetailsPage() {
   toggleKitchenDrawer(false);
   history.pushState({ kitchenSubPage: 'payments' }, '', '#kitchen-payments');
-
   document.getElementById('kitchen-view').style.display = 'none';
-  const subPage = document.getElementById('payment-details-view');
-  if (subPage) subPage.style.display = 'flex';
-
+  document.getElementById('payment-details-view').style.display = 'flex';
   fetchAndRenderPaymentLedger();
 }
 
 function closeKitchenSubPage(triggerBack = true) {
   document.getElementById('customer-data-view').style.display = 'none';
   document.getElementById('payment-details-view').style.display = 'none';
-
-  if (isKitchenMode) {
-    document.getElementById('kitchen-view').style.display = 'flex';
-  }
-
+  if (isKitchenMode) document.getElementById('kitchen-view').style.display = 'flex';
   if (triggerBack && (window.location.hash === '#kitchen-customers' || window.location.hash === '#kitchen-payments')) {
     history.back();
   }
 }
 
 function clearPaymentLedger() {
-  if (!db) {
-    alert("Database connection is not ready. Please refresh the page.");
-    return;
-  }
+  if (!db) return;
   if (confirm("Are you sure you want to wipe all billing records and order entries? This will reset the total ledger back to ₹0.")) {
     db.ref('orders').remove()
       .then(() => {
         alert("Payment ledger wiped clean!");
         fetchAndRenderPaymentLedger();
       })
-      .catch((err) => {
-        console.error("Error clearing payment ledger:", err);
-        alert("Could not clear payment entries. Please check your network connection.");
-      });
+      .catch((err) => console.error("Error clearing payment ledger:", err));
   }
 }
 
@@ -1108,39 +995,28 @@ function fetchAndRenderCustomerDirectory() {
 
   container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">Fetching live directory...</p>`;
 
-  db.ref('customers').once('value')
-    .then((snapshot) => {
-      const customers = snapshot.val();
-      if (!customers) {
-        container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">No customer version records synced yet. Data appears as orders are placed!</p>`;
-        return;
-      }
-
-      container.innerHTML = '';
-      const list = Object.keys(customers).map(key => customers[key]);
-
-      list.forEach((cust) => {
-        const card = document.createElement('div');
-        card.className = 'customer-data-card';
-        const dateStr = cust.lastSeen
-          ? new Date(cust.lastSeen).toLocaleDateString()
-          : 'Recently';
-
-        card.innerHTML = `
-          <div>
-            <h4 style="font-size:1.05rem; color:#2D2D2D; margin-bottom:3px;">${cust.name || 'Guest'}</h4>
-            <div style="font-size:0.85rem; color:#666;">📞 <strong>${cust.mobile}</strong></div>
-            <div style="font-size:0.75rem; color:#888; margin-top:2px;">Last Active: ${dateStr}</div>
-          </div>
-          <span class="version-badge">${cust.appVersion || 'Unknown'}</span>
-        `;
-        container.appendChild(card);
-      });
-    })
-    .catch((err) => {
-      console.error("Error loading directory:", err);
-      container.innerHTML = `<p style="text-align:center; color:red;">Failed to load customer list.</p>`;
+  db.ref('customers').once('value').then((snapshot) => {
+    const customers = snapshot.val();
+    if (!customers) {
+      container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">No customer version records synced yet.</p>`;
+      return;
+    }
+    container.innerHTML = '';
+    Object.values(customers).forEach((cust) => {
+      const card = document.createElement('div');
+      card.className = 'customer-data-card';
+      const dateStr = cust.lastSeen ? new Date(cust.lastSeen).toLocaleDateString() : 'Recently';
+      card.innerHTML = `
+        <div>
+          <h4 style="font-size:1.05rem; color:#2D2D2D; margin-bottom:3px;">${cust.name || 'Guest'}</h4>
+          <div style="font-size:0.85rem; color:#666;">📞 <strong>${cust.mobile}</strong></div>
+          <div style="font-size:0.75rem; color:#888; margin-top:2px;">Last Active: ${dateStr}</div>
+        </div>
+        <span class="version-badge">${cust.appVersion || 'Unknown'}</span>
+      `;
+      container.appendChild(card);
     });
+  });
 }
 
 function fetchAndRenderPaymentLedger() {
@@ -1149,69 +1025,61 @@ function fetchAndRenderPaymentLedger() {
 
   container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">Calculating payment ledger...</p>`;
 
-  db.ref('orders').once('value')
-    .then((snapshot) => {
-      const orders = snapshot.val();
-      if (!orders) {
-        container.innerHTML = `
-          <div class="payment-summary-box">
-            <div style="font-size:0.85rem; color:#666; text-transform:uppercase; font-weight:700;">Active Orders Billing Total</div>
-            <div style="font-size:1.8rem; font-weight:800; color:#FF4B3A; margin:4px 0;">₹0</div>
-            <div style="font-size:0.85rem; color:#2E7D32;">✔ 0 Orders Accepted/Completed</div>
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px 0;">
-            <h3 style="font-size:1rem; color:#2D2D2D; margin: 0;">Recent Billing Entries</h3>
-            <button type="button" class="btn-clear-menu" onclick="clearPaymentLedger()" style="padding: 6px 12px; font-size: 0.8rem; width: auto; flex: none;">🗑️ Clear Entries</button>
-          </div>
-          <p style="text-align:center; padding: 30px; color:#666;">No active payment records found today.</p>
-        `;
-        return;
-      }
-
-      let totalRevenue = 0;
-      let completedCount = 0;
-      const orderRows = [];
-
-      Object.keys(orders).forEach((key) => {
-        const o = orders[key];
-        orderRows.push(o);
-        if (o.status === 'COMPLETED' || o.status === 'ACCEPTED') {
-          totalRevenue += (o.total || 0);
-          completedCount++;
-        }
-      });
-
+  db.ref('orders').once('value').then((snapshot) => {
+    const orders = snapshot.val();
+    if (!orders) {
       container.innerHTML = `
         <div class="payment-summary-box">
           <div style="font-size:0.85rem; color:#666; text-transform:uppercase; font-weight:700;">Active Orders Billing Total</div>
-          <div style="font-size:1.8rem; font-weight:800; color:#FF4B3A; margin:4px 0;">₹${totalRevenue}</div>
-          <div style="font-size:0.85rem; color:#2E7D32;">✔ ${completedCount} Orders Accepted/Completed</div>
+          <div style="font-size:1.8rem; font-weight:800; color:#FF4B3A; margin:4px 0;">₹0</div>
+          <div style="font-size:0.85rem; color:#2E7D32;">✔ 0 Orders Accepted</div>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px 0;">
           <h3 style="font-size:1rem; color:#2D2D2D; margin: 0;">Recent Billing Entries</h3>
           <button type="button" class="btn-clear-menu" onclick="clearPaymentLedger()" style="padding: 6px 12px; font-size: 0.8rem; width: auto; flex: none;">🗑️ Clear Entries</button>
         </div>
+        <p style="text-align:center; padding: 30px; color:#666;">No active payment records found today.</p>
       `;
+      return;
+    }
 
-      orderRows.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+    let totalRevenue = 0;
+    let completedCount = 0;
+    const orderRows = Object.values(orders);
 
-      orderRows.forEach((order) => {
-        const row = document.createElement('div');
-        row.className = 'customer-data-card';
-        row.innerHTML = `
-          <div>
-            <h4 style="font-size:0.98rem; color:#2D2D2D;">Order #${order.orderId} — ₹${order.total}</h4>
-            <div style="font-size:0.8rem; color:#666;">${order.customerName || 'Guest'} (${order.customerMobile || 'N/A'})</div>
-          </div>
-          <span style="font-weight:700; font-size:0.85rem; color:#FF4B3A;">${order.status}</span>
-        `;
-        container.appendChild(row);
-      });
-    })
-    .catch((err) => {
-      console.error("Error loading payments:", err);
-      container.innerHTML = `<p style="text-align:center; color:red;">Failed to calculate payment ledger.</p>`;
+    orderRows.forEach((o) => {
+      // Ledger only counts accepted orders
+      if (o.status === 'ACCEPTED') {
+        totalRevenue += (o.total || 0);
+        completedCount++;
+      }
     });
+
+    container.innerHTML = `
+      <div class="payment-summary-box">
+        <div style="font-size:0.85rem; color:#666; text-transform:uppercase; font-weight:700;">Active Orders Billing Total</div>
+        <div style="font-size:1.8rem; font-weight:800; color:#FF4B3A; margin:4px 0;">₹${totalRevenue}</div>
+        <div style="font-size:0.85rem; color:#2E7D32;">✔ ${completedCount} Orders Accepted</div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px 0;">
+        <h3 style="font-size:1rem; color:#2D2D2D; margin: 0;">Recent Billing Entries</h3>
+        <button type="button" class="btn-clear-menu" onclick="clearPaymentLedger()" style="padding: 6px 12px; font-size: 0.8rem; width: auto; flex: none;">🗑️ Clear Entries</button>
+      </div>
+    `;
+
+    orderRows.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)).forEach((order) => {
+      const row = document.createElement('div');
+      row.className = 'customer-data-card';
+      row.innerHTML = `
+        <div>
+          <h4 style="font-size:0.98rem; color:#2D2D2D;">Order #${order.orderId} — ₹${order.total}</h4>
+          <div style="font-size:0.8rem; color:#666;">${order.customerName || 'Guest'} (${order.customerMobile || 'N/A'})</div>
+        </div>
+        <span style="font-weight:700; font-size:0.85rem; color:#FF4B3A;">${order.status}</span>
+      `;
+      container.appendChild(row);
+    });
+  });
 }
 
 window.addEventListener('popstate', () => {
@@ -1225,7 +1093,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v52)
+// 14. LIVE KITCHEN ORDER LISTENER (v53)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -1241,10 +1109,17 @@ function listenForKitchenOrders() {
       return;
     }
 
+    // Convert object to array and hide tickets that the kitchen clicked "Remove Ticket" on
     const ordersArray = Object.keys(orders).map(key => ({
       firebaseKey: key,
       ...orders[key]
-    }));
+    })).filter(order => !order.archived);
+
+    if (ordersArray.length === 0) {
+      ordersContainer.innerHTML = `<p style="text-align:center; padding:20px; color:#666;">No active incoming orders.</p>`;
+      return;
+    }
+
     ordersArray.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
     ordersArray.forEach((order) => {
@@ -1258,15 +1133,22 @@ function listenForKitchenOrders() {
       const statusColors = {
         PENDING: '#EF6C00',
         ACCEPTED: '#2E7D32',
-        DENIED: '#C62828',
-        COMPLETED: '#1565C0'
+        REJECTED: '#C62828'
       };
       const statusColor = statusColors[order.status] || '#FF4B3A';
 
-      const actionButtonsHtml = (order.status === 'PENDING')
-        ? `<button class="btn-action btn-accept" onclick="acceptOrder('${order.firebaseKey}')">Accept</button>
-           <button class="btn-action btn-deny" onclick="denyOrder('${order.firebaseKey}')">Deny</button>`
-        : `<button class="btn-action btn-complete" onclick="completeOrder('${order.firebaseKey}')">Complete</button>`;
+      // SIMPLIFIED 2-STATUS UI: Accept/Reject buttons, OR "Remove Ticket" to clean the screen
+      let actionButtonsHtml = '';
+      if (order.status === 'PENDING') {
+        actionButtonsHtml = `
+          <button class="btn-action btn-accept" onclick="acceptOrder('${order.firebaseKey}')">Accept</button>
+          <button class="btn-action btn-deny" onclick="rejectOrder('${order.firebaseKey}')">Reject</button>
+        `;
+      } else {
+        actionButtonsHtml = `
+          <button class="btn-action" style="background: #EAEAEA; color: #555;" onclick="removeTicket('${order.firebaseKey}')">Remove Ticket</button>
+        `;
+      }
 
       card.innerHTML = `
         <div class="order-header">
@@ -1293,14 +1175,14 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 15. TARGETED ORDER ACTIONS (ACCEPT, DENY & COMPLETE) (v52)
+// 15. TARGETED ORDER ACTIONS (ACCEPT, REJECT & REMOVE) (v53)
 // ==========================================================================
 async function acceptOrder(firebaseKey) {
   if (!db) return;
   try {
     await db.ref(`orders/${firebaseKey}`).update({ status: 'ACCEPTED' });
     
-    // Read order to grab customer's push token and send personal alert
+    // Automatically send targeted push to the customer!
     const snap = await db.ref(`orders/${firebaseKey}`).once('value');
     const order = snap.val();
     if (order && order.pushSubscription) {
@@ -1312,46 +1194,36 @@ async function acceptOrder(firebaseKey) {
   }
 }
 
-async function denyOrder(firebaseKey) {
+async function rejectOrder(firebaseKey) {
   if (!db) return;
-  if (confirm("Deny this order? The customer will see that their order was declined.")) {
+  if (confirm("Reject this order? The customer will be notified.")) {
     try {
-      await db.ref(`orders/${firebaseKey}`).update({ status: 'DENIED' });
+      await db.ref(`orders/${firebaseKey}`).update({ status: 'REJECTED' });
       
       const snap = await db.ref(`orders/${firebaseKey}`).once('value');
       const order = snap.val();
       if (order && order.pushSubscription) {
-        sendTargetedRenderPush(order.pushSubscription, "Order Declined ❌", `Sorry ${order.customerName}, your order #${order.orderId} was declined by the kitchen.`);
+        sendTargetedRenderPush(order.pushSubscription, "Order Rejected ❌", `Sorry ${order.customerName}, your order #${order.orderId} was declined by the kitchen.`);
       }
-
-      setTimeout(() => { db.ref(`orders/${firebaseKey}`).remove(); }, 2000);
     } catch (error) {
-      console.error("Error denying order:", error);
+      console.error("Error rejecting order:", error);
       alert("Could not update order status.");
     }
   }
 }
 
-async function completeOrder(firebaseKey) {
+async function removeTicket(firebaseKey) {
   if (!db) return;
-  if (confirm("Mark this order as complete? It will be permanently removed from active orders.")) {
-    try {
-      const snap = await db.ref(`orders/${firebaseKey}`).once('value');
-      const order = snap.val();
-      if (order && order.pushSubscription) {
-        sendTargetedRenderPush(order.pushSubscription, "Order Ready! 🍽️", `Your order #${order.orderId} is complete and ready for pickup!`);
-      }
-
-      await db.ref(`orders/${firebaseKey}`).remove();
-    } catch (error) {
-      console.error("Error completing order:", error);
-      alert("Could not remove completed order.");
-    }
+  try {
+    // We update { archived: true } instead of db.remove() so the Payment Ledger doesn't lose the revenue data!
+    await db.ref(`orders/${firebaseKey}`).update({ archived: true });
+  } catch (error) {
+    console.error("Error removing ticket from screen:", error);
   }
 }
 
 // ==========================================================================
-// 16. INITIALIZE APP & ENFORCE STANDALONE GATE ON DOM READY
+// 16. INITIALIZE APP ON DOM READY
 // ==========================================================================
 function initFoodiesPoint() {
   enforceInstallGate();
