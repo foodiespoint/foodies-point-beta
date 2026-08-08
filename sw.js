@@ -1,18 +1,18 @@
 // ==========================================================================
-// FOODIES POINT SERVICE WORKER (v53 - NATIVE WEB PUSH LISTENER)
+// FOODIES POINT SERVICE WORKER (v54 - NATIVE WEB PUSH LISTENER)
 // ==========================================================================
-const CACHE_NAME = 'fp-cache-v53';
+const CACHE_NAME = 'fp-cache-v54';
 
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
-  '/foodies-point-beta/index.html?v=53',
-  '/foodies-point-beta/app.js?v=53',
-  '/foodies-point-beta/manifest.json?v=53',
+  '/foodies-point-beta/index.html?v=54',
+  '/foodies-point-beta/app.js?v=54',
+  '/foodies-point-beta/manifest.json?v=54',
   '/foodies-point-beta/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW v53] Installing new service worker...');
+  console.log('[SW v54] Installing new service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -21,7 +21,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW v53] Activating & wiping old caches...');
+  console.log('[SW v54] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -35,9 +35,8 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// LISTEN FOR NATIVE PUSH MESSAGES FROM YOUR RENDER BACKEND
 self.addEventListener('push', (event) => {
-  console.log('[SW v53] Native Push Event Received:', event);
+  console.log('[SW v54] Native Push Event Received:', event);
 
   let data = { title: "Foodies Point 🍛", body: "Today's live menu is updated!" };
   if (event.data) {
@@ -61,7 +60,6 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Handle clicking on the notification banner
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
