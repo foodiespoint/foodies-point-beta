@@ -1,7 +1,10 @@
 // ==========================================================================
-// 1. FIREBASE CONFIGURATION & INITIALIZATION (v47)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v49)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v47";
+const CURRENT_APP_VERSION = "v49";
+const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
+const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
+
 let db = null;
 
 try {
@@ -25,7 +28,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v47)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v49)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -57,27 +60,19 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. ONESIGNAL v16 & FOOLPROOF NATIVE NOTIFICATION ENGINE (v47)
+// 3. NATIVE WEB PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE (v49)
 // ==========================================================================
-try {
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "d686653a-e6bc-40a4-b6e1-447a86a082cd",
-      safari_web_id: "web.onesignal.auto.0dd8fdab-49d8-437b-ac06-36c9d15991be",
-      notifyButton: {
-        enable: false,
-      },
-      serviceWorkerParam: { scope: "/foodies-point-beta/" },
-      serviceWorkerPath: "/foodies-point-beta/sw.js"
-    });
-    console.log(`[OneSignal ${CURRENT_APP_VERSION}] v16 SDK initialized successfully.`);
-  });
-} catch (error) {
-  console.error(`[OneSignal ${CURRENT_APP_VERSION}] Initialization error:`, error);
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }
 
-// 1. TAPPING "🔔 Alerts" IN HEADER: Checks permission and gives instant feedback
 function openAlertsModal() {
   if (!('Notification' in window)) {
     alert("Push notifications are not supported on this browser/device.");
@@ -99,34 +94,91 @@ function closeNotificationModal() {
   if (modal) modal.style.display = 'none';
 }
 
-// 2. TAPPING "🔔 Allow Notifications" INSIDE MODAL: Directly invokes OS permission popup
-function requestPushAccess() {
+async function requestPushAccess() {
   closeNotificationModal();
 
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().then((permission) => {
-      console.log(`[PWA ${CURRENT_APP_VERSION}] Native permission result:`, permission);
-      if (permission === 'granted') {
-        alert("✅ Notifications enabled successfully!");
-      }
-    });
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert("Push notifications are not supported on this browser.");
+    return;
   }
 
-  // Simultaneously register with OneSignal v16 in background
   try {
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
-        await OneSignal.Notifications.requestPermission();
-      }
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      alert("🚫 Notifications were denied.");
+      return;
+    }
+
+    const reg = await navigator.serviceWorker.ready;
+    let subscription = await reg.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+
+    console.log(`[Push ${CURRENT_APP_VERSION}] Subscription Object:`, subscription);
+
+    const subString = JSON.stringify(subscription);
+    const dbKey = btoa(subscription.endpoint).replace(/[.#$/\[\]]/g, "_");
+
+    await db.ref(`pushSubscriptions/${dbKey}`).set(JSON.parse(subString));
+    alert("✅ Notifications enabled successfully!");
+  } catch (error) {
+    console.error(`[Push ${CURRENT_APP_VERSION}] Subscription error:`, error);
+    alert("Could not enable notifications. Check console for details.");
+  }
+}
+
+async function sendRenderPushBroadcast(title, message) {
+  try {
+    const snap = await db.ref('pushSubscriptions').once('value');
+    const subsObj = snap.val();
+
+    if (!subsObj) {
+      console.log(`[Push ${CURRENT_APP_VERSION}] No stored subscribers found in database.`);
+      return;
+    }
+
+    const subscriptions = Object.values(subsObj);
+
+    const response = await fetch(`${RENDER_BACKEND_URL}/api/broadcast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, message, subscriptions })
     });
-  } catch (err) {
-    console.error(`[Notification ${CURRENT_APP_VERSION}] OneSignal sync error:`, err);
+
+    const data = await response.json();
+    console.log(`[Push ${CURRENT_APP_VERSION}] Render Broadcast Result:`, data);
+
+    if (data.expiredEndpoints && data.expiredEndpoints.length > 0) {
+      data.expiredEndpoints.forEach((expiredUrl) => {
+        const dbKey = btoa(expiredUrl).replace(/[.#$/\[\]]/g, "_");
+        db.ref(`pushSubscriptions/${dbKey}`).remove();
+      });
+      console.log(`[Push ${CURRENT_APP_VERSION}] Cleaned up ${data.expiredEndpoints.length} expired subscriptions.`);
+    }
+  } catch (error) {
+    console.error(`[Push ${CURRENT_APP_VERSION}] Error contacting Render push API:`, error);
+  }
+}
+
+function broadcastManualMenuAlert() {
+  const selectedCount = Object.keys(kitchenCheckedState).length;
+  const msg = selectedCount > 0
+    ? `We have ${selectedCount} fresh dishes ready on today's cafeteria menu. Open the app to order now!`
+    : "Check out today's live cafeteria specials and place your order before we run out!";
+
+  if (confirm("Send a Push Notification to ALL subscribed customers that today's menu is live?")) {
+    sendRenderPushBroadcast("Today's Live Menu is Up! 🍛", msg);
+    alert("Broadcast command sent to your Render backend!");
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v47 - STRICT NO REFRESH LOOPS)
+// 4. SERVICE WORKER REGISTRATION (v49)
 // ==========================================================================
 let swRegistration = null;
 
@@ -163,7 +215,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v47)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v49)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -207,7 +259,6 @@ function enforceInstallGate() {
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
     console.log(`[PWA ${CURRENT_APP_VERSION}] Standalone PWA mode verified. Application unlocked.`);
     
-    // Auto-prompt check 3 seconds after opening app
     setTimeout(() => {
       if ('Notification' in window && Notification.permission === 'default') {
         const modal = document.getElementById('notification-permission-modal');
@@ -357,7 +408,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v47)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v49)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -377,7 +428,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v47)
+// 8. RENDER KITCHEN MENU (v49)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -459,7 +510,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v47)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v49)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -487,6 +538,10 @@ function publishDailyMenu() {
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully (${selectedCount} items)!`);
+      sendRenderPushBroadcast(
+        "Today's Live Menu is Up! 🍛",
+        `We just published ${selectedCount} fresh items for today's cafeteria menu. Open the app to order now!`
+      );
     })
     .catch((error) => {
       console.error("Error publishing menu:", error);
@@ -515,7 +570,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v47)
+// 10. CUSTOMER LIVE MENU LISTENER (v49)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -616,7 +671,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v47)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v49)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -829,7 +884,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v47)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v49)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -958,7 +1013,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v47)
+// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v49)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -1136,7 +1191,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v47)
+// 14. LIVE KITCHEN ORDER LISTENER (v49)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
