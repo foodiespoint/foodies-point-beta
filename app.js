@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v54)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v55)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v54";
+const CURRENT_APP_VERSION = "v55";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -60,7 +60,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. FAIL-PROOF PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE (v54)
+// 3. FAIL-PROOF PUSH SUBSCRIPTION & AUTO-REPAIR ENGINE (v55)
 // ==========================================================================
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -73,7 +73,39 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-// Force-ensures active push subscription object (checks browser sub + local backup)
+// AUTO-REPAIR: Silently restores deleted tokens when app is opened
+async function autoSyncPushToken() {
+  if ('serviceWorker' in navigator && 'PushManager' in window && Notification.permission === 'granted') {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        });
+      }
+      if (sub && db) {
+        const subJson = sub.toJSON();
+        localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
+        
+        // Save to global list (for Live Menu Broadcasts)
+        const dbKey = btoa(subJson.endpoint).replace(/[.#$/\[\]]/g, "_");
+        db.ref(`pushSubscriptions/${dbKey}`).set(subJson);
+        
+        // Link to Customer Profile (for Targeted Order Alerts)
+        const profileStr = localStorage.getItem('fp_customer_profile');
+        if (profileStr) {
+           const profile = JSON.parse(profileStr);
+           db.ref(`customers/${profile.mobile}/pushSubscription`).set(subJson);
+        }
+      }
+    } catch(e) {
+      console.warn("Silent token auto-sync skipped:", e);
+    }
+  }
+}
+
 async function getLocalPushSubscription() {
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     try {
@@ -96,8 +128,6 @@ async function getLocalPushSubscription() {
       console.warn("Could not fetch active push sub from service worker:", e);
     }
   }
-
-  // Fallback to local storage cache
   const cached = localStorage.getItem('fp_push_sub_cached');
   return cached ? JSON.parse(cached) : null;
 }
@@ -107,7 +137,6 @@ async function openAlertsModal() {
     alert("Push notifications are not supported on this browser/device.");
     return;
   }
-
   if (Notification.permission === 'granted') {
     await requestPushAccess(true);
   } else if (Notification.permission === 'denied') {
@@ -154,6 +183,12 @@ async function requestPushAccess(isSilentSync = false) {
     const dbKey = btoa(subJson.endpoint).replace(/[.#$/\[\]]/g, "_");
     await db.ref(`pushSubscriptions/${dbKey}`).set(subJson);
     
+    const profileStr = localStorage.getItem('fp_customer_profile');
+    if (profileStr) {
+       const profile = JSON.parse(profileStr);
+       await db.ref(`customers/${profile.mobile}/pushSubscription`).set(subJson);
+    }
+
     if (isSilentSync) {
       alert("✅ Push connection verified and synced!");
     } else {
@@ -169,11 +204,9 @@ async function sendRenderPushBroadcast(title, message) {
   try {
     const snap = await db.ref('pushSubscriptions').once('value');
     const subsObj = snap.val();
-
     if (!subsObj) return;
 
     const subscriptions = Object.values(subsObj);
-
     const response = await fetch(`${RENDER_BACKEND_URL}/api/broadcast`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -181,7 +214,6 @@ async function sendRenderPushBroadcast(title, message) {
     });
 
     const data = await response.json();
-
     if (data.expiredEndpoints && data.expiredEndpoints.length > 0) {
       data.expiredEndpoints.forEach((expiredUrl) => {
         const dbKey = btoa(expiredUrl).replace(/[.#$/\[\]]/g, "_");
@@ -194,21 +226,33 @@ async function sendRenderPushBroadcast(title, message) {
 }
 
 async function sendTargetedRenderPush(subscription, title, message) {
-  if (!subscription || !subscription.endpoint) {
-    console.warn(`[Push ${CURRENT_APP_VERSION}] Aborted targeted push: Invalid subscription structure.`, subscription);
-    return;
-  }
+  if (!subscription || !subscription.endpoint) return;
   try {
-    const response = await fetch(`${RENDER_BACKEND_URL}/api/broadcast`, {
+    await fetch(`${RENDER_BACKEND_URL}/api/broadcast`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, message, subscriptions: [subscription] })
     });
-    const data = await response.json();
-    console.log(`[Push ${CURRENT_APP_VERSION}] Targeted Push Result:`, data);
   } catch (error) {
     console.error(`[Push ${CURRENT_APP_VERSION}] Error sending targeted push:`, error);
   }
+}
+
+// THE MAGNET FIX: Looks ONLY at the order ticket or the customer's personal profile!
+async function resolveTargetSubscription(order) {
+  if (order.pushSubscription && order.pushSubscription.endpoint) {
+    return order.pushSubscription;
+  }
+  if (order.customerMobile) {
+    try {
+      const snap = await db.ref(`customers/${order.customerMobile}/pushSubscription`).once('value');
+      const sub = snap.val();
+      if (sub && sub.endpoint) return sub;
+    } catch(e) {
+      console.error("Subscription fallback lookup error:", e);
+    }
+  }
+  return null; // NO GUESSING! If we can't find their token, it aborts silently.
 }
 
 // ==========================================================================
@@ -655,7 +699,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & TARGETED SUBSCRIPTION ENGINE (v54)
+// 11. ORDER SUBMISSION & TARGETED SUBSCRIPTION ENGINE (v55)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -704,7 +748,6 @@ async function placeOrder() {
   const customerProfile = JSON.parse(profileStr);
   syncCustomerVersionToFirebase(customerProfile);
   
-  // Guarantees active push token is retrieved
   const localPushSub = await getLocalPushSubscription();
   executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, localPushSub);
 }
@@ -764,7 +807,6 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
     timestamp: firebase.database.ServerValue.TIMESTAMP
   };
 
-  // Safely attach subscription object so Firebase doesn't strip it
   if (pushSub && pushSub.endpoint) {
     orderData.pushSubscription = pushSub;
   }
@@ -867,7 +909,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. KITCHEN LOGIN & NAVIGATION (v54)
+// 12. KITCHEN LOGIN & NAVIGATION (v55)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -1116,7 +1158,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v54)
+// 14. LIVE KITCHEN ORDER LISTENER (v55)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -1195,31 +1237,8 @@ function listenForKitchenOrders() {
   });
 }
 
-// Helper: Retrieves target subscription either from order or global subscriptions node
-async function resolveTargetSubscription(order) {
-  if (order.pushSubscription && order.pushSubscription.endpoint) {
-    return order.pushSubscription;
-  }
-  
-  // Fallback lookup across all active database push subscriptions
-  try {
-    const snap = await db.ref('pushSubscriptions').once('value');
-    const subs = snap.val();
-    if (subs) {
-      const subsList = Object.values(subs);
-      if (subsList.length > 0) {
-        // Returns the most recently saved subscription token as a fallback
-        return subsList[subsList.length - 1];
-      }
-    }
-  } catch (e) {
-    console.error("Subscription fallback lookup error:", e);
-  }
-  return null;
-}
-
 // ==========================================================================
-// 15. TARGETED ORDER ACTIONS WITH AUTOMATIC FALLBACK LOOKUP (v54)
+// 15. TARGETED ORDER ACTIONS WITH BULLETPROOF LOOKUP (v55)
 // ==========================================================================
 async function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -1279,6 +1298,9 @@ function initFoodiesPoint() {
   listenForCustomerLiveMenu();
   renderCustomerOrderHistory();
   listenForCustomerOrderUpdates();
+  
+  // NEW: Automatically restores tokens to Firebase in the background
+  autoSyncPushToken();
 
   setInterval(() => {
     checkDaily6PMReset();
