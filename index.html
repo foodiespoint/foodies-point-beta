@@ -6,9 +6,9 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v51)                            -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v52)                            -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=51">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=52">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,13 +17,13 @@
   <link rel="icon" type="image/png" href="/foodies-point-beta/icon.png">
 
   <!-- ====================================================================== -->
-  <!-- 2. EXTERNAL SDKS (Firebase Only - Clean Native Stack)                  -->
+  <!-- 2. EXTERNAL SDKS (Firebase Only)                                       -->
   <!-- ====================================================================== -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v51)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v52)                              -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -53,9 +53,6 @@
       color: var(--text-dark);
     }
 
-    /* ====================================================================== */
-    /* FIXED INSTALL GATE OVERLAY                                             */
-    /* ====================================================================== */
     #install-gate-overlay {
       display: flex !important;
       position: fixed;
@@ -103,9 +100,6 @@
       display: block;
     }
 
-    /* ====================================================================== */
-    /* MASTER APP CONTAINER                                                   */
-    /* ====================================================================== */
     #main-app-content {
       display: none !important;
     }
@@ -213,9 +207,6 @@
       font-weight: 700;
     }
 
-    /* ====================================================================== */
-    /* 50/50 SPLIT CUSTOMER PAGE                                              */
-    /* ====================================================================== */
     #customer-view {
       display: flex;
       position: fixed;
@@ -439,7 +430,7 @@
       margin-bottom: 12px;
     }
 
-    .btn-publish, .btn-clear-menu, .btn-notify-all {
+    .btn-publish, .btn-clear-menu {
       flex: 1;
       border: none;
       padding: 11px 8px;
@@ -457,20 +448,11 @@
       box-shadow: 0 3px 10px rgba(255, 75, 58, 0.25);
     }
 
-    .btn-notify-all {
-      background: #1565C0;
-      color: var(--white);
-      box-shadow: 0 3px 10px rgba(21, 101, 192, 0.25);
-    }
-
     .btn-clear-menu {
       background: #EAEAEA;
       color: #333;
     }
 
-    /* ====================================================================== */
-    /* 2-HALF SPLIT KITCHEN CONSOLE VIEW                                      */
-    /* ====================================================================== */
     #kitchen-view {
       display: none;
       position: fixed;
@@ -564,7 +546,6 @@
       color: var(--white);
     }
 
-    /* SUB-PAGES & DRAWER */
     .kitchen-subpage {
       display: none;
       position: fixed;
@@ -805,22 +786,24 @@
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v51)                                          -->
+  <!-- 5. MASTER APP CONTAINER (v52 - UPDATED HEADER LAYOUT)                  -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
     <header class="app-header" id="app-header">
+      <!-- Left side: Kitchen button -->
       <div class="header-left-group">
+        <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
         <button class="btn-back-arrow" id="header-back-btn" onclick="handleHeaderBack()" style="display: none;" aria-label="Back">←</button>
         <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenDrawer()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
 
       <div class="app-title" id="main-app-title">Foodies Point</div>
 
+      <!-- Right side: Notifications & Exit -->
       <div class="header-right-group">
         <button class="btn-icon" id="header-notify-btn" onclick="openAlertsModal()" aria-label="Notifications">🔔</button>
-        <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
-        <span id="kitchen-version-badge">v51</span>
+        <span id="kitchen-version-badge">v52</span>
         <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
       </div>
     </header>
@@ -852,9 +835,9 @@
     <section id="kitchen-view">
       <div class="kitchen-half kitchen-upper">
         <h2 class="section-title" style="margin: 4px 0 10px 0;">Kitchen Console</h2>
+        <!-- Automatically alerts on Publish now -->
         <div class="kitchen-menu-actions">
-          <button class="btn-publish" onclick="publishDailyMenu()">Publish</button>
-          <button class="btn-notify-all" onclick="broadcastManualMenuAlert()">📢 Notify All</button>
+          <button class="btn-publish" onclick="publishDailyMenu()">Publish Menu</button>
           <button class="btn-clear-menu" onclick="clearDailyMenu()">🗑️ Clear</button>
         </div>
         <div class="menu-list" id="kitchen-menu-container"></div>
@@ -868,9 +851,6 @@
       </div>
     </section>
 
-    <!-- ==================================================================== -->
-    <!-- PAGE 1: CUSTOMER DATA DIRECTORY PAGE                                 -->
-    <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="customer-data-view">
       <div class="subpage-header">
         <h2>Customer Data</h2>
@@ -880,9 +860,6 @@
       </div>
     </section>
 
-    <!-- ==================================================================== -->
-    <!-- PAGE 2: PAYMENT RECORDS PAGE                                         -->
-    <!-- ==================================================================== -->
     <section class="kitchen-subpage" id="payment-details-view">
       <div class="subpage-header">
         <h2>Payment Records & Ledger</h2>
@@ -914,9 +891,6 @@
     </div>
   </aside>
 
-  <!-- ====================================================================== -->
-  <!-- 6. NOTIFICATION PERMISSION CARD MODAL                                  -->
-  <!-- ====================================================================== -->
   <div class="modal-overlay" id="notification-permission-modal">
     <div class="modal-card">
       <div style="font-size: 2.8rem; margin-bottom: 8px;">🔔</div>
@@ -932,7 +906,6 @@
     </div>
   </div>
 
-  <!-- PASSCODE MODAL -->
   <div class="modal-overlay" id="pin-modal">
     <div class="modal-card">
       <h3>Kitchen Console</h3>
@@ -950,7 +923,6 @@
     </div>
   </div>
 
-  <!-- PROFILE MODAL -->
   <div class="modal-overlay" id="profile-modal">
     <div class="modal-card">
       <h3>Customer Details</h3>
@@ -968,9 +940,6 @@
     </div>
   </div>
 
-  <!-- ====================================================================== -->
-  <!-- 7. MAIN APP SCRIPT (v51)                                               -->
-  <!-- ====================================================================== -->
-  <script src="/foodies-point-beta/app.js?v=51"></script>
+  <script src="/foodies-point-beta/app.js?v=52"></script>
 </body>
 </html>
