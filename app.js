@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v51)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v52)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v51";
+const CURRENT_APP_VERSION = "v52";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -28,7 +28,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v51)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v52)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -60,7 +60,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. NATIVE WEB PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE (v51)
+// 3. NATIVE WEB PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE (v52)
 // ==========================================================================
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -71,6 +71,19 @@ function urlBase64ToUint8Array(base64String) {
     outputArray[i] = rawData.charCodeAt(i);
   }
   return outputArray;
+}
+
+// Helper to pull the current device's push token (Used when placing orders)
+async function getLocalPushSubscription() {
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      return await reg.pushManager.getSubscription();
+    } catch (e) {
+      console.warn("Could not get local push sub:", e);
+    }
+  }
+  return null;
 }
 
 async function openAlertsModal() {
@@ -137,6 +150,7 @@ async function requestPushAccess(isSilentSync = false) {
   }
 }
 
+// Global broadcast to ALL subscribers (Used for Menu Publishing)
 async function sendRenderPushBroadcast(title, message) {
   try {
     const snap = await db.ref('pushSubscriptions').once('value');
@@ -144,7 +158,6 @@ async function sendRenderPushBroadcast(title, message) {
 
     if (!subsObj) {
       console.log(`[Push ${CURRENT_APP_VERSION}] No stored subscribers found in database.`);
-      alert("No customers are currently subscribed to receive notifications.");
       return;
     }
 
@@ -157,34 +170,37 @@ async function sendRenderPushBroadcast(title, message) {
     });
 
     const data = await response.json();
-    console.log(`[Push ${CURRENT_APP_VERSION}] Render Broadcast Result:`, data);
+    console.log(`[Push ${CURRENT_APP_VERSION}] Global Broadcast Result:`, data);
 
     if (data.expiredEndpoints && data.expiredEndpoints.length > 0) {
       data.expiredEndpoints.forEach((expiredUrl) => {
         const dbKey = btoa(expiredUrl).replace(/[.#$/\[\]]/g, "_");
         db.ref(`pushSubscriptions/${dbKey}`).remove();
       });
-      console.log(`[Push ${CURRENT_APP_VERSION}] Cleaned up ${data.expiredEndpoints.length} expired subscriptions.`);
     }
   } catch (error) {
     console.error(`[Push ${CURRENT_APP_VERSION}] Error contacting Render push API:`, error);
   }
 }
 
-function broadcastManualMenuAlert() {
-  const selectedCount = Object.keys(kitchenCheckedState).length;
-  const msg = selectedCount > 0
-    ? `We have ${selectedCount} fresh dishes ready on today's cafeteria menu. Open the app to order now!`
-    : "Check out today's live cafeteria specials and place your order before we run out!";
-
-  if (confirm("Send a Push Notification to ALL subscribed customers that today's menu is live?")) {
-    sendRenderPushBroadcast("Today's Live Menu is Up! 🍛", msg);
-    alert("Broadcast command sent to your Render backend!");
+// Personal Targeted Push to a SINGLE subscriber (Used for Orders)
+async function sendTargetedRenderPush(subscription, title, message) {
+  if (!subscription) return;
+  try {
+    const response = await fetch(`${RENDER_BACKEND_URL}/api/broadcast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, message, subscriptions: [subscription] }) // Passes exactly 1 token
+    });
+    const data = await response.json();
+    console.log(`[Push ${CURRENT_APP_VERSION}] Targeted Push Result:`, data);
+  } catch (error) {
+    console.error(`[Push ${CURRENT_APP_VERSION}] Error sending targeted push:`, error);
   }
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v51)
+// 4. SERVICE WORKER REGISTRATION (v52)
 // ==========================================================================
 let swRegistration = null;
 
@@ -221,7 +237,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v51)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v52)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -414,7 +430,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v51)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v52)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -434,7 +450,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v51)
+// 8. RENDER KITCHEN MENU (v52)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -516,7 +532,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v51)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v52)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -541,9 +557,10 @@ function publishDailyMenu() {
     return;
   }
 
+  // AUTOMATIC MENU PUBLISH BROADCAST: Sent to ALL subscribers
   db.ref('dailyMenu').set(kitchenCheckedState)
     .then(() => {
-      alert(`Daily Live Menu published successfully (${selectedCount} items)!`);
+      alert(`Daily Live Menu published successfully (${selectedCount} items)! Notification broadcasted.`);
       sendRenderPushBroadcast(
         "Today's Live Menu is Up! 🍛",
         `We just published ${selectedCount} fresh items for today's cafeteria menu. Open the app to order now!`
@@ -576,7 +593,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v51)
+// 10. CUSTOMER LIVE MENU LISTENER (v52)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -677,7 +694,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v51)
+// 11. ORDER SUBMISSION & TARGETED SUBSCRIPTION ENGINE (v52)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -689,7 +706,8 @@ function syncCustomerVersionToFirebase(profile) {
   }).catch((err) => console.error("Error syncing customer version:", err));
 }
 
-function placeOrder() {
+// MAKE ASYNC: Grabs local push token before sending order
+async function placeOrder() {
   if (isDuringBreakWindow()) {
     alert("Orders are closed for today. Tomorrow's menu will be available starting at 9:00 PM tonight!");
     return;
@@ -730,7 +748,10 @@ function placeOrder() {
 
   const customerProfile = JSON.parse(profileStr);
   syncCustomerVersionToFirebase(customerProfile);
-  executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile);
+  
+  // Attach user's push token directly to their order!
+  const localPushSub = await getLocalPushSubscription();
+  executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, localPushSub);
 }
 
 function closeProfileModal() {
@@ -738,7 +759,8 @@ function closeProfileModal() {
   if (profileModal) profileModal.style.display = 'none';
 }
 
-function saveProfileAndPlaceOrder() {
+// MAKE ASYNC: Grabs local push token before sending order
+async function saveProfileAndPlaceOrder() {
   const nameInput = document.getElementById('cust-name-input');
   const mobileInput = document.getElementById('cust-mobile-input');
   
@@ -773,10 +795,13 @@ function saveProfileAndPlaceOrder() {
     }
   });
 
-  executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile);
+  // Attach user's push token directly to their order!
+  const localPushSub = await getLocalPushSubscription();
+  executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, localPushSub);
 }
 
-function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile) {
+// Saves pushSubscription alongside the order ticket
+function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, pushSub) {
   const newOrderRef = db.ref('orders').push();
   const orderData = {
     orderId: newOrderRef.key.slice(-4).toUpperCase(),
@@ -786,6 +811,7 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
     customerName: customerProfile.name,
     customerMobile: customerProfile.mobile,
     customerVersion: CURRENT_APP_VERSION,
+    pushSubscription: pushSub ? JSON.parse(JSON.stringify(pushSub)) : null, // Safely copy token
     timestamp: firebase.database.ServerValue.TIMESTAMP
   };
 
@@ -890,7 +916,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v51)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v52)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -953,6 +979,7 @@ function enterKitchenMode() {
 
   document.getElementById('customer-view').style.display = 'none';
 
+  // Swap header buttons for kitchen layout
   document.getElementById('header-notify-btn').style.display = 'none';
   document.getElementById('header-kitchen-btn').style.display = 'none';
   document.getElementById('header-back-btn').style.display = 'inline-flex';
@@ -1005,7 +1032,8 @@ function exitKitchenMode(triggerHistoryBack = true) {
 
   document.getElementById('customer-view').style.display = 'flex';
 
-  document.getElementById('header-notify-btn').style.display = 'inline-block';
+  // Restore customer layout
+  document.getElementById('header-notify-btn').style.display = 'inline-flex';
   document.getElementById('header-kitchen-btn').style.display = 'inline-block';
   document.getElementById('header-back-btn').style.display = 'none';
   document.getElementById('header-drawer-btn').style.display = 'none';
@@ -1019,7 +1047,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v51)
+// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v52)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -1197,7 +1225,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v51)
+// 14. LIVE KITCHEN ORDER LISTENER (v52)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -1265,45 +1293,60 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 15. ORDER ACTIONS (ACCEPT, DENY & COMPLETE)
+// 15. TARGETED ORDER ACTIONS (ACCEPT, DENY & COMPLETE) (v52)
 // ==========================================================================
-function acceptOrder(firebaseKey) {
+async function acceptOrder(firebaseKey) {
   if (!db) return;
-  db.ref(`orders/${firebaseKey}`).update({
-    status: 'ACCEPTED'
-  }).catch((error) => {
+  try {
+    await db.ref(`orders/${firebaseKey}`).update({ status: 'ACCEPTED' });
+    
+    // Read order to grab customer's push token and send personal alert
+    const snap = await db.ref(`orders/${firebaseKey}`).once('value');
+    const order = snap.val();
+    if (order && order.pushSubscription) {
+      sendTargetedRenderPush(order.pushSubscription, "Order Accepted ✅", `Hi ${order.customerName}, your order #${order.orderId} has been accepted and is being prepared!`);
+    }
+  } catch (error) {
     console.error("Error accepting order:", error);
     alert("Could not update order status.");
-  });
-}
-
-function denyOrder(firebaseKey) {
-  if (!db) return;
-  if (confirm("Deny this order? The customer will see that their order was declined.")) {
-    db.ref(`orders/${firebaseKey}`).update({
-      status: 'DENIED'
-    }).then(() => {
-      setTimeout(() => {
-        db.ref(`orders/${firebaseKey}`).remove();
-      }, 2000);
-    }).catch((error) => {
-      console.error("Error denying order:", error);
-      alert("Could not update order status.");
-    });
   }
 }
 
-function completeOrder(firebaseKey) {
+async function denyOrder(firebaseKey) {
+  if (!db) return;
+  if (confirm("Deny this order? The customer will see that their order was declined.")) {
+    try {
+      await db.ref(`orders/${firebaseKey}`).update({ status: 'DENIED' });
+      
+      const snap = await db.ref(`orders/${firebaseKey}`).once('value');
+      const order = snap.val();
+      if (order && order.pushSubscription) {
+        sendTargetedRenderPush(order.pushSubscription, "Order Declined ❌", `Sorry ${order.customerName}, your order #${order.orderId} was declined by the kitchen.`);
+      }
+
+      setTimeout(() => { db.ref(`orders/${firebaseKey}`).remove(); }, 2000);
+    } catch (error) {
+      console.error("Error denying order:", error);
+      alert("Could not update order status.");
+    }
+  }
+}
+
+async function completeOrder(firebaseKey) {
   if (!db) return;
   if (confirm("Mark this order as complete? It will be permanently removed from active orders.")) {
-    db.ref(`orders/${firebaseKey}`).remove()
-      .then(() => {
-        console.log(`Order ${firebaseKey} permanently deleted.`);
-      })
-      .catch((error) => {
-        console.error("Error completing order:", error);
-        alert("Could not remove completed order.");
-      });
+    try {
+      const snap = await db.ref(`orders/${firebaseKey}`).once('value');
+      const order = snap.val();
+      if (order && order.pushSubscription) {
+        sendTargetedRenderPush(order.pushSubscription, "Order Ready! 🍽️", `Your order #${order.orderId} is complete and ready for pickup!`);
+      }
+
+      await db.ref(`orders/${firebaseKey}`).remove();
+    } catch (error) {
+      console.error("Error completing order:", error);
+      alert("Could not remove completed order.");
+    }
   }
 }
 
