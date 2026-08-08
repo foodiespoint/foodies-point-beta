@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v50)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v51)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v50";
+const CURRENT_APP_VERSION = "v51";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -28,7 +28,7 @@ try {
 }
 
 // ==========================================================================
-// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v50)
+// 2. TIME-BOUND OPERATING WINDOW & 6:00 PM AUTOMATIC RESET ENGINE (v51)
 // ==========================================================================
 function isDuringBreakWindow() {
   const now = new Date();
@@ -60,7 +60,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. NATIVE WEB PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE (v50)
+// 3. NATIVE WEB PUSH SUBSCRIPTION & RENDER BROADCAST ENGINE (v51)
 // ==========================================================================
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -73,7 +73,6 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-// FIXED: Now forces a sync even if permission is already granted
 async function openAlertsModal() {
   if (!('Notification' in window)) {
     alert("Push notifications are not supported on this browser/device.");
@@ -81,7 +80,6 @@ async function openAlertsModal() {
   }
 
   if (Notification.permission === 'granted') {
-    // If already granted, run the subscription process silently to guarantee the token is in Firebase
     await requestPushAccess(true);
   } else if (Notification.permission === 'denied') {
     alert("🚫 Notifications are blocked in your browser/phone settings. Please tap the Lock icon 🔒 in your address bar -> Permissions -> Allow.");
@@ -96,7 +94,6 @@ function closeNotificationModal() {
   if (modal) modal.style.display = 'none';
 }
 
-// FIXED: Handles both manual modal clicks and silent background syncing
 async function requestPushAccess(isSilentSync = false) {
   if (!isSilentSync) closeNotificationModal();
 
@@ -125,7 +122,6 @@ async function requestPushAccess(isSilentSync = false) {
     console.log(`[Push ${CURRENT_APP_VERSION}] Subscription Object:`, subscription);
 
     const subString = JSON.stringify(subscription);
-    // Encode endpoint safely for Firebase keys
     const dbKey = btoa(subscription.endpoint).replace(/[.#$/\[\]]/g, "_");
 
     await db.ref(`pushSubscriptions/${dbKey}`).set(JSON.parse(subString));
@@ -154,7 +150,6 @@ async function sendRenderPushBroadcast(title, message) {
 
     const subscriptions = Object.values(subsObj);
 
-    // Send the push broadcast request to your Render server
     const response = await fetch(`${RENDER_BACKEND_URL}/api/broadcast`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -189,7 +184,7 @@ function broadcastManualMenuAlert() {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (v50)
+// 4. SERVICE WORKER REGISTRATION (v51)
 // ==========================================================================
 let swRegistration = null;
 
@@ -226,7 +221,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================================================
-// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v50)
+// 5. STANDALONE DETECTION & INSTALLATION ENGINE (v51)
 // ==========================================================================
 let deferredInstallPrompt = null;
 
@@ -419,7 +414,7 @@ let kitchenCheckedState = {};
 let latestFirebaseMenuSnapshot = null;
 
 // ==========================================================================
-// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v50)
+// 7. KITCHEN LEFT SLIDER DRAWER CONTROLLER (v51)
 // ==========================================================================
 function toggleKitchenDrawer(forceState) {
   const drawer = document.getElementById('kitchen-left-drawer');
@@ -439,7 +434,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (v50)
+// 8. RENDER KITCHEN MENU (v51)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -521,7 +516,7 @@ function toggleOutOfStock(dishId) {
 }
 
 // ==========================================================================
-// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v50)
+// 9. PUBLISH OR CLEAR DAILY LIVE MENU IN FIREBASE (v51)
 // ==========================================================================
 function publishDailyMenu() {
   if (!db) {
@@ -581,7 +576,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER (v50)
+// 10. CUSTOMER LIVE MENU LISTENER (v51)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -682,7 +677,7 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v50)
+// 11. ORDER SUBMISSION & PROFILE VERSION SYNC ENGINE (v51)
 // ==========================================================================
 function syncCustomerVersionToFirebase(profile) {
   if (!db || !profile || !profile.mobile) return;
@@ -895,7 +890,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v50)
+// 12. PERMANENT KITCHEN LOGIN, SMART HEADER BACK & CONTROLS (v51)
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -1024,7 +1019,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v50)
+// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE (v51)
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -1202,7 +1197,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v50)
+// 14. LIVE KITCHEN ORDER LISTENER (v51)
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
