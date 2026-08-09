@@ -47,7 +47,7 @@ function checkDaily6PMReset() {
     kitchenCheckedState = {};
 
     if (db) {
-      db.ref('dailyMenu').remove()
+      db.ref('beta_dailyMenu').remove()
         .then(() => {
           console.log(`[${CURRENT_APP_VERSION}] 6:00 PM reached: Kitchen list checks reset & live menu cleared.`);
           renderKitchenMenu();
@@ -675,7 +675,7 @@ function publishDailyMenu() {
 
   if (!confirm(confirmMsg)) return;
 
-  db.ref('dailyMenu').set(kitchenCheckedState)
+  db.ref('beta_dailyMenu').set(kitchenCheckedState)
     .then(() => {
       alert(`Daily Live Menu published successfully (${selectedCount} items)! Notification broadcasted.`);
       sendRenderPushBroadcast(
@@ -692,7 +692,7 @@ function publishDailyMenu() {
 function clearDailyMenu() {
   if (!db) return;
   if (confirm("Remove all items from the customer's live menu page?")) {
-    db.ref('dailyMenu').remove()
+    db.ref('beta_dailyMenu').remove()
       .then(() => {
         kitchenCheckedState = {};
         renderKitchenMenu();
