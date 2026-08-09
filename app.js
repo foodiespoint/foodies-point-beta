@@ -1093,7 +1093,7 @@ function closeKitchenSubPage(triggerBack = true) {
 function clearPaymentLedger() {
   if (!db) return;
   if (confirm("Are you sure you want to wipe all billing records and order entries? This will reset the total ledger back to ₹0.")) {
-    db.ref('orders').remove()
+    db.ref('beta_orders').remove()
       .then(() => {
         alert("Payment ledger wiped clean!");
         fetchAndRenderPaymentLedger();
@@ -1138,7 +1138,7 @@ function fetchAndRenderPaymentLedger() {
 
   container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">Calculating payment ledger...</p>`;
 
-  db.ref('orders').once('value').then((snapshot) => {
+  db.ref('beta_orders').once('value').then((snapshot) => {
     const orders = snapshot.val();
     if (!orders) {
       container.innerHTML = `
