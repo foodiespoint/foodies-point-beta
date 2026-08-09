@@ -767,7 +767,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
 
 function listenForCustomerLiveMenu() {
   if (!db) return;
-  db.ref('dailyMenu').on('value', (snapshot) => {
+  db.ref('beta_dailyMenu').on('value', (snapshot) => {
     latestFirebaseMenuSnapshot = snapshot.val();
     renderCustomerMenuFromSnapshot(latestFirebaseMenuSnapshot);
   });
@@ -1014,7 +1014,7 @@ function enterKitchenMode() {
   syncKitchenPushSubscription();
 
   if (db) {
-    db.ref('dailyMenu').on('value', (snapshot) => {
+    db.ref('beta_dailyMenu').on('value', (snapshot) => {
       kitchenCheckedState = snapshot.val() || {};
       renderKitchenMenu();
     });
@@ -1058,7 +1058,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 
   if (db) {
     db.ref('beta_orders').off();
-    db.ref('dailyMenu').off();
+    db.ref('beta_dailyMenu').off();
   }
 }
 
