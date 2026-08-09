@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v55)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v2 - PUSH FIX)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v55";
+const CURRENT_APP_VERSION = "v2";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -60,7 +60,7 @@ function checkDaily6PMReset() {
 }
 
 // ==========================================================================
-// 3. FAIL-PROOF PUSH SUBSCRIPTION & AUTO-REPAIR ENGINE (v55)
+// 3. MANDATORY APP ONBOARDING & FAIL-PROOF PUSH ENGINE
 // ==========================================================================
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -73,7 +73,61 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-// AUTO-REPAIR: Silently restores deleted tokens when app is opened
+function checkAppOnboarding() {
+  if (isKitchenMode) {
+     document.getElementById('profile-modal').style.display = 'none';
+     document.getElementById('notification-permission-modal').style.display = 'none';
+     return;
+  }
+
+  const profileStr = localStorage.getItem('fp_customer_profile');
+  if (!profileStr) {
+     document.getElementById('profile-modal').style.display = 'flex';
+     document.getElementById('notification-permission-modal').style.display = 'none';
+     return;
+  }
+
+  if ('Notification' in window && Notification.permission === 'default') {
+     document.getElementById('profile-modal').style.display = 'none';
+     document.getElementById('notification-permission-modal').style.display = 'flex';
+     return;
+  }
+
+  document.getElementById('profile-modal').style.display = 'none';
+  document.getElementById('notification-permission-modal').style.display = 'none';
+}
+
+function saveCustomerProfile() {
+  const nameInput = document.getElementById('cust-name-input');
+  const mobileInput = document.getElementById('cust-mobile-input');
+  
+  const nameVal = nameInput ? nameInput.value.trim() : '';
+  const mobileVal = mobileInput ? mobileInput.value.trim() : '';
+
+  if (nameVal.length < 2) {
+    alert("Please enter a valid Name (at least 2 characters).");
+    return;
+  }
+  if (!/^[0-9]{10}$/.test(mobileVal)) {
+    alert("Please enter a valid 10-digit Mobile Number.");
+    return;
+  }
+
+  const customerProfile = { name: nameVal, mobile: mobileVal };
+  localStorage.setItem('fp_customer_profile', JSON.stringify(customerProfile));
+  
+  if (db) {
+    db.ref(`customers/${customerProfile.mobile}`).update({
+      name: customerProfile.name,
+      mobile: customerProfile.mobile,
+      appVersion: CURRENT_APP_VERSION,
+      lastSeen: firebase.database.ServerValue.TIMESTAMP
+    }).catch(e => console.error(e));
+  }
+  
+  checkAppOnboarding();
+}
+
 async function autoSyncPushToken() {
   if ('serviceWorker' in navigator && 'PushManager' in window && Notification.permission === 'granted') {
     try {
@@ -89,11 +143,9 @@ async function autoSyncPushToken() {
         const subJson = sub.toJSON();
         localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
         
-        // Save to global list (for Live Menu Broadcasts)
         const dbKey = btoa(subJson.endpoint).replace(/[.#$/\[\]]/g, "_");
         db.ref(`pushSubscriptions/${dbKey}`).set(subJson);
         
-        // Link to Customer Profile (for Targeted Order Alerts)
         const profileStr = localStorage.getItem('fp_customer_profile');
         if (profileStr) {
            const profile = JSON.parse(profileStr);
@@ -132,6 +184,14 @@ async function getLocalPushSubscription() {
   return cached ? JSON.parse(cached) : null;
 }
 
+async function syncKitchenPushSubscription() {
+  const sub = await getLocalPushSubscription();
+  if (sub && db) {
+    const dbKey = btoa(sub.endpoint).replace(/[.#$/\[\]]/g, "_");
+    db.ref(`kitchenSubscriptions/${dbKey}`).set(sub);
+  }
+}
+
 async function openAlertsModal() {
   if (!('Notification' in window)) {
     alert("Push notifications are not supported on this browser/device.");
@@ -139,22 +199,15 @@ async function openAlertsModal() {
   }
   if (Notification.permission === 'granted') {
     await requestPushAccess(true);
+    alert("✅ Notifications are already enabled!");
   } else if (Notification.permission === 'denied') {
     alert("🚫 Notifications are blocked in your browser/phone settings. Please tap the Lock icon 🔒 in your address bar -> Permissions -> Allow.");
   } else {
-    const modal = document.getElementById('notification-permission-modal');
-    if (modal) modal.style.display = 'flex';
+    document.getElementById('notification-permission-modal').style.display = 'flex';
   }
 }
 
-function closeNotificationModal() {
-  const modal = document.getElementById('notification-permission-modal');
-  if (modal) modal.style.display = 'none';
-}
-
 async function requestPushAccess(isSilentSync = false) {
-  if (!isSilentSync) closeNotificationModal();
-
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     if (!isSilentSync) alert("Push notifications are not supported on this browser.");
     return;
@@ -162,8 +215,13 @@ async function requestPushAccess(isSilentSync = false) {
 
   try {
     const permission = await Notification.requestPermission();
+    
+    if (!isSilentSync) {
+       checkAppOnboarding();
+    }
+
     if (permission !== 'granted') {
-      if (!isSilentSync) alert("🚫 Notifications were denied.");
+      if (!isSilentSync) alert("🚫 Notifications were blocked. You will not receive live order updates.");
       return;
     }
 
@@ -190,13 +248,12 @@ async function requestPushAccess(isSilentSync = false) {
     }
 
     if (isSilentSync) {
-      alert("✅ Push connection verified and synced!");
+      console.log("Push connection verified.");
     } else {
       alert("✅ Notifications enabled successfully!");
     }
   } catch (error) {
-    console.error(`[Push ${CURRENT_APP_VERSION}] Subscription error:`, error);
-    if (!isSilentSync) alert("Could not enable notifications. Check console for details.");
+    console.error(`[Push] Error:`, error);
   }
 }
 
@@ -238,7 +295,6 @@ async function sendTargetedRenderPush(subscription, title, message) {
   }
 }
 
-// THE MAGNET FIX: Looks ONLY at the order ticket or the customer's personal profile!
 async function resolveTargetSubscription(order) {
   if (order.pushSubscription && order.pushSubscription.endpoint) {
     return order.pushSubscription;
@@ -252,7 +308,28 @@ async function resolveTargetSubscription(order) {
       console.error("Subscription fallback lookup error:", e);
     }
   }
-  return null; // NO GUESSING! If we can't find their token, it aborts silently.
+  return null;
+}
+
+async function notifyKitchenNewOrder(orderData) {
+  try {
+    const snap = await db.ref('kitchenSubscriptions').once('value');
+    const subsObj = snap.val();
+    if (!subsObj) return;
+
+    const subscriptions = Object.values(subsObj);
+    fetch(`${RENDER_BACKEND_URL}/api/broadcast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: "New Order! 🔔",
+        message: `${orderData.customerName} just placed an order for ₹${orderData.total}`,
+        subscriptions
+      })
+    });
+  } catch(e) {
+    console.error("Failed to notify kitchen:", e);
+  }
 }
 
 // ==========================================================================
@@ -262,9 +339,7 @@ let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/foodies-point-beta/sw.js', {
-      scope: '/foodies-point-beta/'
-    })
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
     .then((reg) => {
       swRegistration = reg;
       reg.update();
@@ -307,8 +382,17 @@ function triggerAppInstall() {
       deferredInstallPrompt = null;
     });
   } else {
+    const installBtn = document.getElementById('btn-native-install');
+    if (installBtn) {
+      installBtn.textContent = "See Instructions Below 👇";
+      installBtn.style.background = "#EAEAEA";
+      installBtn.style.color = "#333";
+      installBtn.style.boxShadow = "none";
+    }
     const guide = document.getElementById('install-manual-guide');
-    if (guide) guide.style.display = 'block';
+    if (guide) {
+      guide.style.display = 'block';
+    }
   }
 }
 
@@ -331,16 +415,13 @@ function enforceInstallGate() {
     if (appContent) appContent.style.setProperty('display', 'block', 'important');
     
     setTimeout(() => {
-      if ('Notification' in window && Notification.permission === 'default') {
-        const modal = document.getElementById('notification-permission-modal');
-        if (modal) modal.style.display = 'flex';
-      }
-    }, 3000);
+      checkAppOnboarding();
+    }, 500);
   }
 }
 
 // ==========================================================================
-// 6. COMPLETE FOODIES POINT MENU (102 ITEMS - MASTER DATA)
+// 6. COMPLETE FOODIES POINT MENU (UPDATED v2 DATA)
 // ==========================================================================
 const MENU_ITEMS = [
   { id: 'dish-001', category: 'Rolls', name: 'Dahi Bread Roll (1 pc)', price: 15 },
@@ -355,96 +436,113 @@ const MENU_ITEMS = [
   { id: 'dish-010', category: 'Rolls', name: 'Chicken Mayonnaise Roll', price: 60 },
   { id: 'dish-011', category: 'Rolls', name: 'Chicken Egg Roll', price: 70 },
   { id: 'dish-012', category: 'Rolls', name: 'Chicken Egg Mayonnaise Roll', price: 75 },
-  { id: 'dish-013', category: 'Pakodi', name: 'Pyaaz ki Pakodi (250gm)', price: 60 },
-  { id: 'dish-014', category: 'Pakodi', name: 'Paalak ki Pakodi (250gm)', price: 60 },
-  { id: 'dish-015', category: 'Pakodi', name: 'Gobhi ki Pakodi (250gm)', price: 60 },
-  { id: 'dish-016', category: 'Pakodi', name: 'Mirch ki Pakodi', price: 15 },
-  { id: 'dish-017', category: 'Pakodi', name: 'Bread Pakoda', price: 20 },
-  { id: 'dish-018', category: 'Pakodi', name: 'Egg Pakodi', price: 10 },
-  { id: 'dish-019', category: 'Pakodi', name: 'Moong Daal ke Mongode (250gm)', price: 75 },
-  { id: 'dish-020', category: 'Sandwich', name: 'Veg Grilled Mayonnaise Sandwich (2 pc)', price: 55 },
-  { id: 'dish-021', category: 'Sandwich', name: 'Veg Cheese Sandwich (2 pc)', price: 60 },
-  { id: 'dish-022', category: 'Sandwich', name: 'Veg Sandwich', price: 18 },
-  { id: 'dish-023', category: 'Snacks', name: 'Chocolate Croissant', price: 48 },
-  { id: 'dish-024', category: 'Snacks', name: 'Zingy Parcel (Paneer)', price: 60 },
-  { id: 'dish-025', category: 'Snacks', name: 'Pizza Puff', price: 18 },
-  { id: 'dish-026', category: 'Snacks', name: 'Mini Pizza', price: 45 },
-  { id: 'dish-027', category: 'Snacks', name: 'Veg Burger', price: 50 },
-  { id: 'dish-028', category: 'Snacks', name: 'Aloo Patty', price: 17 },
-  { id: 'dish-029', category: 'Snacks', name: 'Paneer Patty', price: 25 },
-  { id: 'dish-030', category: 'Snacks', name: 'Veg Appe (per plate)', price: 65 },
-  { id: 'dish-031', category: 'Snacks', name: 'Phare (250gm)', price: 70 },
-  { id: 'dish-032', category: 'Snacks', name: 'Veg Masala Idli (per plate)', price: 45 },
-  { id: 'dish-033', category: 'Snacks', name: 'Fried Idli (per plate)', price: 50 },
-  { id: 'dish-034', category: 'Snacks', name: 'Poha (per plate)', price: 80 },
-  { id: 'dish-035', category: 'Snacks', name: 'Crispy Stuffed Mushroom (4 pc)', price: 65 },
-  { id: 'dish-036', category: 'Snacks', name: 'Aloo Bonda', price: 12 },
-  { id: 'dish-037', category: 'Snacks', name: 'Vada Pav', price: 25 },
-  { id: 'dish-038', category: 'Snacks', name: 'Cheese Balls (8 pc plate)', price: 80 },
-  { id: 'dish-039', category: 'Snacks', name: 'Masala Vada (8 pc plate)', price: 80 },
-  { id: 'dish-040', category: 'Snacks', name: 'Falafel Mushakkal Veg. Roll', price: 40 },
-  { id: 'dish-041', category: 'Snacks', name: 'Pani Poori (5 pc)', price: 15 },
-  { id: 'dish-042', category: 'Snacks', name: 'Tikki Chaat (per plate)', price: 55 },
-  { id: 'dish-043', category: 'Snacks', name: 'Dahi Vada (4 pc plate)', price: 60 },
-  { id: 'dish-044', category: 'Snacks', name: 'Raj Kachori (per plate)', price: 85 },
-  { id: 'dish-045', category: 'Snacks', name: 'Samosa', price: 12 },
-  { id: 'dish-046', category: 'Snacks', name: 'Paneer Tikka (per plate)', price: 240 },
-  { id: 'dish-047', category: 'Snacks', name: 'Paneer Malai Tikka (per plate)', price: 260 },
-  { id: 'dish-048', category: 'Chinese', name: 'Honey Chilli Potato', price: 90 },
-  { id: 'dish-049', category: 'Chinese', name: 'Chowmein', price: 80 },
-  { id: 'dish-050', category: 'Chinese', name: 'Macaroni', price: 80 },
-  { id: 'dish-051', category: 'Chinese', name: 'Fried Rice', price: 80 },
-  { id: 'dish-052', category: 'Chinese', name: 'Veg Manchurian', price: 80 },
-  { id: 'dish-053', category: 'Chinese', name: 'Paneer Manchurian', price: 160 },
-  { id: 'dish-054', category: 'Chinese', name: 'Chilli Paneer', price: 140 },
-  { id: 'dish-055', category: 'Chinese', name: 'Veg Momos (10 pc)', price: 55 },
-  { id: 'dish-056', category: 'Chinese', name: 'Paneer Momos (10 pc)', price: 75 },
-  { id: 'dish-057', category: 'Chinese', name: 'Chicken Momos (10 pc)', price: 100 },
-  { id: 'dish-058', category: 'Chinese', name: 'White Pasta', price: 100 },
-  { id: 'dish-059', category: 'Kebabs', name: 'Veg. Seekh Kebab', price: 15 },
-  { id: 'dish-060', category: 'Kebabs', name: 'Veg Kebab', price: 17 },
-  { id: 'dish-061', category: 'Kebabs', name: 'Dahi ke Kebab', price: 25 },
-  { id: 'dish-062', category: 'Kebabs', name: 'Hariyali Kebab', price: 25 },
-  { id: 'dish-063', category: 'Cake (Egg-Less)', name: 'Tutti Frutti Cup Cake', price: 18 },
-  { id: 'dish-064', category: 'Cake (Egg-Less)', name: 'Chocolate Cup Cake', price: 20 },
-  { id: 'dish-065', category: 'Cake (Egg-Less)', name: 'Chocolava Cup Cake', price: 38 },
-  { id: 'dish-066', category: 'Shakes', name: 'Mango Shake', price: 30 },
-  { id: 'dish-067', category: 'Shakes', name: 'Lassi', price: 45 },
-  { id: 'dish-068', category: 'Shakes', name: 'Panna', price: 12 },
-  { id: 'dish-069', category: 'Meals & Combos', name: 'Chokha Baati (2 pc plate)', price: 50 },
-  { id: 'dish-070', category: 'Meals & Combos', name: 'Chole Aloo Kulche (per plate)', price: 70 },
-  { id: 'dish-071', category: 'Meals & Combos', name: 'Chole Bhature (per plate)', price: 60 },
-  { id: 'dish-072', category: 'Meals & Combos', name: 'Khasta Aloo Matar (2 pc plate)', price: 55 },
-  { id: 'dish-073', category: 'Meals & Combos', name: 'Sambhar Vada (4 pc plate)', price: 55 },
-  { id: 'dish-074', category: 'Meals & Combos', name: 'Idli Sambhar (4 pc plate)', price: 55 },
-  { id: 'dish-075', category: 'Meals & Combos', name: 'Pav Bhaaji (per plate)', price: 60 },
-  { id: 'dish-076', category: 'Sweets', name: 'Gulab Jamun', price: 20 },
-  { id: 'dish-077', category: 'Sweets', name: 'Kheer', price: 80 },
-  { id: 'dish-078', category: 'Sweets', name: 'Sweet Rice', price: 90 },
-  { id: 'dish-079', category: 'Sweets', name: 'Shrikhand (250 gm)', price: 85 },
-  { id: 'dish-080', category: 'Sabzi', name: 'Shaahi Paneer', price: 300 },
-  { id: 'dish-081', category: 'Sabzi', name: 'Paneer Masala', price: 220 },
-  { id: 'dish-082', category: 'Sabzi', name: 'Paneer Angara', price: 280 },
-  { id: 'dish-083', category: 'Sabzi', name: 'Paneer Korma', price: 260 },
-  { id: 'dish-084', category: 'Sabzi', name: 'Palak Paneer', price: 200 },
-  { id: 'dish-085', category: 'Sabzi', name: 'Matar Paneer', price: 200 },
-  { id: 'dish-086', category: 'Non-Veg', name: 'Chicken Afghani', price: 500 },
-  { id: 'dish-087', category: 'Non-Veg', name: 'Roasted Chicken', price: 340 },
-  { id: 'dish-088', category: 'Non-Veg', name: 'Chilli Chicken', price: 440 },
-  { id: 'dish-089', category: 'Non-Veg', name: 'Egg Curry', price: 75 },
-  { id: 'dish-090', category: 'Non-Veg', name: 'Fish Fry (boneless - 250 gm)', price: 180 },
-  { id: 'dish-091', category: 'Non-Veg', name: 'Fish Dry (boneless - 250 gm)', price: 165 },
-  { id: 'dish-092', category: 'Non-Veg', name: 'Chicken Shawarma', price: 90 },
-  { id: 'dish-093', category: 'Non-Veg', name: 'Mutton Curry', price: 400 },
-  { id: 'dish-094', category: 'Non-Veg', name: 'Mutton Korma', price: 430 },
-  { id: 'dish-095', category: 'Non-Veg', name: 'Keema Kaleji', price: 400 },
-  { id: 'dish-096', category: 'Non-Veg', name: 'Chicken Curry', price: 360 },
-  { id: 'dish-097', category: 'Non-Veg', name: 'Chicken Masala', price: 400 },
-  { id: 'dish-098', category: 'Non-Veg', name: 'Butter Chicken', price: 500 },
-  { id: 'dish-099', category: 'Rice', name: 'Plain Rice', price: 90 },
-  { id: 'dish-100', category: 'Rice', name: 'Jeera Rice', price: 120 },
-  { id: 'dish-101', category: 'Rice', name: 'Matar Pulao', price: 140 },
-  { id: 'dish-102', category: 'Rice', name: 'Veg. Biryani', price: 180 }
+  { id: 'dish-013', category: 'Rolls', name: 'Crispy Veg. Cheese Bread Roll', price: 18 },
+
+  { id: 'dish-014', category: 'Pakodi', name: 'Pyaaz ki Pakodi (250gm)', price: 60 },
+  { id: 'dish-015', category: 'Pakodi', name: 'Paalak ki Pakodi (250gm)', price: 60 },
+  { id: 'dish-016', category: 'Pakodi', name: 'Gobhi ki Pakodi (250gm)', price: 60 },
+  { id: 'dish-017', category: 'Pakodi', name: 'Mirch ki Pakodi', price: 15 },
+  { id: 'dish-018', category: 'Pakodi', name: 'Bread Pakoda', price: 20 },
+  { id: 'dish-019', category: 'Pakodi', name: 'Egg Pakodi', price: 10 },
+  { id: 'dish-020', category: 'Pakodi', name: 'Moong Daal ke Mongode (250gm)', price: 75 },
+
+  { id: 'dish-021', category: 'Sandwich', name: 'Grilled Veg. Mayonaise Sandwich (2 pc)', price: 55 },
+  { id: 'dish-022', category: 'Sandwich', name: 'Grilled Veg. Cheese Sandwich (2 pc)', price: 65 },
+  { id: 'dish-023', category: 'Sandwich', name: 'Veg Sandwich', price: 18 },
+
+  { id: 'dish-024', category: 'Snacks', name: 'Chocolate Croissant', price: 48 },
+  { id: 'dish-025', category: 'Snacks', name: 'Zingy Parcel (Paneer)', price: 60 },
+  { id: 'dish-026', category: 'Snacks', name: 'Pizza Puff', price: 18 },
+  { id: 'dish-027', category: 'Snacks', name: 'Mini Pizza', price: 45 },
+  { id: 'dish-028', category: 'Snacks', name: 'Veg Burger', price: 50 },
+  { id: 'dish-029', category: 'Snacks', name: 'Aloo Patty', price: 17 },
+  { id: 'dish-030', category: 'Snacks', name: 'Paneer Patty', price: 25 },
+  { id: 'dish-031', category: 'Snacks', name: 'Veg Appe (12 pc plate)', price: 70 },
+  { id: 'dish-032', category: 'Snacks', name: 'Phare (250gm)', price: 70 },
+  { id: 'dish-033', category: 'Snacks', name: 'Veg Masala Idli (4 pc plate)', price: 50 },
+  { id: 'dish-034', category: 'Snacks', name: 'Fried Idli (per plate)', price: 50 },
+  { id: 'dish-035', category: 'Snacks', name: 'Poha (per plate)', price: 85 },
+  { id: 'dish-036', category: 'Snacks', name: 'Crispy Stuffed Mushroom (4 pc plate)', price: 65 },
+  { id: 'dish-037', category: 'Snacks', name: 'Aloo Bonda', price: 12 },
+  { id: 'dish-038', category: 'Snacks', name: 'Vada Pav', price: 25 },
+  { id: 'dish-039', category: 'Snacks', name: 'Cheese Balls (8 pc plate)', price: 85 },
+  { id: 'dish-040', category: 'Snacks', name: 'Masala Vada (8 pc plate)', price: 80 },
+  { id: 'dish-041', category: 'Snacks', name: 'Falafel Mushakkal Veg. Roll', price: 40 },
+  { id: 'dish-042', category: 'Snacks', name: 'Pani Poori (5 pc)', price: 15 },
+  { id: 'dish-043', category: 'Snacks', name: 'Tikki Chaat (per plate)', price: 55 },
+  { id: 'dish-044', category: 'Snacks', name: 'Dahi Vada (4 pc plate)', price: 60 },
+  { id: 'dish-045', category: 'Snacks', name: 'Raj Kachori (per plate)', price: 85 },
+  { id: 'dish-046', category: 'Snacks', name: 'Samosa', price: 12 },
+  { id: 'dish-047', category: 'Snacks', name: 'Paneer Tikka (per plate)', price: 240 },
+  { id: 'dish-048', category: 'Snacks', name: 'Paneer Malai Tikka (per plate)', price: 260 },
+
+  { id: 'dish-049', category: 'Chinese', name: 'Honey Chilli Potato', price: 90 },
+  { id: 'dish-050', category: 'Chinese', name: 'Chowmein', price: 80 },
+  { id: 'dish-051', category: 'Chinese', name: 'Macaroni', price: 80 },
+  { id: 'dish-052', category: 'Chinese', name: 'Fried Rice', price: 80 },
+  { id: 'dish-053', category: 'Chinese', name: 'Veg Manchurian', price: 80 },
+  { id: 'dish-054', category: 'Chinese', name: 'Paneer Manchurian', price: 160 },
+  { id: 'dish-055', category: 'Chinese', name: 'Chilli Paneer', price: 140 },
+  { id: 'dish-056', category: 'Chinese', name: 'Veg Momos (10 pc)', price: 55 },
+  { id: 'dish-057', category: 'Chinese', name: 'Paneer Momos (10 pc)', price: 75 },
+  { id: 'dish-058', category: 'Chinese', name: 'Chicken Momos (10 pc)', price: 100 },
+  { id: 'dish-059', category: 'Chinese', name: 'White Pasta', price: 100 },
+
+  { id: 'dish-060', category: 'Kebabs', name: 'Veg. Seekh Kebab', price: 15 },
+  { id: 'dish-061', category: 'Kebabs', name: 'Veg Kebab', price: 17 },
+  { id: 'dish-062', category: 'Kebabs', name: 'Dahi ke Kebab', price: 25 },
+  { id: 'dish-063', category: 'Kebabs', name: 'Hariyali Kebab', price: 25 },
+
+  { id: 'dish-064', category: 'Cake (Egg-Less)', name: 'Tutti Frutti Cup Cake', price: 18 },
+  { id: 'dish-065', category: 'Cake (Egg-Less)', name: 'Chocolate Cup Cake', price: 20 },
+  { id: 'dish-066', category: 'Cake (Egg-Less)', name: 'Chocolava Cup Cake', price: 38 },
+
+  { id: 'dish-067', category: 'Shakes', name: 'Mango Shake', price: 30 },
+  { id: 'dish-068', category: 'Shakes', name: 'Lassi', price: 45 },
+  { id: 'dish-069', category: 'Shakes', name: 'Panna', price: 12 },
+
+  { id: 'dish-070', category: 'Meals & Combos', name: 'Chokha Baati (2 pc plate)', price: 50 },
+  { id: 'dish-071', category: 'Meals & Combos', name: 'Aloo-Kulche Chole (per plate)', price: 70 },
+  { id: 'dish-072', category: 'Meals & Combos', name: 'Chole Bhature (per plate)', price: 60 },
+  { id: 'dish-073', category: 'Meals & Combos', name: 'Khasta Aloo Matar (2 pc plate)', price: 55 },
+  { id: 'dish-074', category: 'Meals & Combos', name: 'Sambhar Vada (4 pc plate)', price: 55 },
+  { id: 'dish-075', category: 'Meals & Combos', name: 'Idli Sambhar (4 pc plate)', price: 55 },
+  { id: 'dish-076', category: 'Meals & Combos', name: 'Pav Bhaaji (per plate)', price: 60 },
+
+  { id: 'dish-077', category: 'Sweets', name: 'Gulab Jamun', price: 20 },
+  { id: 'dish-078', category: 'Sweets', name: 'Kheer', price: 80 },
+  { id: 'dish-079', category: 'Sweets', name: 'Sweet Rice', price: 90 },
+  { id: 'dish-080', category: 'Sweets', name: 'Shrikhand (250 gm)', price: 85 },
+
+  { id: 'dish-081', category: 'Sabzi', name: 'Shaahi Paneer', price: 300 },
+  { id: 'dish-082', category: 'Sabzi', name: 'Paneer Masala', price: 220 },
+  { id: 'dish-083', category: 'Sabzi', name: 'Paneer Angara', price: 280 },
+  { id: 'dish-084', category: 'Sabzi', name: 'Paneer Korma', price: 260 },
+  { id: 'dish-085', category: 'Sabzi', name: 'Palak Paneer', price: 200 },
+  { id: 'dish-086', category: 'Sabzi', name: 'Matar Paneer', price: 200 },
+
+  { id: 'dish-087', category: 'Non-Veg', name: 'Chicken Afghani', price: 500 },
+  { id: 'dish-088', category: 'Non-Veg', name: 'Roasted Chicken', price: 340 },
+  { id: 'dish-089', category: 'Non-Veg', name: 'Chilli Chicken', price: 440 },
+  { id: 'dish-090', category: 'Non-Veg', name: 'Egg Curry', price: 75 },
+  { id: 'dish-091', category: 'Non-Veg', name: 'Fish Fry (boneless - 250 gm)', price: 180 },
+  { id: 'dish-092', category: 'Non-Veg', name: 'Fish Dry (boneless - 250 gm)', price: 165 },
+  { id: 'dish-093', category: 'Non-Veg', name: 'Chicken Shawarma', price: 90 },
+  { id: 'dish-094', category: 'Non-Veg', name: 'Mutton Curry', price: 400 },
+  { id: 'dish-095', category: 'Non-Veg', name: 'Mutton Korma', price: 430 },
+  { id: 'dish-096', category: 'Non-Veg', name: 'Keema Kaleji', price: 400 },
+  { id: 'dish-097', category: 'Non-Veg', name: 'Chicken Curry', price: 360 },
+  { id: 'dish-098', category: 'Non-Veg', name: 'Chicken Masala', price: 400 },
+  { id: 'dish-099', category: 'Non-Veg', name: 'Butter Chicken', price: 500 },
+
+  { id: 'dish-100', category: 'Rice', name: 'Plain Rice', price: 90 },
+  { id: 'dish-101', category: 'Rice', name: 'Jeera Rice', price: 120 },
+  { id: 'dish-102', category: 'Rice', name: 'Matar Pulao', price: 140 },
+  { id: 'dish-103', category: 'Rice', name: 'Veg. Biryani', price: 180 },
+
+  { id: 'dish-104', category: 'Falahaar', name: 'Aloo-Sabudaana Tikki (2 pc)', price: 25 },
+  { id: 'dish-105', category: 'Falahaar', name: 'Sabudaana Khichdi', price: 70 },
+  { id: 'dish-106', category: 'Falahaar', name: 'Falahaari Mirch ki Pakodi', price: 15 }
 ];
 
 const cart = {};
@@ -472,7 +570,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU
+// 8. RENDER KITCHEN MENU (Keeps Section Headers)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -605,7 +703,7 @@ function clearDailyMenu() {
 }
 
 // ==========================================================================
-// 10. CUSTOMER LIVE MENU LISTENER
+// 10. CUSTOMER LIVE MENU LISTENER (No Section Headers)
 // ==========================================================================
 function renderCustomerMenuFromSnapshot(activeIds) {
   const container = document.getElementById('customer-menu-container');
@@ -636,22 +734,12 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     return;
   }
 
-  let currentCategory = '';
-
   MENU_ITEMS.forEach((dish) => {
     if (activeIds[dish.id]) {
       cart[dish.id] = cart[dish.id] || 0;
       const isOOS = (activeIds[dish.id] === 'OOS');
 
       if (isOOS && cart[dish.id] > 0) cart[dish.id] = 0;
-
-      if (dish.category !== currentCategory) {
-        currentCategory = dish.category;
-        const categoryHeader = document.createElement('h3');
-        categoryHeader.style.cssText = "margin: 18px 0 6px 0; font-size: 1.05rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
-        categoryHeader.textContent = currentCategory;
-        container.appendChild(categoryHeader);
-      }
 
       const card = document.createElement('div');
       card.className = 'menu-card';
@@ -699,18 +787,8 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION & TARGETED SUBSCRIPTION ENGINE (v55)
+// 11. ORDER SUBMISSION ENGINE (FRESH PUSH TOKEN BINDING)
 // ==========================================================================
-function syncCustomerVersionToFirebase(profile) {
-  if (!db || !profile || !profile.mobile) return;
-  db.ref(`customers/${profile.mobile}`).update({
-    name: profile.name,
-    mobile: profile.mobile,
-    appVersion: CURRENT_APP_VERSION,
-    lastSeen: firebase.database.ServerValue.TIMESTAMP
-  }).catch((err) => console.error("Error syncing customer version:", err));
-}
-
 async function placeOrder() {
   if (isDuringBreakWindow()) {
     alert("Orders are closed for today. Tomorrow's menu will be available starting at 9:00 PM tonight!");
@@ -740,56 +818,15 @@ async function placeOrder() {
 
   const profileStr = localStorage.getItem('fp_customer_profile');
   if (!profileStr) {
-    const profileModal = document.getElementById('profile-modal');
-    if (profileModal) profileModal.style.display = 'flex';
+    checkAppOnboarding(); 
     return;
   }
 
   const customerProfile = JSON.parse(profileStr);
-  syncCustomerVersionToFirebase(customerProfile);
   
-  const localPushSub = await getLocalPushSubscription();
-  executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, localPushSub);
-}
+  // Guarantee push token resolution before order submission
+  let localPushSub = await getLocalPushSubscription();
 
-function closeProfileModal() {
-  const profileModal = document.getElementById('profile-modal');
-  if (profileModal) profileModal.style.display = 'none';
-}
-
-async function saveProfileAndPlaceOrder() {
-  const nameInput = document.getElementById('cust-name-input');
-  const mobileInput = document.getElementById('cust-mobile-input');
-  
-  const nameVal = nameInput ? nameInput.value.trim() : '';
-  const mobileVal = mobileInput ? mobileInput.value.trim() : '';
-
-  if (nameVal.length < 2) {
-    alert("Please enter a valid Name (at least 2 characters).");
-    return;
-  }
-  if (!/^[0-9]{10}$/.test(mobileVal)) {
-    alert("Please enter a valid 10-digit Mobile Number.");
-    return;
-  }
-
-  const customerProfile = { name: nameVal, mobile: mobileVal };
-
-  localStorage.setItem('fp_customer_profile', JSON.stringify(customerProfile));
-  syncCustomerVersionToFirebase(customerProfile);
-  closeProfileModal();
-
-  const orderItems = [];
-  let totalAmount = 0;
-  MENU_ITEMS.forEach((dish) => {
-    const qty = cart[dish.id] || 0;
-    if (qty > 0) {
-      orderItems.push({ id: dish.id, name: dish.name, price: dish.price, quantity: qty });
-      totalAmount += dish.price * qty;
-    }
-  });
-
-  const localPushSub = await getLocalPushSubscription();
   executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, localPushSub);
 }
 
@@ -813,6 +850,8 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
 
   newOrderRef.set(orderData)
     .then(() => {
+      notifyKitchenNewOrder(orderData);
+      
       alert(`Order placed successfully! Your Order ID is #${orderData.orderId}`);
       
       const myOrder = {
@@ -861,11 +900,14 @@ function renderCustomerOrderHistory() {
       .map(i => `<strong>${i.quantity}x</strong> ${i.name}`)
       .join(', ');
 
-    const dateStr = new Date(myOrder.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateStr = new Date(myOrder.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     card.innerHTML = `
       <div class="customer-order-header">
-        <span><strong>Order #${myOrder.orderId}</strong> (${dateStr})</span>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-weight: 700; font-size: 0.95rem; color: #2D2D2D;">${dateStr}</span>
+          <span style="font-size: 0.75rem; color: #888; margin-top: 2px;">Order ID: #${myOrder.orderId}</span>
+        </div>
         <span class="status-badge status-${myOrder.status}">${myOrder.status}</span>
       </div>
       <p style="font-size: 0.88rem; color: #444; margin-bottom: 6px; line-height: 1.4;">${itemsSummary}</p>
@@ -909,7 +951,7 @@ function listenForCustomerOrderUpdates() {
 }
 
 // ==========================================================================
-// 12. KITCHEN LOGIN & NAVIGATION (v55)
+// 12. KITCHEN LOGIN & NAVIGATION
 // ==========================================================================
 const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
@@ -967,6 +1009,9 @@ function enterKitchenMode() {
   document.getElementById('header-exit-btn').style.display = 'inline-block';
 
   document.getElementById('kitchen-view').style.display = 'flex';
+  
+  checkAppOnboarding();
+  syncKitchenPushSubscription();
 
   if (db) {
     db.ref('dailyMenu').on('value', (snapshot) => {
@@ -1008,6 +1053,8 @@ function exitKitchenMode(triggerHistoryBack = true) {
   document.getElementById('header-drawer-btn').style.display = 'none';
   document.getElementById('kitchen-version-badge').style.display = 'none';
   document.getElementById('header-exit-btn').style.display = 'none';
+  
+  checkAppOnboarding();
 
   if (db) {
     db.ref('orders').off();
@@ -1016,7 +1063,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
 }
 
 // ==========================================================================
-// 13. DEDICATED KITCHEN SUB-PAGES & ATOMIC LEDGER WIPE ENGINE
+// 13. DEDICATED KITCHEN SUB-PAGES
 // ==========================================================================
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
@@ -1135,10 +1182,14 @@ function fetchAndRenderPaymentLedger() {
     orderRows.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0)).forEach((order) => {
       const row = document.createElement('div');
       row.className = 'customer-data-card';
+      
+      const dateStr = new Date(order.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      
       row.innerHTML = `
-        <div>
-          <h4 style="font-size:0.98rem; color:#2D2D2D;">Order #${order.orderId} — ₹${order.total}</h4>
-          <div style="font-size:0.8rem; color:#666;">${order.customerName || 'Guest'} (${order.customerMobile || 'N/A'})</div>
+        <div style="flex: 1;">
+          <div style="font-size:0.9rem; font-weight: 700; color:#2D2D2D;">${dateStr} <span style="font-weight: normal; color: #888; font-size: 0.75rem; margin-left: 4px;">(#${order.orderId})</span></div>
+          <div style="font-size: 0.95rem; color: #FF4B3A; font-weight: 700; margin: 4px 0;">₹${order.total}</div>
+          <div style="font-size:0.8rem; color:#666;">👤 ${order.customerName || 'Guest'} (${order.customerMobile || 'N/A'})</div>
         </div>
         <span style="font-weight:700; font-size:0.85rem; color:#FF4B3A;">${order.status}</span>
       `;
@@ -1158,7 +1209,7 @@ window.addEventListener('popstate', () => {
 });
 
 // ==========================================================================
-// 14. LIVE KITCHEN ORDER LISTENER (v55)
+// 14. LIVE KITCHEN ORDER LISTENER
 // ==========================================================================
 function listenForKitchenOrders() {
   if (!db) return;
@@ -1213,11 +1264,14 @@ function listenForKitchenOrders() {
         `;
       }
 
+      const dateStr = new Date(order.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
       card.innerHTML = `
         <div class="order-header">
           <div>
-            <div style="font-size: 1.05rem;">Order #${order.orderId}</div>
-            <div style="font-size: 0.85rem; color: #444; margin-top: 3px; font-weight: 500;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: #2D2D2D;">${dateStr}</div>
+            <div style="font-size: 0.75rem; color: #888; margin-top: 2px;">Order ID: #${order.orderId}</div>
+            <div style="font-size: 0.85rem; color: #444; margin-top: 6px; font-weight: 500;">
               👤 <strong>${order.customerName || 'Guest'}</strong> (${order.customerMobile || 'N/A'})
             </div>
           </div>
@@ -1238,7 +1292,7 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 15. TARGETED ORDER ACTIONS WITH BULLETPROOF LOOKUP (v55)
+// 15. TARGETED ORDER ACTIONS
 // ==========================================================================
 async function acceptOrder(firebaseKey) {
   if (!db) return;
@@ -1299,7 +1353,6 @@ function initFoodiesPoint() {
   renderCustomerOrderHistory();
   listenForCustomerOrderUpdates();
   
-  // NEW: Automatically restores tokens to Firebase in the background
   autoSyncPushToken();
 
   setInterval(() => {
