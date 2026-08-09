@@ -1,18 +1,18 @@
 // ==========================================================================
-// FOODIES POINT SERVICE WORKER (v2 - PUSH FIX)
+// FOODIES POINT SERVICE WORKER (BETA ENVIRONMENT - GITHUB PAGES PATHS)
 // ==========================================================================
-const CACHE_NAME = 'fp-cache-v2';
+const CACHE_NAME = 'fp-beta-cache-v2';
 
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html?v=2',
-  '/app.js?v=2',
-  '/manifest.json?v=2',
-  '/icon.png'
+  '/foodies-point-beta/',
+  '/foodies-point-beta/index.html?v=2',
+  '/foodies-point-beta/app.js?v=2',
+  '/foodies-point-beta/manifest.json?v=2',
+  '/foodies-point-beta/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[SW v2] Installing new service worker...');
+  console.log('[Beta SW] Installing new service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -21,7 +21,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW v2] Activating & wiping old caches...');
+  console.log('[Beta SW] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -36,9 +36,9 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  console.log('[SW v2] Native Push Event Received:', event);
+  console.log('[Beta SW] Native Push Event Received:', event);
 
-  let data = { title: "Foodies Point 🍛", body: "Today's live menu is updated!" };
+  let data = { title: "Foodies Point Beta 🍛", body: "Today's live menu is updated!" };
   if (event.data) {
     try {
       data = event.data.json();
@@ -49,10 +49,10 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: data.body,
-    icon: '/icon.png',
-    badge: '/icon.png',
+    icon: '/foodies-point-beta/icon.png',
+    badge: '/foodies-point-beta/icon.png',
     vibrate: [100, 50, 100],
-    data: { url: '/' }
+    data: { url: '/foodies-point-beta/' }
   };
 
   event.waitUntil(
@@ -63,7 +63,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
+    clients.openWindow(event.notification.data.url || '/foodies-point-beta/')
   );
 });
 
