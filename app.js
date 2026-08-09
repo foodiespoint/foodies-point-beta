@@ -1215,7 +1215,7 @@ function listenForKitchenOrders() {
   if (!db) return;
   const ordersContainer = document.getElementById('kitchen-orders-container');
   
-  db.ref('orders').on('value', (snapshot) => {
+  db.ref('beta_orders').on('value', (snapshot) => {
     if (!ordersContainer) return;
     ordersContainer.innerHTML = '';
 
