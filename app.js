@@ -831,7 +831,7 @@ async function placeOrder() {
 }
 
 function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, pushSub) {
-  const newOrderRef = db.ref('orders').push();
+  const newOrderRef = db.ref('beta_orders').push();
   
   const orderData = {
     orderId: newOrderRef.key.slice(-4).toUpperCase(),
