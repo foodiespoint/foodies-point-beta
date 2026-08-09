@@ -6,15 +6,15 @@
   <title>Foodies Point</title>
 
   <!-- ====================================================================== -->
-  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v55)                            -->
+  <!-- 1. PWA MANIFEST & THEME CONFIGURATION (v2 - PUSH FIX)                  -->
   <!-- ====================================================================== -->
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=55">
+  <link rel="manifest" href="/manifest.json?v=2">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Foodies Point">
-  <link rel="apple-touch-icon" href="/foodies-point-beta/icon.png">
-  <link rel="icon" type="image/png" href="/foodies-point-beta/icon.png">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="icon" type="image/png" href="/icon.png">
 
   <!-- ====================================================================== -->
   <!-- 2. EXTERNAL SDKS (Firebase Only)                                       -->
@@ -23,7 +23,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <!-- ====================================================================== -->
-  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v55)                              -->
+  <!-- 3. EMBEDDED MOBILE-FIRST PWA STYLES (v2)                               -->
   <!-- ====================================================================== -->
   <style>
     :root {
@@ -98,6 +98,7 @@
       width: 100%;
       max-width: 240px;
       display: block;
+      transition: all 0.3s ease;
     }
 
     #main-app-content {
@@ -525,6 +526,19 @@
       color: #C62828;
     }
 
+    /* Primary Action - Highlighted Button */
+    .btn-action.btn-complete {
+      background: var(--primary-color);
+      color: var(--white);
+      font-weight: 700;
+      box-shadow: 0 3px 10px rgba(255, 75, 58, 0.3);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn-action.btn-complete:active {
+      transform: scale(0.97);
+    }
+
     .kitchen-subpage {
       display: none;
       position: fixed;
@@ -676,7 +690,7 @@
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.5);
-      z-index: 2000;
+      z-index: 3000;
       justify-content: center;
       align-items: center;
     }
@@ -752,20 +766,20 @@
   <div id="install-gate-overlay">
     <div class="install-modal-card">
       <h2>Install Foodies Point</h2>
-      <p id="install-instruction-text">Install the app on your home screen to view today's live menu and order food.</p>
+      <p id="install-instruction-text">Install the app to view today's live menu and order food.</p>
       
       <button id="btn-native-install" class="btn-publish" onclick="triggerAppInstall()">
         📲 Install App Now
       </button>
 
       <div id="install-manual-guide" style="display:none; margin-top:14px; font-size:0.85rem; color:#555; line-height:1.4; background:#F8F9FA; padding:10px 12px; border-radius:8px; border:1px solid #EAEAEA;">
-        Tap your browser menu <strong>(⋮ or Share ⎋)</strong> and select <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong>.
+        Tap your browser menu <strong>(⋮ or Share ⎋)</strong> and select <strong>"Install App"</strong>.
       </div>
     </div>
   </div>
 
   <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER (v55)                                          -->
+  <!-- 5. MASTER APP CONTAINER                                                -->
   <!-- ====================================================================== -->
   <div id="main-app-content">
 
@@ -780,7 +794,7 @@
 
       <div class="header-right-group">
         <button class="btn-icon" id="header-notify-btn" onclick="openAlertsModal()" aria-label="Notifications">🔔</button>
-        <span id="kitchen-version-badge">v55</span>
+        <span id="kitchen-version-badge">v2</span>
         <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
       </div>
     </header>
@@ -867,6 +881,26 @@
     </div>
   </aside>
 
+  <!-- ====================================================================== -->
+  <!-- 6. UNDISMISSABLE ONBOARDING MODALS                                     -->
+  <!-- ====================================================================== -->
+  
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal-card">
+      <h3>Customer Details</h3>
+      <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Enter your details to register and order</p>
+      
+      <div class="form-field-group">
+        <input type="text" id="cust-name-input" placeholder="Your Full Name" maxlength="40">
+        <input type="tel" id="cust-mobile-input" placeholder="10-digit Mobile Number" maxlength="10">
+      </div>
+
+      <div style="display: flex;">
+        <button class="btn-action btn-complete" style="width: 100%;" onclick="saveCustomerProfile()">Save & Continue</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="notification-permission-modal">
     <div class="modal-card">
       <div style="font-size: 2.8rem; margin-bottom: 8px;">🔔</div>
@@ -875,9 +909,8 @@
         Get real-time updates when your order is accepted, ready for pickup, or when today's live menu goes live!
       </p>
       
-      <div style="display: flex; gap: 8px;">
-        <button class="btn-action" style="background: #EAEAEA;" onclick="closeNotificationModal()">Not Now</button>
-        <button class="btn-action btn-complete" onclick="requestPushAccess()">🔔 Allow Notifications</button>
+      <div style="display: flex;">
+        <button class="btn-action btn-complete" style="width: 100%;" onclick="requestPushAccess()">🔔 Enable Notifications</button>
       </div>
     </div>
   </div>
@@ -899,23 +932,6 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="profile-modal">
-    <div class="modal-card">
-      <h3>Customer Details</h3>
-      <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Enter your details once for order tracking</p>
-      
-      <div class="form-field-group">
-        <input type="text" id="cust-name-input" placeholder="Your Full Name" maxlength="40">
-        <input type="tel" id="cust-mobile-input" placeholder="10-digit Mobile Number" maxlength="10">
-      </div>
-
-      <div style="display: flex; gap: 8px;">
-        <button class="btn-action" style="background: #EAEAEA;" onclick="closeProfileModal()">Cancel</button>
-        <button class="btn-action btn-complete" onclick="saveProfileAndPlaceOrder()">Save & Order</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="/foodies-point-beta/app.js?v=55"></script>
+  <script src="/app.js?v=2"></script>
 </body>
 </html>
