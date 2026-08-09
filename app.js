@@ -928,7 +928,7 @@ function clearCustomerHistory() {
 function listenForCustomerOrderUpdates() {
   if (!db) return;
 
-  db.ref('orders').on('value', (snapshot) => {
+  db.ref('beta_orders').on('value', (snapshot) => {
     const activeOrders = snapshot.val() || {};
     const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
     let hasChanges = false;
@@ -1057,7 +1057,7 @@ function exitKitchenMode(triggerHistoryBack = true) {
   checkAppOnboarding();
 
   if (db) {
-    db.ref('orders').off();
+    db.ref('beta_orders').off();
     db.ref('dailyMenu').off();
   }
 }
