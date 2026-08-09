@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v2 - PUSH FIX)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v3 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v2";
+const CURRENT_APP_VERSION = "v3";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -22,9 +22,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log(`[Firebase ${CURRENT_APP_VERSION}] Initialized successfully.`);
+  console.log(`[Firebase ${CURRENT_APP_VERSION} Beta] Initialized successfully.`);
 } catch (error) {
-  console.error(`[Firebase ${CURRENT_APP_VERSION}] Initialization error:`, error);
+  console.error(`[Firebase ${CURRENT_APP_VERSION} Beta] Initialization error:`, error);
 }
 
 // ==========================================================================
@@ -40,19 +40,19 @@ function checkDaily6PMReset() {
   const now = new Date();
   const hour = now.getHours();
   const todayStr = now.toDateString();
-  const lastResetDate = localStorage.getItem('fp_last_reset_date');
+  const lastResetDate = localStorage.getItem('fp_beta_last_reset_date');
 
   if (hour >= 18 && hour < 21 && lastResetDate !== todayStr) {
-    localStorage.setItem('fp_last_reset_date', todayStr);
+    localStorage.setItem('fp_beta_last_reset_date', todayStr);
     kitchenCheckedState = {};
 
     if (db) {
       db.ref('beta_dailyMenu').remove()
         .then(() => {
-          console.log(`[${CURRENT_APP_VERSION}] 6:00 PM reached: Kitchen list checks reset & live menu cleared.`);
+          console.log(`[${CURRENT_APP_VERSION}] 6:00 PM reached: Beta Menu cleared.`);
           renderKitchenMenu();
         })
-        .catch((err) => console.error("Error clearing menu at 6 PM:", err));
+        .catch((err) => console.error("Error clearing beta menu at 6 PM:", err));
     } else {
       renderKitchenMenu();
     }
@@ -80,7 +80,7 @@ function checkAppOnboarding() {
      return;
   }
 
-  const profileStr = localStorage.getItem('fp_customer_profile');
+  const profileStr = localStorage.getItem('fp_beta_customer_profile');
   if (!profileStr) {
      document.getElementById('profile-modal').style.display = 'flex';
      document.getElementById('notification-permission-modal').style.display = 'none';
@@ -114,10 +114,10 @@ function saveCustomerProfile() {
   }
 
   const customerProfile = { name: nameVal, mobile: mobileVal };
-  localStorage.setItem('fp_customer_profile', JSON.stringify(customerProfile));
+  localStorage.setItem('fp_beta_customer_profile', JSON.stringify(customerProfile));
   
   if (db) {
-    db.ref(`customers/${customerProfile.mobile}`).update({
+    db.ref(`beta_customers/${customerProfile.mobile}`).update({
       name: customerProfile.name,
       mobile: customerProfile.mobile,
       appVersion: CURRENT_APP_VERSION,
@@ -141,15 +141,15 @@ async function autoSyncPushToken() {
       }
       if (sub && db) {
         const subJson = sub.toJSON();
-        localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
+        localStorage.setItem('fp_beta_push_sub_cached', JSON.stringify(subJson));
         
         const dbKey = btoa(subJson.endpoint).replace(/[.#$/\[\]]/g, "_");
-        db.ref(`pushSubscriptions/${dbKey}`).set(subJson);
+        db.ref(`beta_pushSubscriptions/${dbKey}`).set(subJson);
         
-        const profileStr = localStorage.getItem('fp_customer_profile');
+        const profileStr = localStorage.getItem('fp_beta_customer_profile');
         if (profileStr) {
            const profile = JSON.parse(profileStr);
-           db.ref(`customers/${profile.mobile}/pushSubscription`).set(subJson);
+           db.ref(`beta_customers/${profile.mobile}/pushSubscription`).set(subJson);
         }
       }
     } catch(e) {
@@ -173,14 +173,14 @@ async function getLocalPushSubscription() {
 
       if (subscription) {
         const subJson = subscription.toJSON();
-        localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
+        localStorage.setItem('fp_beta_push_sub_cached', JSON.stringify(subJson));
         return subJson;
       }
     } catch (e) {
       console.warn("Could not fetch active push sub from service worker:", e);
     }
   }
-  const cached = localStorage.getItem('fp_push_sub_cached');
+  const cached = localStorage.getItem('fp_beta_push_sub_cached');
   return cached ? JSON.parse(cached) : null;
 }
 
@@ -188,7 +188,7 @@ async function syncKitchenPushSubscription() {
   const sub = await getLocalPushSubscription();
   if (sub && db) {
     const dbKey = btoa(sub.endpoint).replace(/[.#$/\[\]]/g, "_");
-    db.ref(`kitchenSubscriptions/${dbKey}`).set(sub);
+    db.ref(`beta_kitchenSubscriptions/${dbKey}`).set(sub);
   }
 }
 
@@ -236,15 +236,15 @@ async function requestPushAccess(isSilentSync = false) {
     }
 
     const subJson = subscription.toJSON();
-    localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
+    localStorage.setItem('fp_beta_push_sub_cached', JSON.stringify(subJson));
 
     const dbKey = btoa(subJson.endpoint).replace(/[.#$/\[\]]/g, "_");
-    await db.ref(`pushSubscriptions/${dbKey}`).set(subJson);
+    await db.ref(`beta_pushSubscriptions/${dbKey}`).set(subJson);
     
-    const profileStr = localStorage.getItem('fp_customer_profile');
+    const profileStr = localStorage.getItem('fp_beta_customer_profile');
     if (profileStr) {
        const profile = JSON.parse(profileStr);
-       await db.ref(`customers/${profile.mobile}/pushSubscription`).set(subJson);
+       await db.ref(`beta_customers/${profile.mobile}/pushSubscription`).set(subJson);
     }
 
     if (isSilentSync) {
@@ -259,7 +259,7 @@ async function requestPushAccess(isSilentSync = false) {
 
 async function sendRenderPushBroadcast(title, message) {
   try {
-    const snap = await db.ref('pushSubscriptions').once('value');
+    const snap = await db.ref('beta_pushSubscriptions').once('value');
     const subsObj = snap.val();
     if (!subsObj) return;
 
@@ -274,11 +274,11 @@ async function sendRenderPushBroadcast(title, message) {
     if (data.expiredEndpoints && data.expiredEndpoints.length > 0) {
       data.expiredEndpoints.forEach((expiredUrl) => {
         const dbKey = btoa(expiredUrl).replace(/[.#$/\[\]]/g, "_");
-        db.ref(`pushSubscriptions/${dbKey}`).remove();
+        db.ref(`beta_pushSubscriptions/${dbKey}`).remove();
       });
     }
   } catch (error) {
-    console.error(`[Push ${CURRENT_APP_VERSION}] Error contacting Render push API:`, error);
+    console.error(`[Push] Error contacting Render push API:`, error);
   }
 }
 
@@ -291,7 +291,7 @@ async function sendTargetedRenderPush(subscription, title, message) {
       body: JSON.stringify({ title, message, subscriptions: [subscription] })
     });
   } catch (error) {
-    console.error(`[Push ${CURRENT_APP_VERSION}] Error sending targeted push:`, error);
+    console.error(`[Push] Error sending targeted push:`, error);
   }
 }
 
@@ -301,7 +301,7 @@ async function resolveTargetSubscription(order) {
   }
   if (order.customerMobile) {
     try {
-      const snap = await db.ref(`customers/${order.customerMobile}/pushSubscription`).once('value');
+      const snap = await db.ref(`beta_customers/${order.customerMobile}/pushSubscription`).once('value');
       const sub = snap.val();
       if (sub && sub.endpoint) return sub;
     } catch(e) {
@@ -313,7 +313,7 @@ async function resolveTargetSubscription(order) {
 
 async function notifyKitchenNewOrder(orderData) {
   try {
-    const snap = await db.ref('kitchenSubscriptions').once('value');
+    const snap = await db.ref('beta_kitchenSubscriptions').once('value');
     const subsObj = snap.val();
     if (!subsObj) return;
 
@@ -322,8 +322,8 @@ async function notifyKitchenNewOrder(orderData) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: "New Order! 🔔",
-        message: `${orderData.customerName} just placed an order for ₹${orderData.total}`,
+        title: "New Beta Order! 🔔",
+        message: `${orderData.customerName} ordered ${orderData.orderType} for ${orderData.scheduledTime}`,
         subscriptions
       })
     });
@@ -333,13 +333,13 @@ async function notifyKitchenNewOrder(orderData) {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION
+// 4. SERVICE WORKER REGISTRATION (BETA PATHS)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    navigator.serviceWorker.register('/foodies-point-beta/sw.js', { scope: '/foodies-point-beta/' })
     .then((reg) => {
       swRegistration = reg;
       reg.update();
@@ -360,7 +360,7 @@ if ('serviceWorker' in navigator) {
       });
     })
     .catch((err) => {
-      console.error(`[SW ${CURRENT_APP_VERSION}] Registration failed:`, err);
+      console.error(`[SW] Registration failed:`, err);
     });
   });
 }
@@ -421,7 +421,7 @@ function enforceInstallGate() {
 }
 
 // ==========================================================================
-// 6. COMPLETE FOODIES POINT MENU (UPDATED v2 DATA)
+// 6. COMPLETE FOODIES POINT MENU (UPDATED v1 DATA)
 // ==========================================================================
 const MENU_ITEMS = [
   { id: 'dish-001', category: 'Rolls', name: 'Dahi Bread Roll (1 pc)', price: 15 },
@@ -570,7 +570,7 @@ function toggleKitchenDrawer(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (Keeps Section Headers)
+// 8. RENDER KITCHEN MENU
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -646,7 +646,7 @@ function toggleOutOfStock(dishId) {
   kitchenCheckedState[dishId] = newState;
 
   if (db) {
-    db.ref(`dailyMenu/${dishId}`).set(newState);
+    db.ref(`beta_dailyMenu/${dishId}`).set(newState);
   }
   renderKitchenMenu();
 }
@@ -655,10 +655,7 @@ function toggleOutOfStock(dishId) {
 // 9. PUBLISH OR CLEAR DAILY LIVE MENU
 // ==========================================================================
 function publishDailyMenu() {
-  if (!db) {
-    alert("Database connection is not ready. Please refresh the page.");
-    return;
-  }
+  if (!db) return alert("Database connection is not ready. Please refresh.");
 
   const selectedCount = Object.keys(kitchenCheckedState).length;
 
@@ -669,34 +666,28 @@ function publishDailyMenu() {
     return;
   }
 
-  const confirmMsg = isDuringBreakWindow()
-    ? `It is currently between 6:00 PM and 9:00 PM.\n\nAre you sure you want to publish these ${selectedCount} selected items? (They will automatically go live for customers at 9:00 PM tonight for tomorrow's orders.)`
-    : `Are you sure you want to publish ${selectedCount} selected items to the live customer menu?`;
-
+  const confirmMsg = `Are you sure you want to publish ${selectedCount} selected items to the BETA live customer menu?`;
   if (!confirm(confirmMsg)) return;
 
   db.ref('beta_dailyMenu').set(kitchenCheckedState)
     .then(() => {
-      alert(`Daily Live Menu published successfully (${selectedCount} items)! Notification broadcasted.`);
+      alert(`Beta Menu published successfully (${selectedCount} items)!`);
       sendRenderPushBroadcast(
-        "Today's Live Menu is Up! 🍛",
-        `We just published ${selectedCount} fresh items for today's cafeteria menu. Open the app to order now!`
+        "Beta Menu Up! 🍛",
+        `We just published ${selectedCount} items.`
       );
     })
-    .catch((error) => {
-      console.error("Error publishing menu:", error);
-      alert("Failed to publish daily menu. Please check your network connection.");
-    });
+    .catch((error) => console.error("Error publishing menu:", error));
 }
 
 function clearDailyMenu() {
   if (!db) return;
-  if (confirm("Remove all items from the customer's live menu page?")) {
+  if (confirm("Remove all items from the beta customer menu?")) {
     db.ref('beta_dailyMenu').remove()
       .then(() => {
         kitchenCheckedState = {};
         renderKitchenMenu();
-        alert("All items have been removed from the customer page!");
+        alert("All items removed!");
       })
       .catch((error) => console.error("Error clearing daily menu:", error));
   }
@@ -787,16 +778,13 @@ function updateQuantity(dishId, change) {
 }
 
 // ==========================================================================
-// 11. ORDER SUBMISSION ENGINE (FRESH PUSH TOKEN BINDING)
+// 11. ORDER SUBMISSION ENGINE (DELIVERY/TAKEAWAY ADDED)
 // ==========================================================================
-async function placeOrder() {
+let pendingCustomerOrder = null;
+
+function openOrderOptionsModal() {
   if (isDuringBreakWindow()) {
     alert("Orders are closed for today. Tomorrow's menu will be available starting at 9:00 PM tonight!");
-    return;
-  }
-
-  if (!db) {
-    alert("Database connection is not ready. Please refresh the page.");
     return;
   }
 
@@ -816,21 +804,53 @@ async function placeOrder() {
     return;
   }
 
-  const profileStr = localStorage.getItem('fp_customer_profile');
+  const profileStr = localStorage.getItem('fp_beta_customer_profile');
   if (!profileStr) {
     checkAppOnboarding(); 
     return;
   }
 
-  const customerProfile = JSON.parse(profileStr);
+  // Save the state and show options modal
+  pendingCustomerOrder = {
+    items: orderItems,
+    total: totalAmount,
+    profile: JSON.parse(profileStr)
+  };
   
-  // Guarantee push token resolution before order submission
-  let localPushSub = await getLocalPushSubscription();
-
-  executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, localPushSub);
+  document.getElementById('order-options-modal').style.display = 'flex';
 }
 
-function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, pushSub) {
+function closeOrderOptionsModal() {
+  document.getElementById('order-options-modal').style.display = 'none';
+  pendingCustomerOrder = null;
+}
+
+async function finalizeOrderPlacement() {
+  const orderType = document.getElementById('order-type-select').value;
+  const scheduledTime = document.getElementById('order-time-input').value;
+
+  if (!scheduledTime) {
+    alert("Please select a preferred time for your order.");
+    return;
+  }
+
+  document.getElementById('order-options-modal').style.display = 'none';
+  
+  let localPushSub = await getLocalPushSubscription();
+
+  executeFirebaseOrderSubmission(
+    pendingCustomerOrder.items, 
+    pendingCustomerOrder.total, 
+    pendingCustomerOrder.profile, 
+    localPushSub,
+    orderType,
+    scheduledTime
+  );
+  
+  pendingCustomerOrder = null;
+}
+
+function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, pushSub, orderType, scheduledTime) {
   const newOrderRef = db.ref('beta_orders').push();
   
   const orderData = {
@@ -841,7 +861,10 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
     customerName: customerProfile.name,
     customerMobile: customerProfile.mobile,
     customerVersion: CURRENT_APP_VERSION,
-    timestamp: firebase.database.ServerValue.TIMESTAMP
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+    orderType: orderType,          // New!
+    scheduledTime: scheduledTime,  // New!
+    deliveryCharge: 0              // New!
   };
 
   if (pushSub && pushSub.endpoint) {
@@ -860,11 +883,15 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
         items: orderItems,
         total: totalAmount,
         status: 'PENDING',
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        orderType: orderType,
+        scheduledTime: scheduledTime,
+        deliveryCharge: 0
       };
-      const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
+      
+      const pastOrders = JSON.parse(localStorage.getItem('fp_beta_customer_orders') || '[]');
       pastOrders.unshift(myOrder);
-      localStorage.setItem('fp_customer_orders', JSON.stringify(pastOrders));
+      localStorage.setItem('fp_beta_customer_orders', JSON.stringify(pastOrders));
       renderCustomerOrderHistory();
 
       MENU_ITEMS.forEach((dish) => { cart[dish.id] = 0; });
@@ -872,6 +899,7 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
         const span = document.getElementById(`qty-${id}`);
         if (span) span.textContent = 0;
       });
+      document.getElementById('order-time-input').value = "";
     })
     .catch((error) => {
       console.error("Error placing order:", error);
@@ -883,7 +911,7 @@ function renderCustomerOrderHistory() {
   const container = document.getElementById('customer-orders-container');
   if (!container) return;
 
-  const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
+  const pastOrders = JSON.parse(localStorage.getItem('fp_beta_customer_orders') || '[]');
 
   if (pastOrders.length === 0) {
     container.innerHTML = `<p style="text-align:center; padding: 20px; color:#666;">No past orders yet. Orders placed from this device will appear here!</p>`;
@@ -901,6 +929,18 @@ function renderCustomerOrderHistory() {
       .join(', ');
 
     const dateStr = new Date(myOrder.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    
+    // Delivery info string
+    const typeEmoji = myOrder.orderType === 'Delivery' ? '🚚' : '🥡';
+    const deliveryStr = `<div style="font-weight: 600; color: #1565C0; margin-top: 6px; font-size: 0.85rem; background: #E3F2FD; display: inline-block; padding: 3px 8px; border-radius: 6px;">
+        ${typeEmoji} ${myOrder.orderType} @ ${myOrder.scheduledTime}
+    </div>`;
+
+    // Delivery charge string
+    let totalDisplay = `₹${myOrder.total}`;
+    if (myOrder.deliveryCharge > 0) {
+      totalDisplay += ` <span style="font-size:0.75rem; font-weight:normal; color:#666;">(includes ₹${myOrder.deliveryCharge} delivery fee)</span>`;
+    }
 
     card.innerHTML = `
       <div class="customer-order-header">
@@ -910,8 +950,9 @@ function renderCustomerOrderHistory() {
         </div>
         <span class="status-badge status-${myOrder.status}">${myOrder.status}</span>
       </div>
-      <p style="font-size: 0.88rem; color: #444; margin-bottom: 6px; line-height: 1.4;">${itemsSummary}</p>
-      <div style="font-weight: 700; color: #FF4B3A; font-size: 0.95rem;">Total: ₹${myOrder.total}</div>
+      <p style="font-size: 0.88rem; color: #444; margin-bottom: 4px; line-height: 1.4;">${itemsSummary}</p>
+      ${deliveryStr}
+      <div style="font-weight: 700; color: #FF4B3A; font-size: 0.95rem; margin-top: 8px;">Total: ${totalDisplay}</div>
     `;
 
     container.appendChild(card);
@@ -920,7 +961,7 @@ function renderCustomerOrderHistory() {
 
 function clearCustomerHistory() {
   if (confirm("Clear your order history from this device?")) {
-    localStorage.removeItem('fp_customer_orders');
+    localStorage.removeItem('fp_beta_customer_orders');
     renderCustomerOrderHistory();
   }
 }
@@ -930,21 +971,23 @@ function listenForCustomerOrderUpdates() {
 
   db.ref('beta_orders').on('value', (snapshot) => {
     const activeOrders = snapshot.val() || {};
-    const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
+    const pastOrders = JSON.parse(localStorage.getItem('fp_beta_customer_orders') || '[]');
     let hasChanges = false;
 
     pastOrders.forEach((myOrder) => {
       const liveOrder = activeOrders[myOrder.firebaseKey];
       if (liveOrder) {
-        if (myOrder.status !== liveOrder.status) {
+        if (myOrder.status !== liveOrder.status || myOrder.total !== liveOrder.total) {
           myOrder.status = liveOrder.status;
+          myOrder.total = liveOrder.total;
+          myOrder.deliveryCharge = liveOrder.deliveryCharge || 0;
           hasChanges = true;
         }
       }
     });
 
     if (hasChanges) {
-      localStorage.setItem('fp_customer_orders', JSON.stringify(pastOrders));
+      localStorage.setItem('fp_beta_customer_orders', JSON.stringify(pastOrders));
       renderCustomerOrderHistory();
     }
   });
@@ -957,7 +1000,7 @@ const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
 
 function openKitchenPINModal() {
-  if (localStorage.getItem('fp_kitchen_auth') === 'true') {
+  if (localStorage.getItem('fp_beta_kitchen_auth') === 'true') {
     enterKitchenMode();
     return;
   }
@@ -986,7 +1029,7 @@ function togglePasscodeVisibility() {
 function verifyKitchenPIN() {
   const inputPin = document.getElementById('kitchen-pin-input').value;
   if (inputPin === KITCHEN_PIN) {
-    localStorage.setItem('fp_kitchen_auth', 'true');
+    localStorage.setItem('fp_beta_kitchen_auth', 'true');
     closePINModal();
     enterKitchenMode();
   } else {
@@ -1108,7 +1151,7 @@ function fetchAndRenderCustomerDirectory() {
 
   container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">Fetching live directory...</p>`;
 
-  db.ref('customers').once('value').then((snapshot) => {
+  db.ref('beta_customers').once('value').then((snapshot) => {
     const customers = snapshot.val();
     if (!customers) {
       container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">No customer version records synced yet.</p>`;
@@ -1185,10 +1228,15 @@ function fetchAndRenderPaymentLedger() {
       
       const dateStr = new Date(order.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       
+      let totalDisplay = `₹${order.total}`;
+      if (order.deliveryCharge > 0) {
+        totalDisplay += ` (+ ₹${order.deliveryCharge} fee)`;
+      }
+
       row.innerHTML = `
         <div style="flex: 1;">
           <div style="font-size:0.9rem; font-weight: 700; color:#2D2D2D;">${dateStr} <span style="font-weight: normal; color: #888; font-size: 0.75rem; margin-left: 4px;">(#${order.orderId})</span></div>
-          <div style="font-size: 0.95rem; color: #FF4B3A; font-weight: 700; margin: 4px 0;">₹${order.total}</div>
+          <div style="font-size: 0.95rem; color: #FF4B3A; font-weight: 700; margin: 4px 0;">${totalDisplay}</div>
           <div style="font-size:0.8rem; color:#666;">👤 ${order.customerName || 'Guest'} (${order.customerMobile || 'N/A'})</div>
         </div>
         <span style="font-weight:700; font-size:0.85rem; color:#FF4B3A;">${order.status}</span>
@@ -1252,10 +1300,18 @@ function listenForKitchenOrders() {
       };
       const statusColor = statusColors[order.status] || '#FF4B3A';
 
+      // NEW: Delivery/Takeaway Tag
+      const typeEmoji = order.orderType === 'Delivery' ? '🚚' : '🥡';
+      const orderTypeHtml = `
+        <div style="font-weight: 700; color: #1565C0; margin: 8px 0; background: #E3F2FD; display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.9rem;">
+          ${typeEmoji} ${order.orderType} @ ${order.scheduledTime || 'N/A'}
+        </div>
+      `;
+
       let actionButtonsHtml = '';
       if (order.status === 'PENDING') {
         actionButtonsHtml = `
-          <button class="btn-action btn-accept" onclick="acceptOrder('${order.firebaseKey}')">Accept</button>
+          <button class="btn-action btn-accept" onclick="acceptOrderTrigger('${order.firebaseKey}', '${order.orderType}', ${order.total})">Accept</button>
           <button class="btn-action btn-deny" onclick="rejectOrder('${order.firebaseKey}')">Reject</button>
         `;
       } else {
@@ -1265,6 +1321,11 @@ function listenForKitchenOrders() {
       }
 
       const dateStr = new Date(order.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      
+      let totalDisplay = `₹${order.total}`;
+      if (order.deliveryCharge > 0) {
+        totalDisplay += ` <span style="font-size:0.8rem; font-weight:normal; color:#666;">(Includes ₹${order.deliveryCharge} fee)</span>`;
+      }
 
       card.innerHTML = `
         <div class="order-header">
@@ -1277,9 +1338,10 @@ function listenForKitchenOrders() {
           </div>
           <span style="color: ${statusColor}; font-weight: 700;">${order.status}</span>
         </div>
+        ${orderTypeHtml}
         <div class="order-body" style="margin: 6px 0 12px 0;">
           ${itemsListHtml}
-          <p style="margin-top: 8px; font-weight: bold;">Total: ₹${order.total}</p>
+          <p style="margin-top: 8px; font-weight: bold;">Total: ${totalDisplay}</p>
         </div>
         <div class="order-actions">
           ${actionButtonsHtml}
@@ -1292,20 +1354,57 @@ function listenForKitchenOrders() {
 }
 
 // ==========================================================================
-// 15. TARGETED ORDER ACTIONS
+// 15. TARGETED ORDER ACTIONS (WITH DELIVERY CHARGE LOGIC)
 // ==========================================================================
-async function acceptOrder(firebaseKey) {
+let pendingAcceptance = null;
+
+function acceptOrderTrigger(firebaseKey, orderType, currentTotal) {
+  if (orderType === 'Delivery') {
+    // Open Delivery Charge Modal
+    pendingAcceptance = { key: firebaseKey, originalTotal: currentTotal };
+    document.getElementById('kitchen-delivery-fee-input').value = "";
+    document.getElementById('delivery-charge-modal').style.display = 'flex';
+  } else {
+    // Process Takeaway instantly with 0 charge
+    processOrderAcceptance(firebaseKey, 0);
+  }
+}
+
+function closeDeliveryChargeModal() {
+  document.getElementById('delivery-charge-modal').style.display = 'none';
+  pendingAcceptance = null;
+}
+
+function confirmDeliveryAcceptance() {
+  const feeInput = document.getElementById('kitchen-delivery-fee-input').value;
+  const charge = parseInt(feeInput) || 0;
+  
+  processOrderAcceptance(pendingAcceptance.key, charge);
+  closeDeliveryChargeModal();
+}
+
+async function processOrderAcceptance(firebaseKey, deliveryCharge) {
   if (!db) return;
   try {
-    await db.ref(`orders/${firebaseKey}`).update({ status: 'ACCEPTED' });
-    
-    const snap = await db.ref(`orders/${firebaseKey}`).once('value');
+    const snap = await db.ref(`beta_orders/${firebaseKey}`).once('value');
     const order = snap.val();
-    if (order) {
-      const targetSub = await resolveTargetSubscription(order);
-      if (targetSub) {
-        sendTargetedRenderPush(targetSub, "Order Accepted ✅", `Hi ${order.customerName}, your order #${order.orderId} has been accepted and is being prepared!`);
+    if (!order) return;
+
+    const newTotal = order.total + deliveryCharge;
+
+    await db.ref(`beta_orders/${firebaseKey}`).update({ 
+      status: 'ACCEPTED',
+      deliveryCharge: deliveryCharge,
+      total: newTotal
+    });
+    
+    const targetSub = await resolveTargetSubscription(order);
+    if (targetSub) {
+      let pushMessage = `Hi ${order.customerName}, your order #${order.orderId} has been accepted and will be ready at ${order.scheduledTime}! Total is ₹${newTotal}.`;
+      if (deliveryCharge > 0) {
+         pushMessage = `Hi ${order.customerName}, your order #${order.orderId} is accepted for ${order.scheduledTime}! Total is ₹${newTotal} (includes ₹${deliveryCharge} delivery fee).`;
       }
+      sendTargetedRenderPush(targetSub, "Order Accepted ✅", pushMessage);
     }
   } catch (error) {
     console.error("Error accepting order:", error);
@@ -1317,9 +1416,9 @@ async function rejectOrder(firebaseKey) {
   if (!db) return;
   if (confirm("Reject this order? The customer will be notified.")) {
     try {
-      await db.ref(`orders/${firebaseKey}`).update({ status: 'REJECTED' });
+      await db.ref(`beta_orders/${firebaseKey}`).update({ status: 'REJECTED' });
       
-      const snap = await db.ref(`orders/${firebaseKey}`).once('value');
+      const snap = await db.ref(`beta_orders/${firebaseKey}`).once('value');
       const order = snap.val();
       if (order) {
         const targetSub = await resolveTargetSubscription(order);
@@ -1337,7 +1436,7 @@ async function rejectOrder(firebaseKey) {
 async function removeTicket(firebaseKey) {
   if (!db) return;
   try {
-    await db.ref(`orders/${firebaseKey}`).update({ archived: true });
+    await db.ref(`beta_orders/${firebaseKey}`).update({ archived: true });
   } catch (error) {
     console.error("Error removing ticket from screen:", error);
   }
