@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v5 - BETA ISOLATED)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v6 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v5";
+const CURRENT_APP_VERSION = "v6";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -132,7 +132,7 @@ async function autoSyncPushToken() {
   if ('serviceWorker' in navigator && 'PushManager' in window && Notification.permission === 'granted') {
     try {
       const reg = await navigator.serviceWorker.ready;
-      let sub = await reg.pushManager.getSubscription();
+      let sub = await pushManager.getSubscription();
       if (!sub) {
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
@@ -1116,7 +1116,6 @@ function enterKitchenMode() {
   document.getElementById('header-kitchen-btn').style.display = 'none';
   document.getElementById('header-back-btn').style.display = 'inline-flex';
   
-  // Kitchen Header Additions
   document.getElementById('header-drawer-btn').style.display = 'inline-block';
   document.getElementById('kitchen-version-badge').style.display = 'inline-block';
 
