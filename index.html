@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Foodies Point Beta</title>
 
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=3">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=4">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -417,23 +417,9 @@
       flex-direction: column;
       max-width: 600px;
       margin: 0 auto;
-    }
-
-    .kitchen-half {
-      flex: 1 1 50%;
-      min-height: 0;
       overflow-y: auto;
-      padding: 14px 16px;
+      padding: 16px;
       -webkit-overflow-scrolling: touch;
-    }
-
-    .kitchen-upper {
-      border-bottom: 3px solid var(--primary-color);
-      background: var(--bg-light);
-    }
-
-    .kitchen-lower {
-      background: var(--white);
     }
 
     .sticky-section-title {
@@ -732,15 +718,17 @@
       <div class="header-left-group">
         <button class="btn-kitchen" id="header-kitchen-btn" onclick="openKitchenPINModal()">Kitchen</button>
         <button class="btn-back-arrow" id="header-back-btn" onclick="handleHeaderBack()" style="display: none;" aria-label="Back">←</button>
-        <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenDrawer()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
 
       <div class="app-title" id="main-app-title">Foodies Point</div>
 
       <div class="header-right-group">
         <button class="btn-icon" id="header-notify-btn" onclick="openAlertsModal()" aria-label="Notifications">🔔</button>
-        <span id="kitchen-version-badge">v3-Beta</span>
-        <button class="btn-kitchen" id="header-exit-btn" onclick="exitKitchenMode(true)" style="display: none;">Exit</button>
+        <span id="kitchen-version-badge">v4-Beta</span>
+        
+        <!-- MOVED & NEW Kitchen Buttons -->
+        <button class="btn-kitchen" id="header-orders-btn" onclick="openKitchenOrdersPage()" style="display: none;">Orders</button>
+        <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenDrawer()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
     </header>
 
@@ -768,24 +756,25 @@
       </div>
     </main>
 
+    <!-- FULL PAGE MENU CONSOLE -->
     <section id="kitchen-view">
-      <div class="kitchen-half kitchen-upper">
-        <h2 class="section-title" style="margin: 4px 0 10px 0;">Kitchen Console</h2>
-        <div class="kitchen-menu-actions">
-          <button class="btn-publish" onclick="publishDailyMenu()">Publish Menu</button>
-          <button class="btn-clear-menu" onclick="clearDailyMenu()">🗑️ Clear</button>
-        </div>
-        <div class="menu-list" id="kitchen-menu-container"></div>
+      <h2 class="section-title" style="margin: 4px 0 10px 0;">Kitchen Console - Menu</h2>
+      <div class="kitchen-menu-actions">
+        <button class="btn-publish" onclick="publishDailyMenu()">Publish Menu</button>
+        <button class="btn-clear-menu" onclick="clearDailyMenu()">🗑️ Clear</button>
       </div>
-
-      <div class="kitchen-half kitchen-lower">
-        <div class="sticky-section-title">
-          <span>Live Incoming Orders</span>
-        </div>
-        <div id="kitchen-orders-container"></div>
-      </div>
+      <div class="menu-list" id="kitchen-menu-container"></div>
     </section>
 
+    <!-- NEW SUBPAGE: ORDERS -->
+    <section class="kitchen-subpage" id="kitchen-orders-view">
+      <div class="subpage-header">
+        <h2>Live Incoming Orders</h2>
+      </div>
+      <div id="kitchen-orders-container"></div>
+    </section>
+
+    <!-- EXISTING SUBPAGES -->
     <section class="kitchen-subpage" id="customer-data-view">
       <div class="subpage-header">
         <h2>Customer Data</h2>
@@ -913,6 +902,6 @@
     </div>
   </div>
 
-  <script src="/foodies-point-beta/app.js?v=3"></script>
+  <script src="/foodies-point-beta/app.js?v=4"></script>
 </body>
 </html>
