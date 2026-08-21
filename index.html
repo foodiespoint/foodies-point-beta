@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Foodies Point Beta</title>
 
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=5">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=6">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -573,12 +573,12 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     
-    /* NEW: Kitchen Dropdown Styles */
+    /* MODIFIED: Safely positions dropdown above backdrop and below header visually */
     .kitchen-dropdown {
       display: none;
-      position: absolute;
-      top: 48px;
-      right: 0;
+      position: fixed;
+      top: 60px;
+      right: 16px;
       background: var(--white);
       border: 1px solid var(--border-color);
       border-radius: 8px;
@@ -609,6 +609,7 @@
       display: none;
       position: fixed;
       inset: 0;
+      background: transparent;
       z-index: 2500;
     }
 
@@ -723,16 +724,8 @@
 
       <div class="header-right-group">
         <button class="btn-icon" id="header-notify-btn" onclick="openAlertsModal()" aria-label="Notifications">🔔</button>
-        <span id="kitchen-version-badge">v5-Beta</span>
-        
+        <span id="kitchen-version-badge">v6-Beta</span>
         <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenMenuDropdown()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
-        
-        <!-- NEW DROPDOWN MENU -->
-        <div id="kitchen-dropdown" class="kitchen-dropdown">
-          <div class="dropdown-item" onclick="openKitchenOrdersPage()">📦 Live Incoming Orders</div>
-          <div class="dropdown-item" onclick="openCustomerDataPage()">👥 Customer Data</div>
-          <div class="dropdown-item" onclick="openPaymentDetailsPage()">💳 Payment Records</div>
-        </div>
       </div>
     </header>
 
@@ -804,7 +797,13 @@
 
   </div>
 
+  <!-- FIX: Dropped outside the header constraints -->
   <div class="kitchen-dropdown-backdrop" id="kitchen-dropdown-backdrop" onclick="toggleKitchenMenuDropdown(false)"></div>
+  <div id="kitchen-dropdown" class="kitchen-dropdown">
+    <div class="dropdown-item" onclick="openKitchenOrdersPage()">📦 Live Incoming Orders</div>
+    <div class="dropdown-item" onclick="openCustomerDataPage()">👥 Customer Data</div>
+    <div class="dropdown-item" onclick="openPaymentDetailsPage()">💳 Payment Records</div>
+  </div>
 
   <!-- ====================================================================== -->
   <!-- 6. MODALS                                                              -->
@@ -941,6 +940,6 @@
     </div>
   </div>
 
-  <script src="/foodies-point-beta/app.js?v=5"></script>
+  <script src="/foodies-point-beta/app.js?v=6"></script>
 </body>
 </html>
