@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v3 - BETA ISOLATED)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v4 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v3";
+const CURRENT_APP_VERSION = "v4";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -862,9 +862,9 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
     customerMobile: customerProfile.mobile,
     customerVersion: CURRENT_APP_VERSION,
     timestamp: firebase.database.ServerValue.TIMESTAMP,
-    orderType: orderType,          // New!
-    scheduledTime: scheduledTime,  // New!
-    deliveryCharge: 0              // New!
+    orderType: orderType,          
+    scheduledTime: scheduledTime,  
+    deliveryCharge: 0              
   };
 
   if (pushSub && pushSub.endpoint) {
@@ -1047,9 +1047,11 @@ function enterKitchenMode() {
   document.getElementById('header-notify-btn').style.display = 'none';
   document.getElementById('header-kitchen-btn').style.display = 'none';
   document.getElementById('header-back-btn').style.display = 'inline-flex';
+  
+  // Display New Re-ordered Buttons
+  document.getElementById('header-orders-btn').style.display = 'inline-block';
   document.getElementById('header-drawer-btn').style.display = 'inline-block';
   document.getElementById('kitchen-version-badge').style.display = 'inline-block';
-  document.getElementById('header-exit-btn').style.display = 'inline-block';
 
   document.getElementById('kitchen-view').style.display = 'flex';
   
@@ -1071,7 +1073,11 @@ function enterKitchenMode() {
 function handleHeaderBack() {
   const custPage = document.getElementById('customer-data-view');
   const payPage = document.getElementById('payment-details-view');
-  if ((custPage && custPage.style.display === 'flex') || (payPage && payPage.style.display === 'flex')) {
+  const ordersPage = document.getElementById('kitchen-orders-view');
+  
+  if ((custPage && custPage.style.display === 'flex') || 
+      (payPage && payPage.style.display === 'flex') || 
+      (ordersPage && ordersPage.style.display === 'flex')) {
     closeKitchenSubPage(true);
   } else {
     exitKitchenMode(true);
@@ -1093,9 +1099,11 @@ function exitKitchenMode(triggerHistoryBack = true) {
   document.getElementById('header-notify-btn').style.display = 'inline-flex';
   document.getElementById('header-kitchen-btn').style.display = 'inline-block';
   document.getElementById('header-back-btn').style.display = 'none';
+  
+  // Hide Kitchen Header Elements
+  document.getElementById('header-orders-btn').style.display = 'none';
   document.getElementById('header-drawer-btn').style.display = 'none';
   document.getElementById('kitchen-version-badge').style.display = 'none';
-  document.getElementById('header-exit-btn').style.display = 'none';
   
   checkAppOnboarding();
 
@@ -1108,6 +1116,13 @@ function exitKitchenMode(triggerHistoryBack = true) {
 // ==========================================================================
 // 13. DEDICATED KITCHEN SUB-PAGES
 // ==========================================================================
+function openKitchenOrdersPage() {
+  toggleKitchenDrawer(false);
+  history.pushState({ kitchenSubPage: 'orders' }, '', '#kitchen-orders');
+  document.getElementById('kitchen-view').style.display = 'none';
+  document.getElementById('kitchen-orders-view').style.display = 'flex';
+}
+
 function openCustomerDataPage() {
   toggleKitchenDrawer(false);
   history.pushState({ kitchenSubPage: 'customers' }, '', '#kitchen-customers');
@@ -1127,8 +1142,9 @@ function openPaymentDetailsPage() {
 function closeKitchenSubPage(triggerBack = true) {
   document.getElementById('customer-data-view').style.display = 'none';
   document.getElementById('payment-details-view').style.display = 'none';
+  document.getElementById('kitchen-orders-view').style.display = 'none';
   if (isKitchenMode) document.getElementById('kitchen-view').style.display = 'flex';
-  if (triggerBack && (window.location.hash === '#kitchen-customers' || window.location.hash === '#kitchen-payments')) {
+  if (triggerBack && (window.location.hash === '#kitchen-customers' || window.location.hash === '#kitchen-payments' || window.location.hash === '#kitchen-orders')) {
     history.back();
   }
 }
@@ -1250,7 +1266,7 @@ window.addEventListener('popstate', () => {
   if (isKitchenMode) {
     if (window.location.hash === '#kitchen') {
       closeKitchenSubPage(false);
-    } else if (window.location.hash !== '#kitchen-customers' && window.location.hash !== '#kitchen-payments') {
+    } else if (window.location.hash !== '#kitchen-customers' && window.location.hash !== '#kitchen-payments' && window.location.hash !== '#kitchen-orders') {
       exitKitchenMode(false);
     }
   }
