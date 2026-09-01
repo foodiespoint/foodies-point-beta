@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v10 - BETA ISOLATED)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v11 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v10";
+const CURRENT_APP_VERSION = "v11";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -128,7 +128,6 @@ function saveCustomerProfile() {
   checkAppOnboarding();
 }
 
-// Background customer presence update
 function updateCustomerPresence() {
   const profileStr = localStorage.getItem('fp_beta_customer_profile');
   if (profileStr && db && !isKitchenMode) {
@@ -345,7 +344,7 @@ async function notifyKitchenNewOrder(orderData) {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (FORCE BYPASS FOR v10)
+// 4. SERVICE WORKER REGISTRATION 
 // ==========================================================================
 let swRegistration = null;
 
