@@ -1,27 +1,28 @@
 // ==========================================================================
-// FOODIES POINT SERVICE WORKER (BETA ENVIRONMENT - v6)
+// FOODIES POINT SERVICE WORKER (BETA ENVIRONMENT - v10)
 // ==========================================================================
-const CACHE_NAME = 'fp-beta-cache-v6';
+const CACHE_NAME = 'fp-beta-cache-v10';
 
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
-  '/foodies-point-beta/index.html?v=6',
-  '/foodies-point-beta/app.js?v=6',
-  '/foodies-point-beta/manifest.json?v=6',
+  '/foodies-point-beta/index.html?v=10',
+  '/foodies-point-beta/app.js?v=10',
+  '/foodies-point-beta/manifest.json?v=10',
   '/foodies-point-beta/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[Beta SW v6] Installing new service worker...');
+  console.log('[Beta SW v10] Installing new service worker...');
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[Beta SW v6] Activating & wiping old caches...');
+  console.log('[Beta SW v10] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -36,7 +37,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  console.log('[Beta SW v6] Native Push Event Received:', event);
+  console.log('[Beta SW v10] Native Push Event Received:', event);
 
   let data = { title: "Foodies Point Beta 🍛", body: "Today's live menu is updated!" };
   if (event.data) {
@@ -47,11 +48,13 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  // UPDATED options for maximum lock screen / idle visibility
   const options = {
     body: data.body,
     icon: '/foodies-point-beta/icon.png',
     badge: '/foodies-point-beta/icon.png',
-    vibrate: [100, 50, 100],
+    vibrate: [300, 100, 300, 100, 300], // Stronger physical pattern to wake attention
+    requireInteraction: true, // Forces notification to stay until user clears it
     data: { url: '/foodies-point-beta/' }
   };
 
