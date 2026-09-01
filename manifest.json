@@ -5,7 +5,7 @@
   "scope": "/foodies-point-beta/",
   "display": "standalone",
   "background_color": "#F8F9FA",
-  "theme_color": "#FF4B3A",
+  "theme_color": "#D9534F",
   "icons": [
     {
       "src": "/foodies-point-beta/icon.png",
