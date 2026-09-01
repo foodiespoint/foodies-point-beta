@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v11 - BETA ISOLATED)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v12 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v11";
+const CURRENT_APP_VERSION = "v12";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -344,7 +344,7 @@ async function notifyKitchenNewOrder(orderData) {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION 
+// 4. SERVICE WORKER REGISTRATION (FORCE BYPASS FOR v12)
 // ==========================================================================
 let swRegistration = null;
 
@@ -724,7 +724,7 @@ function renderKitchenMenu() {
 
     if (uncheckedCatItems.length > 0) {
       const categoryHeader = document.createElement('h3');
-      categoryHeader.style.cssText = "margin: 16px 0 6px 0; font-size: 0.95rem; color: #FF4B3A; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
+      categoryHeader.style.cssText = "margin: 16px 0 6px 0; font-size: 0.95rem; color: #D9534F; border-bottom: 2px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;";
       categoryHeader.textContent = cat;
       container.appendChild(categoryHeader);
 
@@ -825,7 +825,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
     container.innerHTML = `
       <div style="text-align:center; padding: 40px 20px; color:#555;">
         <div style="font-size: 2.5rem; margin-bottom: 12px;">🌙</div>
-        <h3 style="color:#FF4B3A; font-size: 1.15rem; margin-bottom: 8px;">We're Closed for the Day!</h3>
+        <h3 style="color:#D9534F; font-size: 1.15rem; margin-bottom: 8px;">We're Closed for the Day!</h3>
         <p style="font-size: 0.95rem; line-height: 1.5; color: #666;">
           Orders are now closed for today.<br>
           Tomorrow's live menu will be available starting at <strong>9:00 PM tonight</strong>!
@@ -1067,7 +1067,7 @@ function renderCustomerOrderHistory() {
       </div>
       <p style="font-size: 0.88rem; color: #444; margin-bottom: 4px; line-height: 1.4;">${itemsSummary}</p>
       ${deliveryStr}
-      <div style="font-weight: 700; color: #FF4B3A; font-size: 0.95rem; margin-top: 8px;">Total: ${totalDisplay}</div>
+      <div style="font-weight: 700; color: #D9534F; font-size: 0.95rem; margin-top: 8px;">Total: ${totalDisplay}</div>
     `;
 
     container.appendChild(card);
@@ -1318,7 +1318,7 @@ function fetchAndRenderPaymentLedger() {
       container.innerHTML = `
         <div class="payment-summary-box">
           <div style="font-size:0.85rem; color:#666; text-transform:uppercase; font-weight:700;">Active Orders Billing Total</div>
-          <div style="font-size:1.8rem; font-weight:800; color:#FF4B3A; margin:4px 0;">₹0</div>
+          <div style="font-size:1.8rem; font-weight:800; color:#D9534F; margin:4px 0;">₹0</div>
           <div style="font-size:0.85rem; color:#2E7D32;">✔ 0 Orders Accepted</div>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px 0;">
@@ -1344,7 +1344,7 @@ function fetchAndRenderPaymentLedger() {
     container.innerHTML = `
       <div class="payment-summary-box">
         <div style="font-size:0.85rem; color:#666; text-transform:uppercase; font-weight:700;">Active Orders Billing Total</div>
-        <div style="font-size:1.8rem; font-weight:800; color:#FF4B3A; margin:4px 0;">₹${totalRevenue}</div>
+        <div style="font-size:1.8rem; font-weight:800; color:#D9534F; margin:4px 0;">₹${totalRevenue}</div>
         <div style="font-size:0.85rem; color:#2E7D32;">✔ ${completedCount} Orders Accepted</div>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin: 16px 0 10px 0;">
@@ -1367,10 +1367,10 @@ function fetchAndRenderPaymentLedger() {
       row.innerHTML = `
         <div style="flex: 1;">
           <div style="font-size:0.9rem; font-weight: 700; color:#2D2D2D;">${dateStr} <span style="font-weight: normal; color: #888; font-size: 0.75rem; margin-left: 4px;">(#${order.orderId})</span></div>
-          <div style="font-size: 0.95rem; color: #FF4B3A; font-weight: 700; margin: 4px 0;">${totalDisplay}</div>
+          <div style="font-size: 0.95rem; color: #D9534F; font-weight: 700; margin: 4px 0;">${totalDisplay}</div>
           <div style="font-size:0.8rem; color:#666;">👤 ${order.customerName || 'Guest'} (${order.customerMobile || 'N/A'})</div>
         </div>
-        <span style="font-weight:700; font-size:0.85rem; color:#FF4B3A;">${order.status}</span>
+        <span style="font-weight:700; font-size:0.85rem; color:#D9534F;">${order.status}</span>
       `;
       container.appendChild(row);
     });
@@ -1429,7 +1429,7 @@ function listenForKitchenOrders() {
         ACCEPTED: '#2E7D32',
         REJECTED: '#C62828'
       };
-      const statusColor = statusColors[order.status] || '#FF4B3A';
+      const statusColor = statusColors[order.status] || '#D9534F';
 
       const typeEmoji = order.orderType === 'Delivery' ? '🚚' : '🥡';
       const orderTypeHtml = `
