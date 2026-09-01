@@ -10,7 +10,7 @@
 
   <title>Foodies Point Beta</title>
 
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=12">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=13">
   <meta name="theme-color" content="#D9534F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -399,7 +399,8 @@
       margin-bottom: 12px;
     }
 
-    .btn-publish, .btn-clear-menu {
+    /* UPDATED: Buttons styling for Clear, Add Item, Publish */
+    .btn-publish, .btn-clear-menu, .btn-add-item {
       flex: 1;
       border: none;
       padding: 11px 8px;
@@ -415,6 +416,12 @@
       background: var(--primary-color);
       color: var(--white);
       box-shadow: 0 3px 10px rgba(217, 83, 79, 0.25);
+    }
+    
+    .btn-add-item {
+      background: #4A90E2; /* Clean, soft blue */
+      color: var(--white);
+      box-shadow: 0 3px 10px rgba(74, 144, 226, 0.25);
     }
 
     .btn-clear-menu {
@@ -728,7 +735,7 @@
 
       <div class="header-right-group">
         <button class="btn-icon" id="header-notify-btn" onclick="openAlertsModal()" aria-label="Notifications">🔔</button>
-        <span id="kitchen-version-badge">v12-Beta</span>
+        <span id="kitchen-version-badge">v13-Beta</span>
         <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenMenuDropdown()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
     </header>
@@ -760,10 +767,11 @@
     <!-- FULL PAGE MENU CONSOLE -->
     <section id="kitchen-view">
       <h2 class="section-title" style="margin: 4px 0 10px 0;">Kitchen Console - Menu</h2>
+      <!-- UPDATED ORDER: Clear -> Add Item -> Publish -->
       <div class="kitchen-menu-actions">
-        <button class="btn-publish" onclick="publishDailyMenu()">Publish Menu</button>
-        <button class="btn-publish" style="background: #2E7D32;" onclick="openAddItemModal()">➕ Add Item</button>
         <button class="btn-clear-menu" onclick="clearDailyMenu()">🗑️ Clear</button>
+        <button class="btn-add-item" onclick="openAddItemModal()">+ Add Item</button>
+        <button class="btn-publish" onclick="publishDailyMenu()">Publish Menu</button>
       </div>
       <div class="search-bar-container">
         <input type="text" id="kitchen-menu-search" placeholder="Search menu..." onkeyup="renderKitchenMenu()">
@@ -944,7 +952,6 @@
     </div>
   </div>
 
-  <!-- Force fetching v12 of the script -->
-  <script src="/foodies-point-beta/app.js?v=12"></script>
+  <script src="/foodies-point-beta/app.js?v=13"></script>
 </body>
 </html>
