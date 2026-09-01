@@ -3,9 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <title>Foodies Point Beta</title>
 
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=6">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=10">
   <meta name="theme-color" content="#FF4B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -573,7 +578,6 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     
-    /* MODIFIED: Safely positions dropdown above backdrop and below header visually */
     .kitchen-dropdown {
       display: none;
       position: fixed;
@@ -724,7 +728,7 @@
 
       <div class="header-right-group">
         <button class="btn-icon" id="header-notify-btn" onclick="openAlertsModal()" aria-label="Notifications">🔔</button>
-        <span id="kitchen-version-badge">v6-Beta</span>
+        <span id="kitchen-version-badge">v10-Beta</span>
         <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenMenuDropdown()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
     </header>
@@ -797,7 +801,6 @@
 
   </div>
 
-  <!-- FIX: Dropped outside the header constraints -->
   <div class="kitchen-dropdown-backdrop" id="kitchen-dropdown-backdrop" onclick="toggleKitchenMenuDropdown(false)"></div>
   <div id="kitchen-dropdown" class="kitchen-dropdown">
     <div class="dropdown-item" onclick="openKitchenOrdersPage()">📦 Live Incoming Orders</div>
@@ -819,8 +822,10 @@
         <span class="form-label">Dish Name:</span>
         <input type="text" id="add-item-name" placeholder="e.g. Masala Dosa">
 
+        <!-- Dynamic Category Dropdown -->
         <span class="form-label" style="margin-top: 8px;">Category:</span>
-        <input type="text" id="add-item-category" placeholder="e.g. South Indian">
+        <select id="add-item-category-select" onchange="handleCategorySelectChange()"></select>
+        <input type="text" id="add-item-category-new" style="margin-top: 8px; display: none;" placeholder="Enter new category name">
         
         <span class="form-label" style="margin-top: 8px;">Price (₹):</span>
         <input type="number" id="add-item-price" placeholder="e.g. 120" min="1">
@@ -940,6 +945,6 @@
     </div>
   </div>
 
-  <script src="/foodies-point-beta/app.js?v=6"></script>
+  <script src="/foodies-point-beta/app.js?v=10"></script>
 </body>
 </html>
