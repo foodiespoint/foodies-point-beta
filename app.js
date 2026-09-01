@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v7 - LIVE)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v10 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v7";
+const CURRENT_APP_VERSION = "v10";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -22,9 +22,9 @@ try {
     firebase.initializeApp(firebaseConfig);
   }
   db = firebase.database();
-  console.log(`[Firebase ${CURRENT_APP_VERSION}] Initialized successfully.`);
+  console.log(`[Firebase ${CURRENT_APP_VERSION} Beta] Initialized successfully.`);
 } catch (error) {
-  console.error(`[Firebase ${CURRENT_APP_VERSION}] Initialization error:`, error);
+  console.error(`[Firebase ${CURRENT_APP_VERSION} Beta] Initialization error:`, error);
 }
 
 // ==========================================================================
@@ -40,19 +40,19 @@ function checkDaily6PMReset() {
   const now = new Date();
   const hour = now.getHours();
   const todayStr = now.toDateString();
-  const lastResetDate = localStorage.getItem('fp_last_reset_date');
+  const lastResetDate = localStorage.getItem('fp_beta_last_reset_date');
 
   if (hour >= 18 && hour < 21 && lastResetDate !== todayStr) {
-    localStorage.setItem('fp_last_reset_date', todayStr);
+    localStorage.setItem('fp_beta_last_reset_date', todayStr);
     kitchenCheckedState = {};
 
     if (db) {
-      db.ref('dailyMenu').remove()
+      db.ref('beta_dailyMenu').remove()
         .then(() => {
-          console.log(`[${CURRENT_APP_VERSION}] 6:00 PM reached: Menu cleared.`);
+          console.log(`[${CURRENT_APP_VERSION}] 6:00 PM reached: Beta Menu cleared.`);
           renderKitchenMenu();
         })
-        .catch((err) => console.error("Error clearing menu at 6 PM:", err));
+        .catch((err) => console.error("Error clearing beta menu at 6 PM:", err));
     } else {
       renderKitchenMenu();
     }
@@ -80,7 +80,7 @@ function checkAppOnboarding() {
      return;
   }
 
-  const profileStr = localStorage.getItem('fp_customer_profile');
+  const profileStr = localStorage.getItem('fp_beta_customer_profile');
   if (!profileStr) {
      document.getElementById('profile-modal').style.display = 'flex';
      document.getElementById('notification-permission-modal').style.display = 'none';
@@ -114,10 +114,10 @@ function saveCustomerProfile() {
   }
 
   const customerProfile = { name: nameVal, mobile: mobileVal };
-  localStorage.setItem('fp_customer_profile', JSON.stringify(customerProfile));
+  localStorage.setItem('fp_beta_customer_profile', JSON.stringify(customerProfile));
   
   if (db) {
-    db.ref(`customers/${customerProfile.mobile}`).update({
+    db.ref(`beta_customers/${customerProfile.mobile}`).update({
       name: customerProfile.name,
       mobile: customerProfile.mobile,
       appVersion: CURRENT_APP_VERSION,
@@ -126,6 +126,18 @@ function saveCustomerProfile() {
   }
   
   checkAppOnboarding();
+}
+
+// Background customer presence update
+function updateCustomerPresence() {
+  const profileStr = localStorage.getItem('fp_beta_customer_profile');
+  if (profileStr && db && !isKitchenMode) {
+    const profile = JSON.parse(profileStr);
+    db.ref(`beta_customers/${profile.mobile}`).update({
+      appVersion: CURRENT_APP_VERSION,
+      lastSeen: firebase.database.ServerValue.TIMESTAMP
+    }).catch(e => console.error("Presence update failed:", e));
+  }
 }
 
 async function autoSyncPushToken() {
@@ -141,15 +153,15 @@ async function autoSyncPushToken() {
       }
       if (sub && db) {
         const subJson = sub.toJSON();
-        localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
+        localStorage.setItem('fp_beta_push_sub_cached', JSON.stringify(subJson));
         
         const dbKey = btoa(subJson.endpoint).replace(/[.#$/\[\]]/g, "_");
-        db.ref(`pushSubscriptions/${dbKey}`).set(subJson);
+        db.ref(`beta_pushSubscriptions/${dbKey}`).set(subJson);
         
-        const profileStr = localStorage.getItem('fp_customer_profile');
+        const profileStr = localStorage.getItem('fp_beta_customer_profile');
         if (profileStr) {
            const profile = JSON.parse(profileStr);
-           db.ref(`customers/${profile.mobile}/pushSubscription`).set(subJson);
+           db.ref(`beta_customers/${profile.mobile}/pushSubscription`).set(subJson);
         }
       }
     } catch(e) {
@@ -173,14 +185,14 @@ async function getLocalPushSubscription() {
 
       if (subscription) {
         const subJson = subscription.toJSON();
-        localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
+        localStorage.setItem('fp_beta_push_sub_cached', JSON.stringify(subJson));
         return subJson;
       }
     } catch (e) {
       console.warn("Could not fetch active push sub from service worker:", e);
     }
   }
-  const cached = localStorage.getItem('fp_push_sub_cached');
+  const cached = localStorage.getItem('fp_beta_push_sub_cached');
   return cached ? JSON.parse(cached) : null;
 }
 
@@ -188,7 +200,7 @@ async function syncKitchenPushSubscription() {
   const sub = await getLocalPushSubscription();
   if (sub && db) {
     const dbKey = btoa(sub.endpoint).replace(/[.#$/\[\]]/g, "_");
-    db.ref(`kitchenSubscriptions/${dbKey}`).set(sub);
+    db.ref(`beta_kitchenSubscriptions/${dbKey}`).set(sub);
   }
 }
 
@@ -236,15 +248,15 @@ async function requestPushAccess(isSilentSync = false) {
     }
 
     const subJson = subscription.toJSON();
-    localStorage.setItem('fp_push_sub_cached', JSON.stringify(subJson));
+    localStorage.setItem('fp_beta_push_sub_cached', JSON.stringify(subJson));
 
     const dbKey = btoa(subJson.endpoint).replace(/[.#$/\[\]]/g, "_");
-    await db.ref(`pushSubscriptions/${dbKey}`).set(subJson);
+    await db.ref(`beta_pushSubscriptions/${dbKey}`).set(subJson);
     
-    const profileStr = localStorage.getItem('fp_customer_profile');
+    const profileStr = localStorage.getItem('fp_beta_customer_profile');
     if (profileStr) {
        const profile = JSON.parse(profileStr);
-       await db.ref(`customers/${profile.mobile}/pushSubscription`).set(subJson);
+       await db.ref(`beta_customers/${profile.mobile}/pushSubscription`).set(subJson);
     }
 
     if (isSilentSync) {
@@ -259,7 +271,7 @@ async function requestPushAccess(isSilentSync = false) {
 
 async function sendRenderPushBroadcast(title, message) {
   try {
-    const snap = await db.ref('pushSubscriptions').once('value');
+    const snap = await db.ref('beta_pushSubscriptions').once('value');
     const subsObj = snap.val();
     if (!subsObj) return;
 
@@ -274,7 +286,7 @@ async function sendRenderPushBroadcast(title, message) {
     if (data.expiredEndpoints && data.expiredEndpoints.length > 0) {
       data.expiredEndpoints.forEach((expiredUrl) => {
         const dbKey = btoa(expiredUrl).replace(/[.#$/\[\]]/g, "_");
-        db.ref(`pushSubscriptions/${dbKey}`).remove();
+        db.ref(`beta_pushSubscriptions/${dbKey}`).remove();
       });
     }
   } catch (error) {
@@ -301,7 +313,7 @@ async function resolveTargetSubscription(order) {
   }
   if (order.customerMobile) {
     try {
-      const snap = await db.ref(`customers/${order.customerMobile}/pushSubscription`).once('value');
+      const snap = await db.ref(`beta_customers/${order.customerMobile}/pushSubscription`).once('value');
       const sub = snap.val();
       if (sub && sub.endpoint) return sub;
     } catch(e) {
@@ -313,7 +325,7 @@ async function resolveTargetSubscription(order) {
 
 async function notifyKitchenNewOrder(orderData) {
   try {
-    const snap = await db.ref('kitchenSubscriptions').once('value');
+    const snap = await db.ref('beta_kitchenSubscriptions').once('value');
     const subsObj = snap.val();
     if (!subsObj) return;
 
@@ -322,7 +334,7 @@ async function notifyKitchenNewOrder(orderData) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: "New Order! 🔔",
+        title: "New Beta Order! 🔔",
         message: `${orderData.customerName} ordered ${orderData.orderType} for ${orderData.scheduledTime}`,
         subscriptions
       })
@@ -333,13 +345,13 @@ async function notifyKitchenNewOrder(orderData) {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION 
+// 4. SERVICE WORKER REGISTRATION (FORCE BYPASS FOR v10)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=${CURRENT_APP_VERSION}`, { scope: '/foodies-point-beta/' })
     .then((reg) => {
       swRegistration = reg;
       reg.update();
@@ -472,7 +484,6 @@ const DEFAULT_MENU_ITEMS = [
   { id: 'dish-046', category: 'Snacks', name: 'Samosa', price: 12 },
   { id: 'dish-047', category: 'Snacks', name: 'Paneer Tikka (per plate)', price: 240 },
   { id: 'dish-048', category: 'Snacks', name: 'Paneer Malai Tikka (per plate)', price: 260 },
-  { id: 'dish-107', category: 'Snacks', name: 'Crispy Corn (per plate)', price: 120 },
   { id: 'dish-049', category: 'Chinese', name: 'Honey Chilli Potato', price: 90 },
   { id: 'dish-050', category: 'Chinese', name: 'Chowmein', price: 80 },
   { id: 'dish-051', category: 'Chinese', name: 'Macaroni', price: 80 },
@@ -540,7 +551,7 @@ let latestFirebaseMenuSnapshot = null;
 
 function loadDynamicMenuCatalog() {
   if (!db) return;
-  db.ref('menu_catalog').on('value', (snap) => {
+  db.ref('beta_menu_catalog').on('value', (snap) => {
     const catalog = snap.val();
     activeMenuItems = catalog ? catalog : [...DEFAULT_MENU_ITEMS];
     if (isKitchenMode) renderKitchenMenu();
@@ -550,9 +561,40 @@ function loadDynamicMenuCatalog() {
 
 function openAddItemModal() {
   document.getElementById('add-item-name').value = '';
-  document.getElementById('add-item-category').value = '';
   document.getElementById('add-item-price').value = '';
+  
+  const select = document.getElementById('add-item-category-select');
+  const newCatInput = document.getElementById('add-item-category-new');
+  
+  select.innerHTML = '';
+  newCatInput.style.display = 'none';
+  newCatInput.value = '';
+
+  const categories = [...new Set(activeMenuItems.map(item => item.category))];
+  
+  categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    select.appendChild(opt);
+  });
+  
+  const addOpt = document.createElement('option');
+  addOpt.value = 'ADD_NEW';
+  addOpt.textContent = '➕ Add New Category...';
+  select.appendChild(addOpt);
+
   document.getElementById('add-item-modal').style.display = 'flex';
+}
+
+function handleCategorySelectChange() {
+  const select = document.getElementById('add-item-category-select');
+  const newCategoryInput = document.getElementById('add-item-category-new');
+  if (select.value === 'ADD_NEW') {
+    newCategoryInput.style.display = 'block';
+  } else {
+    newCategoryInput.style.display = 'none';
+  }
 }
 
 function closeAddItemModal() {
@@ -561,8 +603,13 @@ function closeAddItemModal() {
 
 function saveNewItem() {
   const name = document.getElementById('add-item-name').value.trim();
-  const category = document.getElementById('add-item-category').value.trim() || 'Specials';
   const price = parseInt(document.getElementById('add-item-price').value);
+  
+  let category = document.getElementById('add-item-category-select').value;
+  if (category === 'ADD_NEW') {
+    category = document.getElementById('add-item-category-new').value.trim();
+  }
+  if (!category) category = 'Specials';
 
   if (!name || isNaN(price) || price <= 0) {
     alert("Please enter a valid Name and Price.");
@@ -577,7 +624,7 @@ function saveNewItem() {
   };
 
   activeMenuItems.push(newItem);
-  if (db) db.ref('menu_catalog').set(activeMenuItems);
+  if (db) db.ref('beta_menu_catalog').set(activeMenuItems);
   closeAddItemModal();
 }
 
@@ -608,7 +655,7 @@ function saveEditedItem() {
   if (itemIndex > -1) {
     activeMenuItems[itemIndex].name = newName;
     activeMenuItems[itemIndex].price = newPrice;
-    if (db) db.ref('menu_catalog').set(activeMenuItems);
+    if (db) db.ref('beta_menu_catalog').set(activeMenuItems);
   }
   closeEditItemModal();
 }
@@ -718,7 +765,7 @@ function toggleOutOfStock(dishId) {
   kitchenCheckedState[dishId] = newState;
 
   if (db) {
-    db.ref(`dailyMenu/${dishId}`).set(newState);
+    db.ref(`beta_dailyMenu/${dishId}`).set(newState);
   }
   renderKitchenMenu();
 }
@@ -727,10 +774,7 @@ function toggleOutOfStock(dishId) {
 // 9. PUBLISH OR CLEAR DAILY LIVE MENU
 // ==========================================================================
 function publishDailyMenu() {
-  if (!db) {
-    alert("Database connection is not ready. Please refresh the page.");
-    return;
-  }
+  if (!db) return alert("Database connection is not ready. Please refresh.");
 
   const selectedCount = Object.keys(kitchenCheckedState).length;
 
@@ -741,34 +785,28 @@ function publishDailyMenu() {
     return;
   }
 
-  const confirmMsg = isDuringBreakWindow()
-    ? `It is currently between 6:00 PM and 9:00 PM.\n\nAre you sure you want to publish these ${selectedCount} selected items? (They will automatically go live for customers at 9:00 PM tonight for tomorrow's orders.)`
-    : `Are you sure you want to publish ${selectedCount} selected items to the live customer menu?`;
-
+  const confirmMsg = `Are you sure you want to publish ${selectedCount} selected items to the BETA live customer menu?`;
   if (!confirm(confirmMsg)) return;
 
-  db.ref('dailyMenu').set(kitchenCheckedState)
+  db.ref('beta_dailyMenu').set(kitchenCheckedState)
     .then(() => {
-      alert(`Daily Live Menu published successfully (${selectedCount} items)! Notification broadcasted.`);
+      alert(`Beta Menu published successfully (${selectedCount} items)!`);
       sendRenderPushBroadcast(
-        "Today's Live Menu is Up! 🍛",
-        `We just published ${selectedCount} fresh items for today's cafeteria menu. Open the app to order now!`
+        "Beta Menu Up! 🍛",
+        `We just published ${selectedCount} items.`
       );
     })
-    .catch((error) => {
-      console.error("Error publishing menu:", error);
-      alert("Failed to publish daily menu. Please check your network connection.");
-    });
+    .catch((error) => console.error("Error publishing menu:", error));
 }
 
 function clearDailyMenu() {
   if (!db) return;
-  if (confirm("Remove all items from the customer's live menu page?")) {
-    db.ref('dailyMenu').remove()
+  if (confirm("Remove all items from the beta customer menu?")) {
+    db.ref('beta_dailyMenu').remove()
       .then(() => {
         kitchenCheckedState = {};
         renderKitchenMenu();
-        alert("All items have been removed from the customer page!");
+        alert("All items removed!");
       })
       .catch((error) => console.error("Error clearing daily menu:", error));
   }
@@ -839,7 +877,7 @@ function renderCustomerMenuFromSnapshot(activeIds) {
 
 function listenForCustomerLiveMenu() {
   if (!db) return;
-  db.ref('dailyMenu').on('value', (snapshot) => {
+  db.ref('beta_dailyMenu').on('value', (snapshot) => {
     latestFirebaseMenuSnapshot = snapshot.val();
     renderCustomerMenuFromSnapshot(latestFirebaseMenuSnapshot);
   });
@@ -885,7 +923,7 @@ function openOrderOptionsModal() {
     return;
   }
 
-  const profileStr = localStorage.getItem('fp_customer_profile');
+  const profileStr = localStorage.getItem('fp_beta_customer_profile');
   if (!profileStr) {
     checkAppOnboarding(); 
     return;
@@ -931,7 +969,7 @@ async function finalizeOrderPlacement() {
 }
 
 function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile, pushSub, orderType, scheduledTime) {
-  const newOrderRef = db.ref('orders').push();
+  const newOrderRef = db.ref('beta_orders').push();
   
   const orderData = {
     orderId: newOrderRef.key.slice(-4).toUpperCase(),
@@ -969,9 +1007,9 @@ function executeFirebaseOrderSubmission(orderItems, totalAmount, customerProfile
         deliveryCharge: 0
       };
       
-      const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
+      const pastOrders = JSON.parse(localStorage.getItem('fp_beta_customer_orders') || '[]');
       pastOrders.unshift(myOrder);
-      localStorage.setItem('fp_customer_orders', JSON.stringify(pastOrders));
+      localStorage.setItem('fp_beta_customer_orders', JSON.stringify(pastOrders));
       renderCustomerOrderHistory();
 
       activeMenuItems.forEach((dish) => { cart[dish.id] = 0; });
@@ -991,7 +1029,7 @@ function renderCustomerOrderHistory() {
   const container = document.getElementById('customer-orders-container');
   if (!container) return;
 
-  const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
+  const pastOrders = JSON.parse(localStorage.getItem('fp_beta_customer_orders') || '[]');
 
   if (pastOrders.length === 0) {
     container.innerHTML = `<p style="text-align:center; padding: 20px; color:#666;">No past orders yet. Orders placed from this device will appear here!</p>`;
@@ -1039,7 +1077,7 @@ function renderCustomerOrderHistory() {
 
 function clearCustomerHistory() {
   if (confirm("Clear your order history from this device?")) {
-    localStorage.removeItem('fp_customer_orders');
+    localStorage.removeItem('fp_beta_customer_orders');
     renderCustomerOrderHistory();
   }
 }
@@ -1047,9 +1085,9 @@ function clearCustomerHistory() {
 function listenForCustomerOrderUpdates() {
   if (!db) return;
 
-  db.ref('orders').on('value', (snapshot) => {
+  db.ref('beta_orders').on('value', (snapshot) => {
     const activeOrders = snapshot.val() || {};
-    const pastOrders = JSON.parse(localStorage.getItem('fp_customer_orders') || '[]');
+    const pastOrders = JSON.parse(localStorage.getItem('fp_beta_customer_orders') || '[]');
     let hasChanges = false;
 
     pastOrders.forEach((myOrder) => {
@@ -1065,7 +1103,7 @@ function listenForCustomerOrderUpdates() {
     });
 
     if (hasChanges) {
-      localStorage.setItem('fp_customer_orders', JSON.stringify(pastOrders));
+      localStorage.setItem('fp_beta_customer_orders', JSON.stringify(pastOrders));
       renderCustomerOrderHistory();
     }
   });
@@ -1078,7 +1116,7 @@ const KITCHEN_PIN = "validatefoodies2026";
 let isKitchenMode = false;
 
 function openKitchenPINModal() {
-  if (localStorage.getItem('fp_kitchen_auth') === 'true') {
+  if (localStorage.getItem('fp_beta_kitchen_auth') === 'true') {
     enterKitchenMode();
     return;
   }
@@ -1107,7 +1145,7 @@ function togglePasscodeVisibility() {
 function verifyKitchenPIN() {
   const inputPin = document.getElementById('kitchen-pin-input').value;
   if (inputPin === KITCHEN_PIN) {
-    localStorage.setItem('fp_kitchen_auth', 'true');
+    localStorage.setItem('fp_beta_kitchen_auth', 'true');
     closePINModal();
     enterKitchenMode();
   } else {
@@ -1135,7 +1173,7 @@ function enterKitchenMode() {
   syncKitchenPushSubscription();
 
   if (db) {
-    db.ref('dailyMenu').on('value', (snapshot) => {
+    db.ref('beta_dailyMenu').on('value', (snapshot) => {
       kitchenCheckedState = snapshot.val() || {};
       renderKitchenMenu();
     });
@@ -1183,8 +1221,8 @@ function exitKitchenMode(triggerHistoryBack = true) {
   checkAppOnboarding();
 
   if (db) {
-    db.ref('orders').off();
-    db.ref('dailyMenu').off();
+    db.ref('beta_orders').off();
+    db.ref('beta_dailyMenu').off();
   }
 }
 
@@ -1227,7 +1265,7 @@ function closeKitchenSubPage(triggerBack = true) {
 function clearPaymentLedger() {
   if (!db) return;
   if (confirm("Are you sure you want to wipe all billing records and order entries? This will reset the total ledger back to ₹0.")) {
-    db.ref('orders').remove()
+    db.ref('beta_orders').remove()
       .then(() => {
         alert("Payment ledger wiped clean!");
         fetchAndRenderPaymentLedger();
@@ -1242,14 +1280,17 @@ function fetchAndRenderCustomerDirectory() {
 
   container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">Fetching live directory...</p>`;
 
-  db.ref('customers').once('value').then((snapshot) => {
+  db.ref('beta_customers').once('value').then((snapshot) => {
     const customers = snapshot.val();
     if (!customers) {
       container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">No customer version records synced yet.</p>`;
       return;
     }
     container.innerHTML = '';
-    Object.values(customers).forEach((cust) => {
+    
+    const customerArray = Object.values(customers).sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+    
+    customerArray.forEach((cust) => {
       const card = document.createElement('div');
       card.className = 'customer-data-card';
       const dateStr = cust.lastSeen ? new Date(cust.lastSeen).toLocaleDateString() : 'Recently';
@@ -1272,7 +1313,7 @@ function fetchAndRenderPaymentLedger() {
 
   container.innerHTML = `<p style="text-align:center; padding: 30px; color:#666;">Calculating payment ledger...</p>`;
 
-  db.ref('orders').once('value').then((snapshot) => {
+  db.ref('beta_orders').once('value').then((snapshot) => {
     const orders = snapshot.val();
     if (!orders) {
       container.innerHTML = `
@@ -1354,7 +1395,7 @@ function listenForKitchenOrders() {
   if (!db) return;
   const ordersContainer = document.getElementById('kitchen-orders-container');
   
-  db.ref('orders').on('value', (snapshot) => {
+  db.ref('beta_orders').on('value', (snapshot) => {
     if (!ordersContainer) return;
     ordersContainer.innerHTML = '';
 
@@ -1474,13 +1515,13 @@ function confirmDeliveryAcceptance() {
 async function processOrderAcceptance(firebaseKey, deliveryCharge) {
   if (!db) return;
   try {
-    const snap = await db.ref(`orders/${firebaseKey}`).once('value');
+    const snap = await db.ref(`beta_orders/${firebaseKey}`).once('value');
     const order = snap.val();
     if (!order) return;
 
     const newTotal = order.total + deliveryCharge;
 
-    await db.ref(`orders/${firebaseKey}`).update({ 
+    await db.ref(`beta_orders/${firebaseKey}`).update({ 
       status: 'ACCEPTED',
       deliveryCharge: deliveryCharge,
       total: newTotal
@@ -1504,9 +1545,9 @@ async function rejectOrder(firebaseKey) {
   if (!db) return;
   if (confirm("Reject this order? The customer will be notified.")) {
     try {
-      await db.ref(`orders/${firebaseKey}`).update({ status: 'REJECTED' });
+      await db.ref(`beta_orders/${firebaseKey}`).update({ status: 'REJECTED' });
       
-      const snap = await db.ref(`orders/${firebaseKey}`).once('value');
+      const snap = await db.ref(`beta_orders/${firebaseKey}`).once('value');
       const order = snap.val();
       if (order) {
         const targetSub = await resolveTargetSubscription(order);
@@ -1524,7 +1565,7 @@ async function rejectOrder(firebaseKey) {
 async function removeTicket(firebaseKey) {
   if (!db) return;
   try {
-    await db.ref(`orders/${firebaseKey}`).update({ archived: true });
+    await db.ref(`beta_orders/${firebaseKey}`).update({ archived: true });
   } catch (error) {
     console.error("Error removing ticket from screen:", error);
   }
@@ -1536,6 +1577,8 @@ async function removeTicket(firebaseKey) {
 function initFoodiesPoint() {
   enforceInstallGate();
   checkDaily6PMReset();
+  
+  updateCustomerPresence();
   
   loadDynamicMenuCatalog();
   listenForCustomerLiveMenu();
