@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v12 - BETA ISOLATED)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v13 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v12";
+const CURRENT_APP_VERSION = "v13";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -344,7 +344,7 @@ async function notifyKitchenNewOrder(orderData) {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION (FORCE BYPASS FOR v12)
+// 4. SERVICE WORKER REGISTRATION 
 // ==========================================================================
 let swRegistration = null;
 
@@ -680,7 +680,7 @@ function toggleKitchenMenuDropdown(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (With Search Filter & Edit)
+// 8. RENDER KITCHEN MENU (With Search Filter & Selective Edit)
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -700,6 +700,7 @@ function renderKitchenMenu() {
     card.className = 'menu-card';
     card.setAttribute('data-item-id', dish.id);
 
+    // FIX: Removed Edit Button from checked items
     card.innerHTML = `
       <div class="dish-select-area">
         <input type="checkbox" class="dish-checkbox" id="chk-top-${dish.id}" checked onchange="toggleKitchenItem('${dish.id}', false)">
@@ -712,7 +713,6 @@ function renderKitchenMenu() {
         <button type="button" class="btn-oos ${isOOS ? 'is-oos' : ''}" onclick="toggleOutOfStock('${dish.id}')">
           ${isOOS ? '🔴 Out of Stock' : '🟢 In Stock'}
         </button>
-        <button type="button" class="btn-edit-item" onclick="openEditItemModal('${dish.id}')">✏️ Edit</button>
       </div>
     `;
     container.appendChild(card);
@@ -733,6 +733,7 @@ function renderKitchenMenu() {
         card.className = 'menu-card';
         card.setAttribute('data-item-id', dish.id);
 
+        // Edit button remains for unchecked items
         card.innerHTML = `
           <div class="dish-select-area">
             <input type="checkbox" class="dish-checkbox" id="chk-${dish.id}" onchange="toggleKitchenItem('${dish.id}', true)">
