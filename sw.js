@@ -1,18 +1,18 @@
 // ==========================================================================
-// FOODIES POINT SERVICE WORKER (BETA ENVIRONMENT - v10)
+// FOODIES POINT SERVICE WORKER (BETA ENVIRONMENT - v11)
 // ==========================================================================
-const CACHE_NAME = 'fp-beta-cache-v10';
+const CACHE_NAME = 'fp-beta-cache-v11';
 
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
-  '/foodies-point-beta/index.html?v=10',
-  '/foodies-point-beta/app.js?v=10',
-  '/foodies-point-beta/manifest.json?v=10',
+  '/foodies-point-beta/index.html?v=11',
+  '/foodies-point-beta/app.js?v=11',
+  '/foodies-point-beta/manifest.json?v=11',
   '/foodies-point-beta/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[Beta SW v10] Installing new service worker...');
+  console.log('[Beta SW v11] Installing new service worker...');
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -22,7 +22,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[Beta SW v10] Activating & wiping old caches...');
+  console.log('[Beta SW v11] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -37,7 +37,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  console.log('[Beta SW v10] Native Push Event Received:', event);
+  console.log('[Beta SW v11] Native Push Event Received:', event);
 
   let data = { title: "Foodies Point Beta 🍛", body: "Today's live menu is updated!" };
   if (event.data) {
@@ -48,14 +48,16 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  // UPDATED options for maximum lock screen / idle visibility
+  // Generates an absolute URL to ensure the icon loads perfectly
+  const iconUrl = self.registration.scope + 'icon.png';
+
   const options = {
     body: data.body,
-    icon: '/foodies-point-beta/icon.png',
-    badge: '/foodies-point-beta/icon.png',
-    vibrate: [300, 100, 300, 100, 300], // Stronger physical pattern to wake attention
-    requireInteraction: true, // Forces notification to stay until user clears it
-    data: { url: '/foodies-point-beta/' }
+    icon: iconUrl,  // The large colored image in the notification tray
+    badge: iconUrl, // The tiny status bar icon (Android will make this solid white)
+    vibrate: [300, 100, 300, 100, 300], 
+    requireInteraction: true, 
+    data: { url: self.registration.scope }
   };
 
   event.waitUntil(
@@ -66,7 +68,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/foodies-point-beta/')
+    clients.openWindow(event.notification.data.url || self.registration.scope)
   );
 });
 
