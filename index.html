@@ -224,6 +224,7 @@
       border-top: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
+      gap: 10px;
     }
 
     .btn-place-order {
@@ -244,17 +245,6 @@
       background: #CCCCCC;
       cursor: not-allowed;
       box-shadow: none;
-    }
-    
-    /* NEW: Ad Banner Container Styling */
-    .ad-banner-container {
-      margin-top: 12px;
-      width: 100%;
-      min-height: 50px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: transparent;
     }
 
     .customer-lower {
@@ -714,9 +704,6 @@
 </head>
 <body>
 
-  <!-- ====================================================================== -->
-  <!-- 4. IRREMOVABLE INSTALL GATE OVERLAY                                    -->
-  <!-- ====================================================================== -->
   <div id="install-gate-overlay">
     <div class="install-modal-card">
       <h2>Install Foodies Point</h2>
@@ -732,9 +719,6 @@
     </div>
   </div>
 
-  <!-- ====================================================================== -->
-  <!-- 5. MASTER APP CONTAINER                                                -->
-  <!-- ====================================================================== -->
   <div id="main-app-content">
 
     <header class="app-header" id="app-header">
@@ -760,13 +744,13 @@
             <p style="text-align:center; padding: 30px; color:#666;">Loading live menu...</p>
           </div>
         </div>
+        
         <div class="customer-checkout-bar">
           <button class="btn-place-order" id="btn-place-order" onclick="openOrderOptionsModal()">Place Order</button>
           
-          <!-- Monetag Banner Ad Container -->
-          <div id="monetag-banner-slot" class="ad-banner-container">
-            <!-- Paste the Monetag banner <script> tag here -->
-          </div>
+          <div id="monetag-banner-wrapper" style="margin-top: 6px; width: 100%; min-height: 50px; display: flex; justify-content: center; align-items: center;">
+            
+            </div>
           
         </div>
       </div>
@@ -782,10 +766,8 @@
       </div>
     </main>
 
-    <!-- FULL PAGE MENU CONSOLE -->
     <section id="kitchen-view">
       <h2 class="section-title" style="margin: 4px 0 10px 0;">Kitchen Console - Menu</h2>
-      <!-- UPDATED ORDER: Clear -> Add Item -> Publish -->
       <div class="kitchen-menu-actions">
         <button class="btn-clear-menu" onclick="clearDailyMenu()">🗑️ Clear</button>
         <button class="btn-add-item" onclick="openAddItemModal()">+ Add Item</button>
@@ -797,7 +779,6 @@
       <div class="menu-list" id="kitchen-menu-container"></div>
     </section>
 
-    <!-- SUBPAGE: ORDERS -->
     <section class="kitchen-subpage" id="kitchen-orders-view">
       <div class="subpage-header">
         <h2>Live Incoming Orders</h2>
@@ -805,7 +786,6 @@
       <div id="kitchen-orders-container"></div>
     </section>
 
-    <!-- SUBPAGE: CUSTOMER DATA -->
     <section class="kitchen-subpage" id="customer-data-view">
       <div class="subpage-header">
         <h2>Customer Data</h2>
@@ -815,7 +795,6 @@
       </div>
     </section>
 
-    <!-- SUBPAGE: PAYMENT DATA -->
     <section class="kitchen-subpage" id="payment-details-view">
       <div class="subpage-header">
         <h2>Payment Records & Ledger</h2>
@@ -834,11 +813,6 @@
     <div class="dropdown-item" onclick="openPaymentDetailsPage()">💳 Payment Records</div>
   </div>
 
-  <!-- ====================================================================== -->
-  <!-- 6. MODALS                                                              -->
-  <!-- ====================================================================== -->
-
-  <!-- Add Item Modal -->
   <div class="modal-overlay" id="add-item-modal">
     <div class="modal-card">
       <h3>Add New Item</h3>
@@ -863,7 +837,6 @@
     </div>
   </div>
 
-  <!-- Edit Item Modal -->
   <div class="modal-overlay" id="edit-item-modal">
     <div class="modal-card">
       <h3>Edit Dish</h3>
@@ -885,7 +858,6 @@
     </div>
   </div>
 
-  <!-- Customer: Delivery or Takeaway & Schedule Time -->
   <div class="modal-overlay" id="order-options-modal">
     <div class="modal-card">
       <h3>Order Details</h3>
@@ -909,7 +881,6 @@
     </div>
   </div>
 
-  <!-- Kitchen: Input Delivery Charge for Delivery Orders -->
   <div class="modal-overlay" id="delivery-charge-modal">
     <div class="modal-card">
       <h3>Delivery Charge</h3>
@@ -927,7 +898,6 @@
     </div>
   </div>
   
-  <!-- Onboarding Modals -->
   <div class="modal-overlay" id="profile-modal">
     <div class="modal-card">
       <h3>Customer Details</h3>
