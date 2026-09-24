@@ -1365,7 +1365,7 @@ function fetchAndRenderPaymentLedger() {
 
       row.innerHTML = `
         <div style="flex: 1;">
-          <div style="font-size:0.9rem; font-weight: 700; color:#2D2D2D;">${dateStr} <span style="font-weight: normal; color: #888; font-size: 0.75 margin-left: 4px;">(#${order.orderId})</span></div>
+          <div style="font-size:0.9rem; font-weight: 700; color:#2D2D2D;">${dateStr} <span style="font-weight: normal; color: #888; font-size: 0.75rem; margin-left: 4px;">(#${order.orderId})</span></div>
           <div style="font-size: 0.95rem; color: #D9534F; font-weight: 700; margin: 4px 0;">${totalDisplay}</div>
           <div style="font-size:0.8rem; color:#666;">👤 ${order.customerName || 'Guest'} (${order.customerMobile || 'N/A'})</div>
         </div>
