@@ -10,7 +10,7 @@
 
   <title>Foodies Point Beta</title>
 
-  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=13">
+  <link rel="manifest" href="/foodies-point-beta/manifest.json?v=14">
   <meta name="theme-color" content="#D9534F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -222,6 +222,8 @@
       padding-top: 10px;
       background: var(--bg-light);
       border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
     }
 
     .btn-place-order {
@@ -242,6 +244,17 @@
       background: #CCCCCC;
       cursor: not-allowed;
       box-shadow: none;
+    }
+    
+    /* NEW: Ad Banner Container Styling */
+    .ad-banner-container {
+      margin-top: 12px;
+      width: 100%;
+      min-height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: transparent;
     }
 
     .customer-lower {
@@ -399,7 +412,6 @@
       margin-bottom: 12px;
     }
 
-    /* UPDATED: Buttons styling for Clear, Add Item, Publish */
     .btn-publish, .btn-clear-menu, .btn-add-item {
       flex: 1;
       border: none;
@@ -419,7 +431,7 @@
     }
     
     .btn-add-item {
-      background: #4A90E2; /* Clean, soft blue */
+      background: #4A90E2; 
       color: var(--white);
       box-shadow: 0 3px 10px rgba(74, 144, 226, 0.25);
     }
@@ -735,7 +747,7 @@
 
       <div class="header-right-group">
         <button class="btn-icon" id="header-notify-btn" onclick="openAlertsModal()" aria-label="Notifications">🔔</button>
-        <span id="kitchen-version-badge">v13-Beta</span>
+        <span id="kitchen-version-badge">v14-Beta</span>
         <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenMenuDropdown()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
       </div>
     </header>
@@ -750,6 +762,12 @@
         </div>
         <div class="customer-checkout-bar">
           <button class="btn-place-order" id="btn-place-order" onclick="openOrderOptionsModal()">Place Order</button>
+          
+          <!-- Monetag Banner Ad Container -->
+          <div id="monetag-banner-slot" class="ad-banner-container">
+            <!-- Paste the Monetag banner <script> tag here -->
+          </div>
+          
         </div>
       </div>
 
@@ -952,6 +970,6 @@
     </div>
   </div>
 
-  <script src="/foodies-point-beta/app.js?v=13"></script>
+  <script src="/foodies-point-beta/app.js?v=14"></script>
 </body>
 </html>
