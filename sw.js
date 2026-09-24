@@ -1,18 +1,28 @@
 // ==========================================================================
-// FOODIES POINT SERVICE WORKER (BETA ENVIRONMENT - v13)
+// 0. MONETAG ADS VERIFICATION & PUSH WORKER
 // ==========================================================================
-const CACHE_NAME = 'fp-beta-cache-v13';
+self.options = {
+    "domain": "5gvci.com",
+    "zoneId": 11879398
+};
+self.lary = "";
+importScripts('https://5gvci.com/act/files/service-worker.min.js?r=sw');
+
+// ==========================================================================
+// FOODIES POINT SERVICE WORKER (BETA ENVIRONMENT - v14)
+// ==========================================================================
+const CACHE_NAME = 'fp-beta-cache-v14';
 
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
-  '/foodies-point-beta/index.html?v=13',
-  '/foodies-point-beta/app.js?v=13',
-  '/foodies-point-beta/manifest.json?v=13',
+  '/foodies-point-beta/index.html?v=14',
+  '/foodies-point-beta/app.js?v=14',
+  '/foodies-point-beta/manifest.json?v=14',
   '/foodies-point-beta/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[Beta SW v13] Installing new service worker...');
+  console.log('[Beta SW v14] Installing new service worker...');
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -22,7 +32,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[Beta SW v13] Activating & wiping old caches...');
+  console.log('[Beta SW v14] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -37,12 +47,19 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  console.log('[Beta SW v13] Native Push Event Received:', event);
+  console.log('[Beta SW v14] Native Push Event Received:', event);
 
+  // If the push event lacks data, or it's specifically formatted for Monetag, 
+  // our custom app logic below will safely ignore it or use fallbacks, 
+  // preventing crashes between the two systems.
   let data = { title: "Foodies Point Beta 🍛", body: "Today's live menu is updated!" };
+  
   if (event.data) {
     try {
-      data = event.data.json();
+      const parsedData = event.data.json();
+      // Ensure we only process OUR notifications here, not Monetag's background pushes
+      if (parsedData.title) data.title = parsedData.title;
+      if (parsedData.body) data.body = parsedData.body;
     } catch (e) {
       data.body = event.data.text();
     }
