@@ -1,29 +1,18 @@
 // ==========================================================================
-// MONETAG AD NETWORK INTEGRATION (VERIFICATION)
+// FOODIES POINT SERVICE WORKER (BETA ENVIRONMENT - v15)
 // ==========================================================================
-self.options = {
-  "domain": "3nbf4.com",
-  "zoneId": 11879591
-};
-self.lary = "";
-importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw');
-
-
-// ==========================================================================
-// FOODIES POINT SERVICE WORKER (BETA ENVIRONMENT - v14)
-// ==========================================================================
-const CACHE_NAME = 'fp-beta-cache-v14';
+const CACHE_NAME = 'fp-beta-cache-v15';
 
 const ASSETS_TO_CACHE = [
   '/foodies-point-beta/',
-  '/foodies-point-beta/index.html?v=14',
-  '/foodies-point-beta/app.js?v=14',
-  '/foodies-point-beta/manifest.json?v=14',
+  '/foodies-point-beta/index.html?v=15',
+  '/foodies-point-beta/app.js?v=15',
+  '/foodies-point-beta/manifest.json?v=15',
   '/foodies-point-beta/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('[Beta SW v14] Installing new service worker...');
+  console.log('[Beta SW v15] Installing new service worker...');
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -33,7 +22,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[Beta SW v14] Activating & wiping old caches...');
+  console.log('[Beta SW v15] Activating & wiping old caches...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -48,7 +37,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  console.log('[Beta SW v14] Native Push Event Received:', event);
+  console.log('[Beta SW v15] Native Push Event Received:', event);
 
   let data = { title: "Foodies Point Beta 🍛", body: "Today's live menu is updated!" };
   if (event.data) {
