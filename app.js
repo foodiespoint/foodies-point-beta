@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v13 - BETA ISOLATED)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v14 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v13";
+const CURRENT_APP_VERSION = "v14";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -700,7 +700,6 @@ function renderKitchenMenu() {
     card.className = 'menu-card';
     card.setAttribute('data-item-id', dish.id);
 
-    // FIX: Removed Edit Button from checked items
     card.innerHTML = `
       <div class="dish-select-area">
         <input type="checkbox" class="dish-checkbox" id="chk-top-${dish.id}" checked onchange="toggleKitchenItem('${dish.id}', false)">
@@ -733,7 +732,6 @@ function renderKitchenMenu() {
         card.className = 'menu-card';
         card.setAttribute('data-item-id', dish.id);
 
-        // Edit button remains for unchecked items
         card.innerHTML = `
           <div class="dish-select-area">
             <input type="checkbox" class="dish-checkbox" id="chk-${dish.id}" onchange="toggleKitchenItem('${dish.id}', true)">
@@ -1367,7 +1365,7 @@ function fetchAndRenderPaymentLedger() {
 
       row.innerHTML = `
         <div style="flex: 1;">
-          <div style="font-size:0.9rem; font-weight: 700; color:#2D2D2D;">${dateStr} <span style="font-weight: normal; color: #888; font-size: 0.75rem; margin-left: 4px;">(#${order.orderId})</span></div>
+          <div style="font-size:0.9rem; font-weight: 700; color:#2D2D2D;">${dateStr} <span style="font-weight: normal; color: #888; font-size: 0.75 margin-left: 4px;">(#${order.orderId})</span></div>
           <div style="font-size: 0.95rem; color: #D9534F; font-weight: 700; margin: 4px 0;">${totalDisplay}</div>
           <div style="font-size:0.8rem; color:#666;">👤 ${order.customerName || 'Guest'} (${order.customerMobile || 'N/A'})</div>
         </div>
