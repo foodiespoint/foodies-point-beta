@@ -10,13 +10,14 @@
 
   <title>Foodies Point Beta</title>
 
-  <link rel="manifest" href="/manifest.json?v=24">
+  <!-- Changed to relative paths without leading slash -->
+  <link rel="manifest" href="manifest.json?v=25">
   <meta name="theme-color" content="#D9534F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Foodies Point">
-  <link rel="apple-touch-icon" href="/icon.png">
-  <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
 
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -603,7 +604,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     
-    /* DROPDOWN & BACKDROP EXTRACTED OUTSIDE APP-ROOT */
+    /* DROPDOWN & BACKDROP EXTRACTED OUTSIDE APP-ROOT SO CLICKS PASS THROUGH */
     .kitchen-dropdown {
       display: none;
       position: fixed;
@@ -757,7 +758,7 @@
 
         <div class="header-right-group">
           <button class="btn-icon" id="header-notify-btn" onclick="openAlertsModal()" aria-label="Notifications">🔔</button>
-          <span id="kitchen-version-badge">v24-Beta</span>
+          <span id="kitchen-version-badge">v25-Beta</span>
           <button class="btn-kitchen-menu" id="header-drawer-btn" onclick="toggleKitchenMenuDropdown()" style="display: none;" aria-label="Open Kitchen Menu">☰ Menu</button>
         </div>
       </header>
@@ -967,7 +968,7 @@
     </div>
   </div>
 
-  <!-- Force fetch Beta v24 -->
-  <script src="/app.js?v=24"></script>
+  <!-- Force fetch Beta v25 without leading slash -->
+  <script src="app.js?v=25"></script>
 </body>
 </html>
