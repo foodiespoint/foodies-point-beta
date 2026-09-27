@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v15 - BETA ISOLATED)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v24 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v15";
+const CURRENT_APP_VERSION = "v24";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -344,13 +344,13 @@ async function notifyKitchenNewOrder(orderData) {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION 
+// 4. SERVICE WORKER REGISTRATION
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`/foodies-point-beta/sw.js?v=${CURRENT_APP_VERSION}`, { scope: '/foodies-point-beta/' })
+    navigator.serviceWorker.register(`/sw.js?v=${CURRENT_APP_VERSION}`, { scope: '/' })
     .then((reg) => {
       swRegistration = reg;
       reg.update();
@@ -680,7 +680,7 @@ function toggleKitchenMenuDropdown(forceState) {
 }
 
 // ==========================================================================
-// 8. RENDER KITCHEN MENU (With Search Filter & Selective Edit)
+// 8. RENDER KITCHEN MENU
 // ==========================================================================
 function renderKitchenMenu() {
   const container = document.getElementById('kitchen-menu-container');
@@ -1570,7 +1570,67 @@ async function removeTicket(firebaseKey) {
 }
 
 // ==========================================================================
-// 16. INITIALIZE APP ON DOM READY
+// 16. OMNI-AD DETECTOR (NO Z-INDEX LIMIT)
+// ==========================================================================
+function evaluateCumulativeAdHeight() {
+  let maxBottom = 0;
+  
+  // Scans for any fixed/absolute elements near the top, regardless of z-index
+  document.body.childNodes.forEach(child => {
+    if (child.nodeType === 1 && child.id !== 'app-root' && child.id !== 'install-gate-overlay' && !child.classList.contains('kitchen-dropdown-backdrop') && !child.classList.contains('kitchen-dropdown')) {
+      const st = window.getComputedStyle(child);
+      const isFixed = (st.position === 'fixed' || st.position === 'absolute');
+      
+      if (isFixed && st.display !== 'none' && parseFloat(st.opacity || '1') > 0.01) {
+        const rect = child.getBoundingClientRect();
+        // Check if element is clamped to the top of the viewport
+        if (rect.top >= 0 && rect.top <= 100 && rect.height > 10) {
+          if (rect.bottom > maxBottom) {
+            maxBottom = rect.bottom;
+          }
+        }
+      }
+    }
+  });
+
+  document.documentElement.childNodes.forEach(child => {
+    if (child.tagName && child.tagName.toLowerCase() !== 'body' && child.tagName.toLowerCase() !== 'head') {
+      const st = window.getComputedStyle(child);
+      if (st.position === 'fixed' || st.position === 'absolute') {
+        const rect = child.getBoundingClientRect();
+        if (rect.top >= 0 && rect.top <= 100 && rect.height > 10) {
+          if (rect.bottom > maxBottom) maxBottom = rect.bottom;
+        }
+      }
+    }
+  });
+
+  // Safely shift the UI, cap at 400px so a broken ad doesn't wipe the screen
+  if (maxBottom > 0 && maxBottom < 400) {
+    document.documentElement.style.setProperty('--ad-offset', `${Math.round(maxBottom + 4)}px`);
+  } else {
+    document.documentElement.style.setProperty('--ad-offset', '0px');
+  }
+}
+
+const adObserver = new MutationObserver(() => {
+  evaluateCumulativeAdHeight();
+});
+
+setInterval(evaluateCumulativeAdHeight, 400);
+
+document.addEventListener("DOMContentLoaded", () => {
+  adObserver.observe(document.body, { 
+    childList: true, 
+    subtree: true, 
+    attributes: true, 
+    attributeFilter: ['style', 'class'] 
+  });
+  evaluateCumulativeAdHeight();
+});
+
+// ==========================================================================
+// 17. INITIALIZE APP ON DOM READY
 // ==========================================================================
 function initFoodiesPoint() {
   enforceInstallGate();
