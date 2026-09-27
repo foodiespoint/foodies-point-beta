@@ -1,7 +1,7 @@
 // ==========================================================================
-// 1. FIREBASE & RENDER VAPID CONFIGURATION (v24 - BETA ISOLATED)
+// 1. FIREBASE & RENDER VAPID CONFIGURATION (v25 - BETA ISOLATED)
 // ==========================================================================
-const CURRENT_APP_VERSION = "v24";
+const CURRENT_APP_VERSION = "v25";
 const VAPID_PUBLIC_KEY = "BCYZCGMueIWWUU7cA2m4-fmHK0gEbmwqfSMHyzXr4AGdyhDi53mct0OoEfnPttK-1D3LV8guB3-RtfFYABa82bo";
 const RENDER_BACKEND_URL = "https://foodies-backend-9vvj.onrender.com";
 
@@ -344,13 +344,14 @@ async function notifyKitchenNewOrder(orderData) {
 }
 
 // ==========================================================================
-// 4. SERVICE WORKER REGISTRATION
+// 4. SERVICE WORKER REGISTRATION (PATH CONFLICT FIXED)
 // ==========================================================================
 let swRegistration = null;
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`/sw.js?v=${CURRENT_APP_VERSION}`, { scope: '/' })
+    // Relative path fixes cross-repo ghost worker issue
+    navigator.serviceWorker.register(`sw.js?v=${CURRENT_APP_VERSION}`)
     .then((reg) => {
       swRegistration = reg;
       reg.update();
